@@ -98,7 +98,7 @@ export default function WhatsAppChat() {
       const newMessage = {
         id: Date.now(),
         text: inputText.trim(),
-        isSender: typingMode === "sender",
+        isReceived: typingMode === "receiver",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
       setMessages(prev => [...prev, newMessage])
@@ -193,7 +193,7 @@ export default function WhatsAppChat() {
         const newMessage = {
           id: Date.now(),
           text: "",
-          isSender: true,
+          isReceived: false, // Images are always sent by user (sender)
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           imageUri: result.assets[0].uri,
           type: "image"
