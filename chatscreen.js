@@ -195,25 +195,50 @@ export default function WhatsAppChat() {
 
   // Keyboard event listeners
   useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height)
+      Animated.spring(inputContainerAnimation, {
+        toValue: -e.endCoordinates.height,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 30,
+      }).start()
+    })
+
+    const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardHeight(0)
+      Animated.spring(inputContainerAnimation, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 30,
+      }).start()
+    })
+
+    // Fallback for Android
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
       setKeyboardHeight(e.endCoordinates.height)
-      Animated.timing(inputContainerAnimation, {
+      Animated.spring(inputContainerAnimation, {
         toValue: -e.endCoordinates.height,
-        duration: 250,
         useNativeDriver: true,
+        tension: 400,
+        friction: 25,
       }).start()
     })
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardHeight(0)
-      Animated.timing(inputContainerAnimation, {
+      Animated.spring(inputContainerAnimation, {
         toValue: 0,
-        duration: 250,
         useNativeDriver: true,
+        tension: 400,
+        friction: 25,
       }).start()
     })
 
     return () => {
+      keyboardWillShowListener?.remove()
+      keyboardWillHideListener?.remove()
       keyboardDidShowListener?.remove()
       keyboardDidHideListener?.remove()
     }
