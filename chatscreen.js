@@ -170,8 +170,40 @@ export default function WhatsAppChat() {
     setEditTime("")
   }
 
-  const handleCameraPress = () => {
-    setBackgroundModalVisible(true)
+  const handleCameraPress = async () => {
+    try {
+      // Request permission to access media library
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission Required", "Permission to access camera roll is required!")
+        return
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      })
+
+      if (!result.canceled) {
+        // Add image message to chat
+        const newMessage = {
+          id: Date.now(),
+          text: "",
+          isSender: true,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          imageUri: result.assets[0].uri,
+          type: "image"
+        }
+        setMessages(prev => [...prev, newMessage])
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to pick image. Please try again.")
+      console.error("Image picker error:", error)
+    }
   }
 
   const handleBackgroundSelect = (backgroundId) => {
@@ -312,9 +344,20 @@ export default function WhatsAppChat() {
             activeOpacity={0.7}
           >
             <View style={[styles.messageBubble, message.isReceived ? styles.receivedBubble : styles.sentBubble]}>
-              <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
-                {message.text}
+              {message.type === "image" ? (
+                <View style={styles.imageMessageContainer}>
+                  <Image source={{ uri: message.imageUri }} style={styles.messageImage} />
+                  {message.text ? (
+                    <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
+                      {message.text}
           </Text>
+                  ) : null}
+        </View>
+              ) : (
+                <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
+                  {message.text}
+                </Text>
+              )}
             <View style={styles.messageFooter}>
                 <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
                   {message.time}
@@ -366,11 +409,11 @@ export default function WhatsAppChat() {
             {!isTypingMode ? (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-                  <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-                </TouchableOpacity>
+          <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+        </TouchableOpacity>
                 <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-                  <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
-                </TouchableOpacity>
+          <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+        </TouchableOpacity>
               </>
             ) : showSendButton ? (
               <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
@@ -710,5 +753,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#25D366",
     borderRadius: 20,
     marginLeft: 4,
+  },
+  imageMessageContainer: {
+    marginBottom: 4,
+  },
+  messageImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    marginBottom: 4,
   },
 })
