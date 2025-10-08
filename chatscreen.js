@@ -69,7 +69,6 @@ export default function WhatsAppChat() {
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
-  const inputScaleAnimation = useState(new Animated.Value(1))[0]
   
 
   const addReceiverMessage = () => {
@@ -196,26 +195,12 @@ export default function WhatsAppChat() {
   // Keyboard event listeners with immediate smooth transitions
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
-      // Immediate smooth transition when keyboard opens with scale effect
-      Animated.parallel([
-        Animated.timing(inputContainerAnimation, {
-          toValue: -e.endCoordinates.height,
-          duration: 200, // Faster for immediate response
-          useNativeDriver: true,
-        }),
-        Animated.sequence([
-          Animated.timing(inputScaleAnimation, {
-            toValue: 1.02, // Slight scale up
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          Animated.timing(inputScaleAnimation, {
-            toValue: 1, // Back to normal
-            duration: 100,
-            useNativeDriver: true,
-          })
-        ])
-      ]).start()
+      // Immediate smooth transition when keyboard opens
+      Animated.timing(inputContainerAnimation, {
+        toValue: -e.endCoordinates.height,
+        duration: 200, // Faster for immediate response
+        useNativeDriver: true,
+      }).start()
     })
 
     const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
@@ -229,25 +214,11 @@ export default function WhatsAppChat() {
 
     // Fallback for Android with immediate smooth transitions
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
-      Animated.parallel([
-        Animated.timing(inputContainerAnimation, {
-          toValue: -e.endCoordinates.height,
-          duration: 200, // Faster for immediate response
-          useNativeDriver: true,
-        }),
-        Animated.sequence([
-          Animated.timing(inputScaleAnimation, {
-            toValue: 1.02, // Slight scale up
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          Animated.timing(inputScaleAnimation, {
-            toValue: 1, // Back to normal
-            duration: 100,
-            useNativeDriver: true,
-          })
-        ])
-      ]).start()
+      Animated.timing(inputContainerAnimation, {
+        toValue: -e.endCoordinates.height,
+        duration: 200, // Faster for immediate response
+        useNativeDriver: true,
+      }).start()
     })
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
@@ -264,7 +235,7 @@ export default function WhatsAppChat() {
       keyboardDidShowListener?.remove()
       keyboardDidHideListener?.remove()
     }
-  }, [inputContainerAnimation, inputScaleAnimation])
+  }, [inputContainerAnimation])
   
   const renderMainContent = () => (
     <>
@@ -350,12 +321,7 @@ export default function WhatsAppChat() {
             <Animated.View 
               style={[
                 styles.inputContainer,
-                { 
-                  transform: [
-                    { translateY: inputContainerAnimation },
-                    { scale: inputScaleAnimation }
-                  ] 
-                }
+                { transform: [{ translateY: inputContainerAnimation }] }
               ]}
             >
         <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
