@@ -12,12 +12,14 @@ import {
   Alert,
   ImageBackground,
 } from "react-native"
+import * as ImagePicker from 'expo-image-picker'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
 import { useState, useEffect } from "react"
 import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
+import ChatBackground from './ChatBackground'
 
 export default function WhatsAppChat() {
   const [messages, setMessages] = useState([
@@ -59,18 +61,11 @@ export default function WhatsAppChat() {
   
   const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
   const [selectedBackground, setSelectedBackground] = useState("default")
+  const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   
-  const backgroundOptions = [
-    { id: "default", name: "Default", uri: null },
-    { id: "gradient1", name: "Blue Gradient", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
-    { id: "gradient2", name: "Purple Gradient", uri: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop" },
-    { id: "gradient3", name: "Green Gradient", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
-    { id: "pattern1", name: "Abstract Pattern", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
-    { id: "pattern2", name: "Geometric", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
-  ]
 
   const addReceiverMessage = () => {
     const receiverMessages = [
@@ -164,35 +159,33 @@ export default function WhatsAppChat() {
     setBackgroundModalVisible(true)
   }
 
-  const selectBackground = (backgroundId) => {
-    console.log('selectBackground called with:', backgroundId)
+  const handleBackgroundSelect = (backgroundId) => {
     setSelectedBackground(backgroundId)
-    console.log('setSelectedBackground called, new value should be:', backgroundId)
-    // Auto-apply the background when selected
-    setBackgroundModalVisible(false)
-  }
-
-  const applyBackground = () => {
-    setBackgroundModalVisible(false)
-  }
-
-  const cancelBackgroundSelection = () => {
-    setBackgroundModalVisible(false)
   }
 
   const handleProfilePress = () => {
     setProfileEditModalVisible(true)
   }
 
-  const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
-  console.log('Selected background ID:', selectedBackground)
-  console.log('Current background object:', currentBackground)
-  console.log('Background URI:', currentBackground?.uri)
 
-  // Track selectedBackground state changes
-  useEffect(() => {
-    console.log('selectedBackground state changed to:', selectedBackground)
-  }, [selectedBackground])
+  // Get current background URI based on selection
+  const getCurrentBackgroundUri = () => {
+    if (selectedBackground === "default") return null
+    if (selectedBackground === "custom") return customBackgroundUri
+    
+    // Predefined backgrounds
+    const predefinedBackgrounds = {
+      gradient1: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop",
+      gradient2: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop",
+      gradient3: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop",
+      pattern1: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop",
+      pattern2: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop",
+    }
+    
+    return predefinedBackgrounds[selectedBackground] || null
+  }
+
+  const currentBackgroundUri = getCurrentBackgroundUri()
   
   const renderMainContent = () => (
     <>
@@ -308,7 +301,7 @@ export default function WhatsAppChat() {
         </BlurView>
       ) : (
         <ImageBackground 
-          source={{ uri: currentBackground?.uri }} 
+          source={{ uri: currentBackgroundUri }} 
           style={styles.backgroundImage}
           resizeMode="cover"
           onError={(error) => console.log('ImageBackground error:', error)}
@@ -347,60 +340,6 @@ export default function WhatsAppChat() {
         setEditTime={setEditTime}
       />
 
-      {/* Background Selection Modal */}
-      <Modal
-        visible={backgroundModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={cancelBackgroundSelection}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.backgroundModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Choose Background</Text>
-              <TouchableOpacity onPress={cancelBackgroundSelection} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView style={styles.backgroundGrid}>
-              {backgroundOptions.map((background) => (
-                <TouchableOpacity
-                  key={background.id}
-                  style={[
-                    styles.backgroundOption,
-                    selectedBackground === background.id && styles.selectedBackgroundOption
-                  ]}
-                  onPress={() => selectBackground(background.id)}
-                >
-                  {background.uri ? (
-                    <Image source={{ uri: background.uri }} style={styles.backgroundPreview} />
-                  ) : (
-                    <View style={styles.defaultBackgroundPreview}>
-                      <Text style={styles.defaultBackgroundText}>Default</Text>
-                    </View>
-                  )}
-                  <Text style={styles.backgroundName}>{background.name}</Text>
-                  {selectedBackground === background.id && (
-                    <View style={styles.selectedIndicator}>
-                      <Ionicons name="checkmark" size={20} color="#25D366" />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            
-            <View style={styles.modalFooter}>
-              <TouchableOpacity style={styles.cancelButton} onPress={cancelBackgroundSelection}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={applyBackground}>
-                <Text style={styles.saveButtonText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Profile Edit Modal */}
       <ProfileEdit
@@ -410,6 +349,16 @@ export default function WhatsAppChat() {
         onProfileImageChange={setProfileImageUri}
         contactName={contactName}
         onContactNameChange={setContactName}
+      />
+
+      {/* Chat Background Modal */}
+      <ChatBackground
+        visible={backgroundModalVisible}
+        onClose={() => setBackgroundModalVisible(false)}
+        selectedBackground={selectedBackground}
+        onBackgroundSelect={handleBackgroundSelect}
+        customBackgroundUri={customBackgroundUri}
+        onCustomBackgroundChange={setCustomBackgroundUri}
       />
     </View>
   )
@@ -593,60 +542,6 @@ const styles = StyleSheet.create({
   checkmark: {
     marginLeft: 2,
   },
-  // Modal Styles (for background selection)
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    gap: 12,
-  },
-  cancelButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#DDD',
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  saveButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#25D366',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   // Background Styles
   backgroundImage: {
     flex: 1,
@@ -659,69 +554,6 @@ const styles = StyleSheet.create({
   backgroundOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.1)', // Very light overlay to make text readable
-  },
-  backgroundModalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    width: '95%',
-    maxWidth: 500,
-    maxHeight: '85%',
-  },
-  backgroundGrid: {
-    padding: 20,
-    maxHeight: 400,
-  },
-  backgroundOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginBottom: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    position: 'relative',
-  },
-  selectedBackgroundOption: {
-    borderColor: '#25D366',
-    backgroundColor: '#F0F8F0',
-  },
-  backgroundPreview: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  defaultBackgroundPreview: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-    backgroundColor: '#E8D7C6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  defaultBackgroundText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
-  },
-  backgroundName: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  selectedIndicator: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#25D366',
   },
   inputContainer: {
     position: "absolute",
