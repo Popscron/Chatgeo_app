@@ -14,7 +14,7 @@ import {
 } from "react-native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
@@ -165,7 +165,9 @@ export default function WhatsAppChat() {
   }
 
   const selectBackground = (backgroundId) => {
+    console.log('selectBackground called with:', backgroundId)
     setSelectedBackground(backgroundId)
+    console.log('setSelectedBackground called, new value should be:', backgroundId)
     // Auto-apply the background when selected
     setBackgroundModalVisible(false)
   }
@@ -186,6 +188,11 @@ export default function WhatsAppChat() {
   console.log('Selected background ID:', selectedBackground)
   console.log('Current background object:', currentBackground)
   console.log('Background URI:', currentBackground?.uri)
+
+  // Track selectedBackground state changes
+  useEffect(() => {
+    console.log('selectedBackground state changed to:', selectedBackground)
+  }, [selectedBackground])
   
   const renderMainContent = () => (
     <>
