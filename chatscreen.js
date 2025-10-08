@@ -11,6 +11,10 @@ import {
   Modal,
   Alert,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  Animated,
 } from "react-native"
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
@@ -65,6 +69,8 @@ export default function WhatsAppChat() {
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const inputContainerAnimation = useState(new Animated.Value(0))[0]
   
 
   const addReceiverMessage = () => {
@@ -186,6 +192,32 @@ export default function WhatsAppChat() {
   }
 
   const currentBackgroundUri = getCurrentBackgroundUri()
+
+  // Keyboard event listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height)
+      Animated.timing(inputContainerAnimation, {
+        toValue: -e.endCoordinates.height,
+        duration: 250,
+        useNativeDriver: true,
+      }).start()
+    })
+
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0)
+      Animated.timing(inputContainerAnimation, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start()
+    })
+
+    return () => {
+      keyboardDidShowListener?.remove()
+      keyboardDidHideListener?.remove()
+    }
+  }, [inputContainerAnimation])
   
   const renderMainContent = () => (
     <>
@@ -268,25 +300,38 @@ export default function WhatsAppChat() {
       </ScrollView>
 
       {/* Input Bar */}
-      <BlurView intensity={80} tint="light" style={styles.inputContainer}>
-        <View style={styles.inputContent}>
-          <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-          <Ionicons name="add" size={26} color="#5E5E5E" />
-        </TouchableOpacity>
-        <View style={styles.textInputContainer}>
-          <TextInput style={styles.textInput} placeholder="" placeholderTextColor="#999" />
-          <TouchableOpacity style={styles.emojiButton}>
-            <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
-          </TouchableOpacity>
-        </View>
-          <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-          <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-        </TouchableOpacity>
-          <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-          <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
-        </TouchableOpacity>
-      </View>
-      </BlurView>
+      <Animated.View 
+        style={[
+          styles.inputContainer,
+          { transform: [{ translateY: inputContainerAnimation }] }
+        ]}
+      >
+        <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
+          <View style={styles.inputContent}>
+            <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
+              <Ionicons name="add" size={26} color="#5E5E5E" />
+            </TouchableOpacity>
+            <View style={styles.textInputContainer}>
+              <TextInput 
+                style={styles.textInput} 
+                placeholder="" 
+                placeholderTextColor="#999" 
+                multiline={true}
+                maxHeight={100}
+              />
+              <TouchableOpacity style={styles.emojiButton}>
+                <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
+              <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
+              <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+            </TouchableOpacity>
+          </View>
+        </BlurView>
+      </Animated.View>
     </>
   )
 
@@ -561,15 +606,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
+  },
+  inputBlurView: {
     borderTopWidth: 0.5,
     borderTopColor: "rgba(208, 192, 176, 0.3)",
   },
   inputContent: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     paddingHorizontal: 8,
     paddingVertical: 8,
     paddingBottom: 34, // Account for safe area
+    minHeight: 60,
   },
   inputIcon: {
     padding: 8,
@@ -588,6 +636,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 8,
     color: "#000",
+    minHeight: 40,
+    maxHeight: 100,
+    textAlignVertical: "top",
   },
   emojiButton: {
     padding: 4,
