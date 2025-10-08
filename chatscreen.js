@@ -162,6 +162,8 @@ export default function WhatsAppChat() {
 
   const selectBackground = (backgroundId) => {
     setSelectedBackground(backgroundId)
+    // Auto-apply the background when selected
+    setBackgroundModalVisible(false)
   }
 
   const applyBackground = () => {
@@ -179,28 +181,28 @@ export default function WhatsAppChat() {
       {/* Chat Header */}
       <BlurView intensity={80} tint="light" style={styles.header}>
         <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.unreadCount}>34</Text>
-            <View style={styles.profileContainer}>
-              <Image source={{ uri: "https://i.pravatar.cc/150?img=12" }} style={styles.profileImage} />
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark" size={10} color="#fff" />
-              </View>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.unreadCount}>34</Text>
+          <View style={styles.profileContainer}>
+            <Image source={{ uri: "https://i.pravatar.cc/150?img=12" }} style={styles.profileImage} />
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark" size={10} color="#fff" />
             </View>
-            <Text style={styles.contactName}>Derrick Koftown</Text>
           </View>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="videocam-outline" size={26} color="#000" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="call-outline" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.contactName}>Derrick Koftown</Text>
         </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="videocam-outline" size={26} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="call-outline" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
+      </View>
       </BlurView>
 
       {/* Chat Messages */}
@@ -232,13 +234,13 @@ export default function WhatsAppChat() {
             <View style={[styles.messageBubble, message.isReceived ? styles.receivedBubble : styles.sentBubble]}>
               <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                 {message.text}
-              </Text>
-              <View style={styles.messageFooter}>
+          </Text>
+            <View style={styles.messageFooter}>
                 <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
                   {message.time}
                 </Text>
                 {!message.isReceived && (
-                  <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+              <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
                 )}
               </View>
             </View>
@@ -250,21 +252,21 @@ export default function WhatsAppChat() {
       <BlurView intensity={80} tint="light" style={styles.inputContainer}>
         <View style={styles.inputContent}>
           <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-            <Ionicons name="add" size={26} color="#5E5E5E" />
-          </TouchableOpacity>
-          <View style={styles.textInputContainer}>
-            <TextInput style={styles.textInput} placeholder="" placeholderTextColor="#999" />
-            <TouchableOpacity style={styles.emojiButton}>
-              <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-            <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-            <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+          <Ionicons name="add" size={26} color="#5E5E5E" />
+        </TouchableOpacity>
+        <View style={styles.textInputContainer}>
+          <TextInput style={styles.textInput} placeholder="" placeholderTextColor="#999" />
+          <TouchableOpacity style={styles.emojiButton}>
+            <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
           </TouchableOpacity>
         </View>
+          <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
+          <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+        </TouchableOpacity>
+          <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
+          <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+        </TouchableOpacity>
+      </View>
       </BlurView>
     </>
   )
@@ -277,19 +279,19 @@ export default function WhatsAppChat() {
           style={styles.backgroundImage}
           resizeMode="cover"
         >
-          <BlurView intensity={20} tint="light" style={styles.blurOverlay}>
+          <View style={styles.backgroundOverlay}>
             <SafeAreaView style={styles.safeArea}>
               <StatusBar barStyle="dark-content" />
               {renderMainContent()}
             </SafeAreaView>
-          </BlurView>
+          </View>
         </ImageBackground>
       ) : (
         <BlurView intensity={20} tint="light" style={styles.container}>
           <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="dark-content" />
             {renderMainContent()}
-          </SafeAreaView>
+    </SafeAreaView>
         </BlurView>
       )}
 
@@ -615,6 +617,10 @@ const styles = StyleSheet.create({
   },
   blurOverlay: {
     flex: 1,
+  },
+  backgroundOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)', // Very light overlay to make text readable
   },
   backgroundModalContent: {
     backgroundColor: '#fff',
