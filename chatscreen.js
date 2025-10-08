@@ -631,15 +631,17 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   dateBadge: {
-    backgroundColor: "#E8D7C6",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   dateText: {
     fontSize: 13,
-    color: "#5E5E5E",
-    fontWeight: "500",
+    color: "#000",
+    fontWeight: "600",
   },
   systemMessage: {
     backgroundColor: "#F7EFE5",
