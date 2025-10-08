@@ -397,30 +397,25 @@ export default function WhatsAppChat() {
             {!isTypingMode ? (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-          <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-        </TouchableOpacity>
+                  <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-          <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
-        </TouchableOpacity>
+                  <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+                </TouchableOpacity>
               </>
             ) : showSendButton ? (
               <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
                 <Ionicons name="send" size={24} color="#25D366" />
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.inputIcon} onPress={() => {
-                setIsTypingMode(false)
-                setTypingMode("")
-                setInputText("")
-                setShowSendButton(false)
-                Animated.timing(inputWidthAnimation, {
-                  toValue: 1,
-                  duration: 300,
-                  useNativeDriver: false,
-                }).start()
-              }}>
-                <Ionicons name="close" size={24} color="#5E5E5E" />
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
+                  <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
+                  <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+                </TouchableOpacity>
+              </>
             )}
       </View>
         </BlurView>
