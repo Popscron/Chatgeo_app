@@ -336,22 +336,24 @@ export default function WhatsAppChat() {
                   {message.text ? (
                     <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                       {message.text}
-          </Text>
+                    </Text>
                   ) : null}
-        </View>
+                </View>
               ) : (
                 <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                   {message.text}
                 </Text>
               )}
-            <View style={styles.messageFooter}>
+              <View style={styles.messageFooter}>
                 <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
                   {message.time}
                 </Text>
                 {!message.isReceived && (
-              <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                  <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
                 )}
               </View>
+              {/* Bubble Tail */}
+              <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail} />
             </View>
           </TouchableOpacity>
         ))}
@@ -686,11 +688,41 @@ const styles = StyleSheet.create({
     backgroundColor: "#D9FDD3",
     marginLeft: "auto",
     borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
+    position: "relative",
   },
   receivedBubble: {
     backgroundColor: "#FFFFFF",
     marginRight: "auto",
     borderTopLeftRadius: 2,
+    borderBottomLeftRadius: 2,
+    position: "relative",
+  },
+  sentBubbleTail: {
+    position: "absolute",
+    right: -8,
+    bottom: 0,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderLeftColor: "#D9FDD3",
+    borderTopWidth: 8,
+    borderTopColor: "transparent",
+    borderBottomWidth: 8,
+    borderBottomColor: "transparent",
+  },
+  receivedBubbleTail: {
+    position: "absolute",
+    left: -8,
+    bottom: 0,
+    width: 0,
+    height: 0,
+    borderRightWidth: 8,
+    borderRightColor: "#FFFFFF",
+    borderTopWidth: 8,
+    borderTopColor: "transparent",
+    borderBottomWidth: 8,
+    borderBottomColor: "transparent",
   },
   sentMessageText: {
     fontSize: 16,
