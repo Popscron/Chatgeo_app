@@ -161,6 +161,7 @@ export default function WhatsAppChat() {
   }
 
   const selectBackground = (backgroundId) => {
+    console.log('Selecting background:', backgroundId)
     setSelectedBackground(backgroundId)
     // Auto-apply the background when selected
     setBackgroundModalVisible(false)
@@ -175,6 +176,8 @@ export default function WhatsAppChat() {
   }
 
   const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
+  console.log('Current selectedBackground:', selectedBackground)
+  console.log('Current background object:', currentBackground)
   
   const renderMainContent = () => (
     <>
@@ -273,9 +276,16 @@ export default function WhatsAppChat() {
 
   return (
     <View style={styles.container}>
-      {currentBackground?.uri ? (
+      {selectedBackground === "default" ? (
+        <BlurView intensity={20} tint="light" style={styles.container}>
+          <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="dark-content" />
+            {renderMainContent()}
+          </SafeAreaView>
+        </BlurView>
+      ) : (
         <ImageBackground 
-          source={{ uri: currentBackground.uri }} 
+          source={{ uri: currentBackground?.uri }} 
           style={styles.backgroundImage}
           resizeMode="cover"
         >
@@ -283,16 +293,9 @@ export default function WhatsAppChat() {
             <SafeAreaView style={styles.safeArea}>
               <StatusBar barStyle="dark-content" />
               {renderMainContent()}
-            </SafeAreaView>
+    </SafeAreaView>
           </View>
         </ImageBackground>
-      ) : (
-        <BlurView intensity={20} tint="light" style={styles.container}>
-          <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" />
-            {renderMainContent()}
-    </SafeAreaView>
-        </BlurView>
       )}
 
       {/* Sender Edit Modal */}
