@@ -173,6 +173,11 @@ export default function WhatsAppChat() {
     setProfileEditModalVisible(true)
   }
 
+  const handleSendMessage = () => {
+    // Add logic to send message here
+    console.log('Send message pressed')
+  }
+
 
   // Get current background URI based on selection
   const getCurrentBackgroundUri = () => {
@@ -193,15 +198,17 @@ export default function WhatsAppChat() {
 
   const currentBackgroundUri = getCurrentBackgroundUri()
 
-  // Keyboard event listeners
+  // Keyboard event listeners with iOS 16+ optimizations
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
       setKeyboardHeight(e.endCoordinates.height)
+      // Immediate response for iOS 16+ keyboard
       Animated.spring(inputContainerAnimation, {
         toValue: -e.endCoordinates.height,
         useNativeDriver: true,
-        tension: 300,
-        friction: 30,
+        tension: 500, // Higher tension for snappier response
+        friction: 20, // Lower friction for faster animation
+        overshootClamping: true, // Prevent overshoot
       }).start()
     })
 
@@ -210,8 +217,9 @@ export default function WhatsAppChat() {
       Animated.spring(inputContainerAnimation, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 300,
-        friction: 30,
+        tension: 500,
+        friction: 20,
+        overshootClamping: true,
       }).start()
     })
 
@@ -339,10 +347,20 @@ export default function WhatsAppChat() {
             <View style={styles.textInputContainer}>
               <TextInput 
                 style={styles.textInput} 
-                placeholder="" 
+                placeholder="Message" 
                 placeholderTextColor="#999" 
                 multiline={true}
                 maxHeight={100}
+                keyboardType="default"
+                returnKeyType="send"
+                enablesReturnKeyAutomatically={true}
+                textContentType="none"
+                autoCorrect={true}
+                autoCapitalize="sentences"
+                clearButtonMode="never"
+                keyboardAppearance="default"
+                onSubmitEditing={handleSendMessage}
+                blurOnSubmit={false}
               />
               <TouchableOpacity style={styles.emojiButton}>
                 <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
@@ -655,6 +673,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     marginHorizontal: 4,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 0.5,
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   textInput: {
     flex: 1,
@@ -664,6 +692,8 @@ const styles = StyleSheet.create({
     minHeight: 40,
     maxHeight: 100,
     textAlignVertical: "top",
+    lineHeight: 20,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   emojiButton: {
     padding: 4,
