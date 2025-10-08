@@ -82,12 +82,19 @@ export default function WhatsAppChat() {
     const hasText = text.trim().length > 0
     setShowSendButton(hasText && isTypingMode)
     
-    // Animate width expansion only in typing mode
-    if (isTypingMode) {
+    // Animate width expansion only when user actually types text
+    if (isTypingMode && hasText) {
       Animated.timing(inputWidthAnimation, {
-        toValue: hasText ? 1.15 : 1, // Expand to 115% width when typing
+        toValue: 1.15, // Expand to 115% width when typing
         duration: 300,
         useNativeDriver: false, // Width animation needs layout
+      }).start()
+    } else if (isTypingMode && !hasText) {
+      // Contract back to normal when text is cleared
+      Animated.timing(inputWidthAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
       }).start()
     }
   }
@@ -118,6 +125,9 @@ export default function WhatsAppChat() {
   }
 
   const addReceiverMessage = () => {
+    // Show alert for receiver activation
+    Alert.alert("Receiver Reply", "Receiver replies activated")
+    
     // Enable typing mode for receiver
     setIsTypingMode(true)
     setTypingMode("receiver")
@@ -126,6 +136,9 @@ export default function WhatsAppChat() {
   }
 
   const addSenderMessage = () => {
+    // Show alert for sender activation
+    Alert.alert("Sender Reply", "Sender replies activated")
+    
     // Enable typing mode for sender
     setIsTypingMode(true)
     setTypingMode("sender")
@@ -367,7 +380,7 @@ export default function WhatsAppChat() {
             >
               <TextInput 
                 style={styles.textInput} 
-                placeholder={isTypingMode ? `Type ${typingMode} message...` : "Message"} 
+                placeholder="Message" 
                 placeholderTextColor="#999" 
                 multiline={true}
                 maxHeight={100}
