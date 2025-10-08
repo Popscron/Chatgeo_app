@@ -226,7 +226,13 @@ export default function WhatsAppChat() {
       </BlurView>
 
       {/* Chat Messages */}
-      <ScrollView style={styles.chatContainer} contentContainerStyle={styles.chatContent}>
+            <ScrollView 
+              style={[
+                styles.chatContainer, 
+                selectedBackground !== "default" && { backgroundColor: "transparent" }
+              ]} 
+              contentContainerStyle={styles.chatContent}
+            >
         {/* Date Separator */}
         <View style={styles.dateSeparator}>
           <View style={styles.dateBadge}>
@@ -308,10 +314,12 @@ export default function WhatsAppChat() {
           onError={(error) => console.log('ImageBackground error:', error)}
           onLoad={() => console.log('ImageBackground loaded successfully')}
         >
-          <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" />
-            {renderMainContent()}
-          </SafeAreaView>
+          <View style={styles.backgroundOverlay}>
+            <SafeAreaView style={styles.safeArea}>
+              <StatusBar barStyle="dark-content" />
+              {renderMainContent()}
+            </SafeAreaView>
+          </View>
         </ImageBackground>
       )}
 
@@ -484,7 +492,7 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: "#E8D7C6",
+    backgroundColor: "#E8D7C6", // Default background, will be overridden by dynamic style
     paddingTop: 112, // Account for fixed header (adjusted)
     paddingBottom: 100, // Account for fixed input bar
   },
