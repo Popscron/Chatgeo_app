@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Modal, 
   View, 
@@ -19,9 +19,20 @@ const ProfileEdit = ({
   onProfileImageChange,
   contactName,
   onContactNameChange,
+  unreadCount,
+  onUnreadCountChange,
   onSwitchToBackground
 }) => {
   const [editContactName, setEditContactName] = useState(contactName);
+  const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
+
+  // Sync state when modal opens
+  useEffect(() => {
+    if (visible) {
+      setEditContactName(contactName);
+      setEditUnreadCount(unreadCount.toString());
+    }
+  }, [visible, contactName, unreadCount]);
 
   const pickProfileImage = async () => {
     try {
@@ -56,12 +67,22 @@ const ProfileEdit = ({
       Alert.alert("Error", "Contact name cannot be empty")
       return
     }
+    
+    // Validate unread count
+    const unreadValue = parseInt(editUnreadCount);
+    if (isNaN(unreadValue) || unreadValue < 0) {
+      Alert.alert("Error", "Unread count must be a valid number (0 or greater)")
+      return
+    }
+    
     onContactNameChange(editContactName.trim())
+    onUnreadCountChange(unreadValue)
     onClose()
   }
 
   const cancelEdit = () => {
     setEditContactName(contactName)
+    setEditUnreadCount(unreadCount.toString())
     onClose()
   }
 
@@ -109,6 +130,20 @@ const ProfileEdit = ({
                 placeholder="Enter contact name"
                 maxLength={50}
               />
+            </View>
+
+            {/* Unread Count Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Unread Messages</Text>
+              <TextInput
+                style={styles.unreadCountInput}
+                value={editUnreadCount}
+                onChangeText={setEditUnreadCount}
+                placeholder="Enter unread count"
+                keyboardType="numeric"
+                maxLength={3}
+              />
+              <Text style={styles.helperText}>Number of unread messages to display</Text>
             </View>
           </View>
           
@@ -212,6 +247,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  unreadCountInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    textAlign: 'center',
+    maxWidth: 100,
   },
   modalFooter: {
     flexDirection: 'row',

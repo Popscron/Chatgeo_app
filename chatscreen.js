@@ -67,6 +67,7 @@ export default function WhatsAppChat() {
   const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
   const [contactName, setContactName] = useState("Derrick Koftown")
+  const [unreadCount, setUnreadCount] = useState(3)
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
   const inputWidthAnimation = useState(new Animated.Value(1))[0]
@@ -296,8 +297,13 @@ export default function WhatsAppChat() {
               <Ionicons name="checkmark" size={10} color="#fff" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleProfilePress}>
+          <TouchableOpacity onPress={handleProfilePress} style={styles.contactInfo}>
             <Text style={styles.contactName}>{contactName}</Text>
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadText}>{unreadCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
@@ -499,6 +505,8 @@ export default function WhatsAppChat() {
               onProfileImageChange={setProfileImageUri}
               contactName={contactName}
               onContactNameChange={setContactName}
+              unreadCount={unreadCount}
+              onUnreadCountChange={setUnreadCount}
               onSwitchToBackground={() => {
                 setProfileEditModalVisible(false)
                 setBackgroundModalVisible(true)
@@ -584,10 +592,29 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#E8D7C6",
   },
+  contactInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   contactName: {
     fontSize: 17,
     fontWeight: "600",
     color: "#000",
+  },
+  unreadBadge: {
+    backgroundColor: "#25D366",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
+  },
+  unreadText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
   headerRight: {
     flexDirection: "row",
