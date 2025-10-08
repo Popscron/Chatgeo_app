@@ -203,7 +203,7 @@ export default function WhatsAppChat() {
         toValue: -e.endCoordinates.height,
         duration: 300,
         useNativeDriver: true,
-        easing: Animated.Easing.ease, // Smooth easing curve
+        easing: Animated.Easing.inOut(Animated.Easing.quad), // Smooth easing curve
       }).start()
     })
 
@@ -213,7 +213,7 @@ export default function WhatsAppChat() {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
-        easing: Animated.Easing.ease, // Smooth easing curve
+        easing: Animated.Easing.inOut(Animated.Easing.quad), // Smooth easing curve
       }).start()
     })
 
@@ -224,7 +224,7 @@ export default function WhatsAppChat() {
         toValue: -e.endCoordinates.height,
         duration: 300,
         useNativeDriver: true,
-        easing: Animated.Easing.ease,
+        easing: Animated.Easing.inOut(Animated.Easing.quad),
       }).start()
     })
 
@@ -234,7 +234,7 @@ export default function WhatsAppChat() {
         toValue: 0,
         duration: 300,
         useNativeDriver: true,
-        easing: Animated.Easing.ease,
+        easing: Animated.Easing.inOut(Animated.Easing.quad),
       }).start()
     })
 
