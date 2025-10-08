@@ -416,7 +416,7 @@ export default function WhatsAppChat() {
   return (
     <View style={styles.container}>
       {/* Header - positioned above everything */}
-      <BlurView intensity={80} tint="light" style={styles.header}>
+      <BlurView intensity={90} tint="light" style={styles.header}>
         <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backButton}>
