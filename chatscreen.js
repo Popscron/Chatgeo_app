@@ -10,6 +10,7 @@ import {
   Image,
   Modal,
   Alert,
+  ImageBackground,
 } from "react-native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
@@ -51,6 +52,18 @@ export default function WhatsAppChat() {
   const [editingMessage, setEditingMessage] = useState(null)
   const [editText, setEditText] = useState("")
   const [editTime, setEditTime] = useState("")
+  
+  const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
+  const [selectedBackground, setSelectedBackground] = useState("default")
+  
+  const backgroundOptions = [
+    { id: "default", name: "Default", uri: null },
+    { id: "gradient1", name: "Blue Gradient", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
+    { id: "gradient2", name: "Purple Gradient", uri: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop" },
+    { id: "gradient3", name: "Green Gradient", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
+    { id: "pattern1", name: "Abstract Pattern", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
+    { id: "pattern2", name: "Geometric", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
+  ]
 
   const addReceiverMessage = () => {
     const receiverMessages = [
@@ -134,37 +147,52 @@ export default function WhatsAppChat() {
     setEditTime("")
   }
 
-  return (
-    <BlurView intensity={20} tint="light" style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
+  const handleCameraPress = () => {
+    setBackgroundModalVisible(true)
+  }
 
-        {/* Chat Header */}
-        <BlurView intensity={80} tint="light" style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerLeft}>
-              <TouchableOpacity style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#000" />
-              </TouchableOpacity>
-              <Text style={styles.unreadCount}>34</Text>
-              <View style={styles.profileContainer}>
-                <Image source={{ uri: "https://i.pravatar.cc/150?img=12" }} style={styles.profileImage} />
-                <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark" size={10} color="#fff" />
-                </View>
+  const selectBackground = (backgroundId) => {
+    setSelectedBackground(backgroundId)
+  }
+
+  const applyBackground = () => {
+    setBackgroundModalVisible(false)
+  }
+
+  const cancelBackgroundSelection = () => {
+    setBackgroundModalVisible(false)
+  }
+
+  const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
+  
+  const renderMainContent = () => (
+    <>
+      {/* Chat Header */}
+      <BlurView intensity={80} tint="light" style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="#000" />
+            </TouchableOpacity>
+            <Text style={styles.unreadCount}>34</Text>
+            <View style={styles.profileContainer}>
+              <Image source={{ uri: "https://i.pravatar.cc/150?img=12" }} style={styles.profileImage} />
+              <View style={styles.verifiedBadge}>
+                <Ionicons name="checkmark" size={10} color="#fff" />
               </View>
-              <Text style={styles.contactName}>Derrick Koftown</Text>
             </View>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="videocam-outline" size={26} color="#000" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="call-outline" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.contactName}>Derrick Koftown</Text>
           </View>
-        </BlurView>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="videocam-outline" size={26} color="#000" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="call-outline" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </BlurView>
 
       {/* Chat Messages */}
       <ScrollView style={styles.chatContainer} contentContainerStyle={styles.chatContent}>
@@ -230,7 +258,7 @@ export default function WhatsAppChat() {
                 <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.inputIcon}>
+            <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
               <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
@@ -239,6 +267,32 @@ export default function WhatsAppChat() {
           </View>
         </BlurView>
       </SafeAreaView>
+    </>
+  )
+
+  return (
+    <View style={styles.container}>
+      {currentBackground?.uri ? (
+        <ImageBackground 
+          source={{ uri: currentBackground.uri }} 
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <BlurView intensity={20} tint="light" style={styles.blurOverlay}>
+            <SafeAreaView style={styles.safeArea}>
+              <StatusBar barStyle="dark-content" />
+              {renderMainContent()}
+            </SafeAreaView>
+          </BlurView>
+        </ImageBackground>
+      ) : (
+        <BlurView intensity={20} tint="light" style={styles.container}>
+          <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="dark-content" />
+            {renderMainContent()}
+          </SafeAreaView>
+        </BlurView>
+      )}
 
       {/* Edit Message Modal */}
       <Modal
@@ -287,7 +341,62 @@ export default function WhatsAppChat() {
           </View>
         </View>
       </Modal>
-    </BlurView>
+
+      {/* Background Selection Modal */}
+      <Modal
+        visible={backgroundModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={cancelBackgroundSelection}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.backgroundModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose Background</Text>
+              <TouchableOpacity onPress={cancelBackgroundSelection} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.backgroundGrid}>
+              {backgroundOptions.map((background) => (
+                <TouchableOpacity
+                  key={background.id}
+                  style={[
+                    styles.backgroundOption,
+                    selectedBackground === background.id && styles.selectedBackgroundOption
+                  ]}
+                  onPress={() => selectBackground(background.id)}
+                >
+                  {background.uri ? (
+                    <Image source={{ uri: background.uri }} style={styles.backgroundPreview} />
+                  ) : (
+                    <View style={styles.defaultBackgroundPreview}>
+                      <Text style={styles.defaultBackgroundText}>Default</Text>
+                    </View>
+                  )}
+                  <Text style={styles.backgroundName}>{background.name}</Text>
+                  {selectedBackground === background.id && (
+                    <View style={styles.selectedIndicator}>
+                      <Ionicons name="checkmark" size={20} color="#25D366" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.cancelButton} onPress={cancelBackgroundSelection}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={applyBackground}>
+                <Text style={styles.saveButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   )
 }
 
@@ -555,6 +664,78 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Background Styles
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  blurOverlay: {
+    flex: 1,
+  },
+  backgroundModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '95%',
+    maxWidth: 500,
+    maxHeight: '85%',
+  },
+  backgroundGrid: {
+    padding: 20,
+    maxHeight: 400,
+  },
+  backgroundOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    position: 'relative',
+  },
+  selectedBackgroundOption: {
+    borderColor: '#25D366',
+    backgroundColor: '#F0F8F0',
+  },
+  backgroundPreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  defaultBackgroundPreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: '#E8D7C6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  defaultBackgroundText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  backgroundName: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#25D366',
   },
   inputContainer: {
     position: "absolute",
