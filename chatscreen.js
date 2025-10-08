@@ -11,8 +11,90 @@ import {
 } from "react-native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
+import { useState } from "react"
 
 export default function WhatsAppChat() {
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      text: "Hey! How are you doing?",
+      isReceived: true,
+      time: "11:25 AM",
+      status: "read"
+    },
+    {
+      id: 2,
+      text: "I'm doing great! Just working on some new projects. How about you?",
+      isReceived: false,
+      time: "11:26 AM",
+      status: "read"
+    },
+    {
+      id: 3,
+      text: "That sounds awesome! I'm also working on something exciting. Want to grab coffee later?",
+      isReceived: true,
+      time: "11:28 AM",
+      status: "read"
+    },
+    {
+      id: 4,
+      text: "Sure! I'd love to. What time works for you?",
+      isReceived: false,
+      time: "11:29 AM",
+      status: "read"
+    }
+  ])
+
+  const addReceiverMessage = () => {
+    const receiverMessages = [
+      "That sounds great!",
+      "I'm excited about this!",
+      "Let me know when you're ready",
+      "Perfect timing!",
+      "I'll be there soon",
+      "Thanks for letting me know",
+      "Sounds like a plan!",
+      "I'm looking forward to it",
+      "That works for me",
+      "Great idea!"
+    ]
+    
+    const randomMessage = receiverMessages[Math.floor(Math.random() * receiverMessages.length)]
+    const newMessage = {
+      id: messages.length + 1,
+      text: randomMessage,
+      isReceived: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: "read"
+    }
+    setMessages([...messages, newMessage])
+  }
+
+  const addSenderMessage = () => {
+    const senderMessages = [
+      "I'll be there in 10 minutes",
+      "Let me check my schedule",
+      "That works perfectly for me",
+      "I'm on my way",
+      "See you soon!",
+      "I'll call you later",
+      "Thanks for the update",
+      "I'll get back to you",
+      "Let me think about it",
+      "I'll send you the details"
+    ]
+    
+    const randomMessage = senderMessages[Math.floor(Math.random() * senderMessages.length)]
+    const newMessage = {
+      id: messages.length + 1,
+      text: randomMessage,
+      isReceived: false,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: "read"
+    }
+    setMessages([...messages, newMessage])
+  }
+
   return (
     <BlurView intensity={20} tint="light" style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -72,30 +154,30 @@ export default function WhatsAppChat() {
           </Text>
         </View>
 
-        {/* Sent Message */}
-        <View style={styles.messageRow}>
-          <View style={[styles.messageBubble, styles.sentBubble]}>
-            <Text style={styles.sentMessageText}>Hi</Text>
-            <View style={styles.messageFooter}>
-              <Text style={styles.sentTime}>9:42 AM</Text>
-              <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+        {/* Dynamic Messages */}
+        {messages.map((message) => (
+          <View key={message.id} style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}>
+            <View style={[styles.messageBubble, message.isReceived ? styles.receivedBubble : styles.sentBubble]}>
+              <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
+                {message.text}
+              </Text>
+              <View style={styles.messageFooter}>
+                <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
+                  {message.time}
+                </Text>
+                {!message.isReceived && (
+                  <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                )}
+              </View>
             </View>
           </View>
-        </View>
-
-        {/* Received Message */}
-        <View style={[styles.messageRow, styles.receivedRow]}>
-          <View style={[styles.messageBubble, styles.receivedBubble]}>
-            <Text style={styles.receivedMessageText}>Yh</Text>
-            <Text style={styles.receivedTime}>11:29 AM</Text>
-          </View>
-        </View>
+        ))}
       </ScrollView>
 
         {/* Input Bar */}
         <BlurView intensity={80} tint="light" style={styles.inputContainer}>
           <View style={styles.inputContent}>
-            <TouchableOpacity style={styles.inputIcon}>
+            <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
               <Ionicons name="add" size={26} color="#5E5E5E" />
             </TouchableOpacity>
             <View style={styles.textInputContainer}>
@@ -107,7 +189,7 @@ export default function WhatsAppChat() {
             <TouchableOpacity style={styles.inputIcon}>
               <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.inputIcon}>
+            <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
               <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
             </TouchableOpacity>
           </View>
