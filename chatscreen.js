@@ -15,6 +15,8 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
 import { useState } from "react"
+import SenderEditModal from './SenderEditModal'
+import ReceiverEditModal from './ReceiverEditModal'
 
 export default function WhatsAppChat() {
   const [messages, setMessages] = useState([
@@ -48,7 +50,8 @@ export default function WhatsAppChat() {
     }
   ])
 
-  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [senderEditModalVisible, setSenderEditModalVisible] = useState(false)
+  const [receiverEditModalVisible, setReceiverEditModalVisible] = useState(false)
   const [editingMessage, setEditingMessage] = useState(null)
   const [editText, setEditText] = useState("")
   const [editTime, setEditTime] = useState("")
@@ -119,29 +122,35 @@ export default function WhatsAppChat() {
     setEditingMessage(message)
     setEditText(message.text)
     setEditTime(message.time)
-    setEditModalVisible(true)
+    
+    if (message.isReceived) {
+      setReceiverEditModalVisible(true)
+    } else {
+      setSenderEditModalVisible(true)
+    }
   }
 
-  const saveMessageEdit = () => {
-    if (!editText.trim()) {
-      Alert.alert("Error", "Message text cannot be empty")
-      return
-    }
-
+  const saveMessageEdit = (updatedMessage) => {
     const updatedMessages = messages.map(msg => 
-      msg.id === editingMessage.id 
-        ? { ...msg, text: editText.trim(), time: editTime.trim() || msg.time }
-        : msg
+      msg.id === updatedMessage.id ? updatedMessage : msg
     )
     setMessages(updatedMessages)
-    setEditModalVisible(false)
+    setSenderEditModalVisible(false)
+    setReceiverEditModalVisible(false)
     setEditingMessage(null)
     setEditText("")
     setEditTime("")
   }
 
-  const cancelEdit = () => {
-    setEditModalVisible(false)
+  const cancelSenderEdit = () => {
+    setSenderEditModalVisible(false)
+    setEditingMessage(null)
+    setEditText("")
+    setEditTime("")
+  }
+
+  const cancelReceiverEdit = () => {
+    setReceiverEditModalVisible(false)
     setEditingMessage(null)
     setEditText("")
     setEditTime("")
@@ -212,15 +221,6 @@ export default function WhatsAppChat() {
           </Text>
         </View>
 
-        {/* Disappearing Messages Info 
-        <View style={styles.systemMessage}>
-          <Ionicons name="timer-outline" size={14} color="#5E5E5E" style={styles.lockIcon} />
-          <Text style={styles.systemMessageText}>
-            You use a default timer for disappearing messages in new chats. New messages will disappear from this chat 7
-            days after they're sent, except when kept. Tap to update your own default timer.
-          </Text>
-        </View>
-
         {/* Dynamic Messages */}
         {messages.map((message) => (
           <TouchableOpacity 
@@ -246,27 +246,26 @@ export default function WhatsAppChat() {
         ))}
       </ScrollView>
 
-        {/* Input Bar */}
-        <BlurView intensity={80} tint="light" style={styles.inputContainer}>
-          <View style={styles.inputContent}>
-            <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-              <Ionicons name="add" size={26} color="#5E5E5E" />
-            </TouchableOpacity>
-            <View style={styles.textInputContainer}>
-              <TextInput style={styles.textInput} placeholder="" placeholderTextColor="#999" />
-              <TouchableOpacity style={styles.emojiButton}>
-                <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-              <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-              <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+      {/* Input Bar */}
+      <BlurView intensity={80} tint="light" style={styles.inputContainer}>
+        <View style={styles.inputContent}>
+          <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
+            <Ionicons name="add" size={26} color="#5E5E5E" />
+          </TouchableOpacity>
+          <View style={styles.textInputContainer}>
+            <TextInput style={styles.textInput} placeholder="" placeholderTextColor="#999" />
+            <TouchableOpacity style={styles.emojiButton}>
+              <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
             </TouchableOpacity>
           </View>
-        </BlurView>
-      </SafeAreaView>
+          <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
+            <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
+            <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+          </TouchableOpacity>
+        </View>
+      </BlurView>
     </>
   )
 
@@ -294,53 +293,29 @@ export default function WhatsAppChat() {
         </BlurView>
       )}
 
-      {/* Edit Message Modal */}
-      <Modal
-        visible={editModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={cancelEdit}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Message</Text>
-              <TouchableOpacity onPress={cancelEdit} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.modalBody}>
-              <Text style={styles.inputLabel}>Message Text:</Text>
-              <TextInput
-                style={styles.editTextInput}
-                value={editText}
-                onChangeText={setEditText}
-                placeholder="Enter message text"
-                multiline
-                numberOfLines={3}
-              />
-              
-              <Text style={styles.inputLabel}>Time (optional):</Text>
-              <TextInput
-                style={styles.editTimeInput}
-                value={editTime}
-                onChangeText={setEditTime}
-                placeholder="e.g., 11:25 AM"
-              />
-            </View>
-            
-            <View style={styles.modalFooter}>
-              <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={saveMessageEdit}>
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Sender Edit Modal */}
+      <SenderEditModal
+        visible={senderEditModalVisible}
+        onClose={cancelSenderEdit}
+        onSave={saveMessageEdit}
+        message={editingMessage}
+        editText={editText}
+        setEditText={setEditText}
+        editTime={editTime}
+        setEditTime={setEditTime}
+      />
+
+      {/* Receiver Edit Modal */}
+      <ReceiverEditModal
+        visible={receiverEditModalVisible}
+        onClose={cancelReceiverEdit}
+        onSave={saveMessageEdit}
+        message={editingMessage}
+        editText={editText}
+        setEditText={setEditText}
+        editTime={editTime}
+        setEditTime={setEditTime}
+      />
 
       {/* Background Selection Modal */}
       <Modal
@@ -578,19 +553,12 @@ const styles = StyleSheet.create({
   checkmark: {
     marginLeft: 2,
   },
-  // Modal Styles
+  // Modal Styles (for background selection)
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    width: '90%',
-    maxWidth: 400,
-    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -607,32 +575,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 4,
-  },
-  modalBody: {
-    padding: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  editTextInput: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  editTimeInput: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
   },
   modalFooter: {
     flexDirection: 'row',
