@@ -11,7 +11,6 @@ import {
   Modal,
   Alert,
   ImageBackground,
-  KeyboardAvoidingView,
   Platform,
   Keyboard,
   Animated,
@@ -69,7 +68,6 @@ export default function WhatsAppChat() {
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
   
 
@@ -197,7 +195,6 @@ export default function WhatsAppChat() {
   // Keyboard event listeners with smooth transitions
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height)
       // Very smooth transition when keyboard opens
       Animated.timing(inputContainerAnimation, {
         toValue: -e.endCoordinates.height,
@@ -208,7 +205,6 @@ export default function WhatsAppChat() {
     })
 
     const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
-      setKeyboardHeight(0)
       Animated.timing(inputContainerAnimation, {
         toValue: 0,
         duration: 300,
@@ -219,7 +215,6 @@ export default function WhatsAppChat() {
 
     // Fallback for Android with smooth transitions
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height)
       Animated.timing(inputContainerAnimation, {
         toValue: -e.endCoordinates.height,
         duration: 300,
@@ -229,7 +224,6 @@ export default function WhatsAppChat() {
     })
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardHeight(0)
       Animated.timing(inputContainerAnimation, {
         toValue: 0,
         duration: 300,
