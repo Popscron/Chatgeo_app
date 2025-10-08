@@ -60,6 +60,9 @@ export default function WhatsAppChat() {
   const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
   const [selectedBackground, setSelectedBackground] = useState("default")
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
+  const [contactName, setContactName] = useState("Derrick Koftown")
+  const [contactNameModalVisible, setContactNameModalVisible] = useState(false)
+  const [editContactName, setEditContactName] = useState("")
   
   const backgroundOptions = [
     { id: "default", name: "Default", uri: null },
@@ -204,6 +207,26 @@ export default function WhatsAppChat() {
     }
   }
 
+  const handleContactNamePress = () => {
+    setEditContactName(contactName)
+    setContactNameModalVisible(true)
+  }
+
+  const saveContactName = () => {
+    if (!editContactName.trim()) {
+      Alert.alert("Error", "Contact name cannot be empty")
+      return
+    }
+    setContactName(editContactName.trim())
+    setContactNameModalVisible(false)
+    setEditContactName("")
+  }
+
+  const cancelContactNameEdit = () => {
+    setContactNameModalVisible(false)
+    setEditContactName("")
+  }
+
   const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
   
   const renderMainContent = () => (
@@ -222,7 +245,9 @@ export default function WhatsAppChat() {
               <Ionicons name="checkmark" size={10} color="#fff" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.contactName}>Derrick Koftown</Text>
+          <TouchableOpacity onPress={handleContactNamePress}>
+            <Text style={styles.contactName}>{contactName}</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconButton}>
@@ -398,6 +423,46 @@ export default function WhatsAppChat() {
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveButton} onPress={applyBackground}>
                 <Text style={styles.saveButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Contact Name Edit Modal */}
+      <Modal
+        visible={contactNameModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={cancelContactNameEdit}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.contactNameModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Contact Name</Text>
+              <TouchableOpacity onPress={cancelContactNameEdit} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Contact Name:</Text>
+              <TextInput
+                style={styles.contactNameInput}
+                value={editContactName}
+                onChangeText={setEditContactName}
+                placeholder="Enter contact name"
+                autoFocus={true}
+                maxLength={50}
+              />
+            </View>
+            
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.cancelButton} onPress={cancelContactNameEdit}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={saveContactName}>
+                <Text style={styles.saveButtonText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -751,5 +816,20 @@ const styles = StyleSheet.create({
   },
   emojiButton: {
     padding: 4,
+  },
+  // Contact Name Modal Styles
+  contactNameModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '90%',
+    maxWidth: 400,
+  },
+  contactNameInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginTop: 8,
   },
 })
