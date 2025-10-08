@@ -12,12 +12,12 @@ import {
   Alert,
   ImageBackground,
 } from "react-native"
-import * as ImagePicker from 'expo-image-picker'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
 import { useState } from "react"
 import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
+import ProfileEdit from './ProfileEdit'
 
 export default function WhatsAppChat() {
   const [messages, setMessages] = useState([
@@ -61,8 +61,7 @@ export default function WhatsAppChat() {
   const [selectedBackground, setSelectedBackground] = useState("default")
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
   const [contactName, setContactName] = useState("Derrick Koftown")
-  const [contactNameModalVisible, setContactNameModalVisible] = useState(false)
-  const [editContactName, setEditContactName] = useState("")
+  const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   
   const backgroundOptions = [
     { id: "default", name: "Default", uri: null },
@@ -179,52 +178,8 @@ export default function WhatsAppChat() {
     setBackgroundModalVisible(false)
   }
 
-  const pickProfileImage = async () => {
-    try {
-      // Request permission to access media library
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
-      
-      if (permissionResult.granted === false) {
-        Alert.alert("Permission Required", "Permission to access camera roll is required!")
-        return
-      }
-
-      // Launch image picker
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      })
-
-      if (!result.canceled) {
-        setProfileImageUri(result.assets[0].uri)
-        Alert.alert("Success", "Profile image updated!")
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to pick image. Please try again.")
-      console.error("Image picker error:", error)
-    }
-  }
-
-  const handleContactNamePress = () => {
-    setEditContactName(contactName)
-    setContactNameModalVisible(true)
-  }
-
-  const saveContactName = () => {
-    if (!editContactName.trim()) {
-      Alert.alert("Error", "Contact name cannot be empty")
-      return
-    }
-    setContactName(editContactName.trim())
-    setContactNameModalVisible(false)
-    setEditContactName("")
-  }
-
-  const cancelContactNameEdit = () => {
-    setContactNameModalVisible(false)
-    setEditContactName("")
+  const handleProfilePress = () => {
+    setProfileEditModalVisible(true)
   }
 
   const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
@@ -239,13 +194,13 @@ export default function WhatsAppChat() {
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.unreadCount}>34</Text>
-          <TouchableOpacity style={styles.profileContainer} onPress={pickProfileImage}>
+          <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
             <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark" size={10} color="#fff" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleContactNamePress}>
+          <TouchableOpacity onPress={handleProfilePress}>
             <Text style={styles.contactName}>{contactName}</Text>
           </TouchableOpacity>
         </View>
@@ -429,45 +384,15 @@ export default function WhatsAppChat() {
         </View>
       </Modal>
 
-      {/* Contact Name Edit Modal */}
-      <Modal
-        visible={contactNameModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={cancelContactNameEdit}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.contactNameModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Contact Name</Text>
-              <TouchableOpacity onPress={cancelContactNameEdit} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.modalBody}>
-              <Text style={styles.inputLabel}>Contact Name:</Text>
-              <TextInput
-                style={styles.contactNameInput}
-                value={editContactName}
-                onChangeText={setEditContactName}
-                placeholder="Enter contact name"
-                autoFocus={true}
-                maxLength={50}
-              />
-            </View>
-            
-            <View style={styles.modalFooter}>
-              <TouchableOpacity style={styles.cancelButton} onPress={cancelContactNameEdit}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveButton} onPress={saveContactName}>
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* Profile Edit Modal */}
+      <ProfileEdit
+        visible={profileEditModalVisible}
+        onClose={() => setProfileEditModalVisible(false)}
+        profileImageUri={profileImageUri}
+        onProfileImageChange={setProfileImageUri}
+        contactName={contactName}
+        onContactNameChange={setContactName}
+      />
     </View>
   )
 }
@@ -816,20 +741,5 @@ const styles = StyleSheet.create({
   },
   emojiButton: {
     padding: 4,
-  },
-  // Contact Name Modal Styles
-  contactNameModalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    width: '90%',
-    maxWidth: 400,
-  },
-  contactNameInput: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginTop: 8,
   },
 })
