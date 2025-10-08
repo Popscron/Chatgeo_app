@@ -283,34 +283,6 @@ export default function WhatsAppChat() {
   
   const renderMainContent = () => (
     <>
-      {/* Chat Header */}
-      <BlurView intensity={80} tint="light" style={styles.header}>
-        <View style={styles.headerContent}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.unreadCount}>{unreadCount}</Text>
-          <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
-            <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark" size={10} color="#fff" />
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleProfilePress}>
-            <Text style={styles.contactName}>{contactName}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="videocam-outline" size={26} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="call-outline" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      </BlurView>
 
       {/* Chat Messages */}
             <ScrollView 
@@ -443,6 +415,38 @@ export default function WhatsAppChat() {
 
   return (
     <View style={styles.container}>
+      {/* Header - positioned above everything */}
+      <BlurView intensity={100} tint="light" style={styles.header}>
+        <View style={styles.headerContent}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.unreadCount}>{unreadCount}</Text>
+          <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
+            <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark" size={10} color="#fff" />
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleProfilePress}>
+            <Text style={styles.contactName}>{contactName}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="videocam-outline" size={26} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="call-outline" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="ellipsis-vertical" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
+        </View>
+      </BlurView>
+
       {selectedBackground === "default" ? (
         <BlurView intensity={20} tint="light" style={styles.container}>
           <SafeAreaView style={styles.safeArea}>
@@ -462,7 +466,7 @@ export default function WhatsAppChat() {
             <SafeAreaView style={styles.safeArea}>
               <StatusBar barStyle="dark-content" />
               {renderMainContent()}
-    </SafeAreaView>
+            </SafeAreaView>
           </View>
         </ImageBackground>
       )}
@@ -541,6 +545,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     borderBottomWidth: 0.5,
     borderBottomColor: "rgba(208, 192, 176, 0.3)",
+    backgroundColor: "transparent", // Ensure no background color interferes with blur
   },
   headerContent: {
     flexDirection: "row",
