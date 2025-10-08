@@ -8,6 +8,8 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  Modal,
+  Alert,
 } from "react-native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
@@ -44,6 +46,11 @@ export default function WhatsAppChat() {
       status: "read"
     }
   ])
+
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [editingMessage, setEditingMessage] = useState(null)
+  const [editText, setEditText] = useState("")
+  const [editTime, setEditTime] = useState("")
 
   const addReceiverMessage = () => {
     const receiverMessages = [
@@ -93,6 +100,38 @@ export default function WhatsAppChat() {
       status: "read"
     }
     setMessages([...messages, newMessage])
+  }
+
+  const handleMessagePress = (message) => {
+    setEditingMessage(message)
+    setEditText(message.text)
+    setEditTime(message.time)
+    setEditModalVisible(true)
+  }
+
+  const saveMessageEdit = () => {
+    if (!editText.trim()) {
+      Alert.alert("Error", "Message text cannot be empty")
+      return
+    }
+
+    const updatedMessages = messages.map(msg => 
+      msg.id === editingMessage.id 
+        ? { ...msg, text: editText.trim(), time: editTime.trim() || msg.time }
+        : msg
+    )
+    setMessages(updatedMessages)
+    setEditModalVisible(false)
+    setEditingMessage(null)
+    setEditText("")
+    setEditTime("")
+  }
+
+  const cancelEdit = () => {
+    setEditModalVisible(false)
+    setEditingMessage(null)
+    setEditText("")
+    setEditTime("")
   }
 
   return (
@@ -156,7 +195,12 @@ export default function WhatsAppChat() {
 
         {/* Dynamic Messages */}
         {messages.map((message) => (
-          <View key={message.id} style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}>
+          <TouchableOpacity 
+            key={message.id} 
+            style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}
+            onPress={() => handleMessagePress(message)}
+            activeOpacity={0.7}
+          >
             <View style={[styles.messageBubble, message.isReceived ? styles.receivedBubble : styles.sentBubble]}>
               <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                 {message.text}
@@ -170,7 +214,7 @@ export default function WhatsAppChat() {
                 )}
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
 
@@ -195,6 +239,54 @@ export default function WhatsAppChat() {
           </View>
         </BlurView>
       </SafeAreaView>
+
+      {/* Edit Message Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={cancelEdit}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Message</Text>
+              <TouchableOpacity onPress={cancelEdit} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Message Text:</Text>
+              <TextInput
+                style={styles.editTextInput}
+                value={editText}
+                onChangeText={setEditText}
+                placeholder="Enter message text"
+                multiline
+                numberOfLines={3}
+              />
+              
+              <Text style={styles.inputLabel}>Time (optional):</Text>
+              <TextInput
+                style={styles.editTimeInput}
+                value={editTime}
+                onChangeText={setEditTime}
+                placeholder="e.g., 11:25 AM"
+              />
+            </View>
+            
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={saveMessageEdit}>
+                <Text style={styles.saveButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </BlurView>
   )
 }
@@ -376,6 +468,93 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     marginLeft: 2,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  editTextInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  editTimeInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    gap: 12,
+  },
+  cancelButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DDD',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  saveButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#25D366',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   inputContainer: {
     position: "absolute",
