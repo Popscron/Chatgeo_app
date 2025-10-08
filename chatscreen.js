@@ -336,20 +336,20 @@ export default function WhatsAppChat() {
                   {message.text ? (
                     <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                       {message.text}
-                    </Text>
+          </Text>
                   ) : null}
-                </View>
+        </View>
               ) : (
                 <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                   {message.text}
                 </Text>
               )}
-              <View style={styles.messageFooter}>
+            <View style={styles.messageFooter}>
                 <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
                   {message.time}
                 </Text>
                 {!message.isReceived && (
-                  <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+              <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
                 )}
               </View>
               {/* Bubble Tail */}
@@ -410,11 +410,11 @@ export default function WhatsAppChat() {
             ) : (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-                  <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-                </TouchableOpacity>
+          <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+        </TouchableOpacity>
                 <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-                  <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
-                </TouchableOpacity>
+          <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+        </TouchableOpacity>
               </>
             )}
       </View>
