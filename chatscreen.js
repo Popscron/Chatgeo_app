@@ -72,19 +72,23 @@ export default function WhatsAppChat() {
   const inputWidthAnimation = useState(new Animated.Value(1))[0]
   const [inputText, setInputText] = useState("")
   const [showSendButton, setShowSendButton] = useState(false)
+  const [isTypingMode, setIsTypingMode] = useState(false)
+  const [typingMode, setTypingMode] = useState("") // "receiver" or "sender"
   
   // Handle text input changes
   const handleTextChange = (text) => {
     setInputText(text)
     const hasText = text.trim().length > 0
-    setShowSendButton(hasText)
+    setShowSendButton(hasText && isTypingMode)
     
-    // Animate width expansion
-    Animated.timing(inputWidthAnimation, {
-      toValue: hasText ? 1.15 : 1, // Expand to 115% width when typing
-      duration: 300,
-      useNativeDriver: false, // Width animation needs layout
-    }).start()
+    // Animate width expansion only in typing mode
+    if (isTypingMode) {
+      Animated.timing(inputWidthAnimation, {
+        toValue: hasText ? 1.15 : 1, // Expand to 115% width when typing
+        duration: 300,
+        useNativeDriver: false, // Width animation needs layout
+      }).start()
+    }
   }
 
   // Handle send message
@@ -94,63 +98,38 @@ export default function WhatsAppChat() {
       const newMessage = {
         id: Date.now(),
         text: inputText.trim(),
-        isSender: true,
+        isSender: typingMode === "sender",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
       setMessages(prev => [...prev, newMessage])
       setInputText("")
       setShowSendButton(false)
+      setIsTypingMode(false)
+      setTypingMode("")
+      
+      // Reset width animation
+      Animated.timing(inputWidthAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start()
     }
   }
 
   const addReceiverMessage = () => {
-    const receiverMessages = [
-      "That sounds great!",
-      "I'm excited about this!",
-      "Let me know when you're ready",
-      "Perfect timing!",
-      "I'll be there soon",
-      "Thanks for letting me know",
-      "Sounds like a plan!",
-      "I'm looking forward to it",
-      "That works for me",
-      "Great idea!"
-    ]
-    
-    const randomMessage = receiverMessages[Math.floor(Math.random() * receiverMessages.length)]
-    const newMessage = {
-      id: messages.length + 1,
-      text: randomMessage,
-      isReceived: true,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: "read"
-    }
-    setMessages([...messages, newMessage])
+    // Enable typing mode for receiver
+    setIsTypingMode(true)
+    setTypingMode("receiver")
+    setInputText("")
+    setShowSendButton(false)
   }
 
   const addSenderMessage = () => {
-    const senderMessages = [
-      "I'll be there in 10 minutes",
-      "Let me check my schedule",
-      "That works perfectly for me",
-      "I'm on my way",
-      "See you soon!",
-      "I'll call you later",
-      "Thanks for the update",
-      "I'll get back to you",
-      "Let me think about it",
-      "I'll send you the details"
-    ]
-    
-    const randomMessage = senderMessages[Math.floor(Math.random() * senderMessages.length)]
-    const newMessage = {
-      id: messages.length + 1,
-      text: randomMessage,
-      isReceived: false,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: "read"
-    }
-    setMessages([...messages, newMessage])
+    // Enable typing mode for sender
+    setIsTypingMode(true)
+    setTypingMode("sender")
+    setInputText("")
+    setShowSendButton(false)
   }
 
   const handleMessagePress = (message) => {
@@ -349,7 +328,7 @@ export default function WhatsAppChat() {
         ))}
       </ScrollView>
 
-            {/* Input Bar */}
+      {/* Input Bar */}
             <Animated.View 
               style={[
                 styles.inputContainer,
@@ -359,8 +338,8 @@ export default function WhatsAppChat() {
         <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-              <Ionicons name="add" size={26} color="#5E5E5E" />
-            </TouchableOpacity>
+          <Ionicons name="add" size={26} color="#5E5E5E" />
+        </TouchableOpacity>
             <Animated.View 
               style={[
                 styles.textInputContainer, 
@@ -372,18 +351,19 @@ export default function WhatsAppChat() {
             >
               <TextInput 
                 style={styles.textInput} 
-                placeholder="Message" 
+                placeholder={isTypingMode ? `Type ${typingMode} message...` : "Message"} 
                 placeholderTextColor="#999" 
                 multiline={true}
                 maxHeight={100}
                 value={inputText}
                 onChangeText={handleTextChange}
+                editable={isTypingMode}
               />
-              <TouchableOpacity style={styles.emojiButton}>
-                <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
-              </TouchableOpacity>
+          <TouchableOpacity style={styles.emojiButton}>
+            <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
+          </TouchableOpacity>
             </Animated.View>
-            {!showSendButton ? (
+            {!isTypingMode ? (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
                   <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
@@ -392,12 +372,26 @@ export default function WhatsAppChat() {
                   <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
                 </TouchableOpacity>
               </>
-            ) : (
+            ) : showSendButton ? (
               <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
                 <Ionicons name="send" size={24} color="#25D366" />
               </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.inputIcon} onPress={() => {
+                setIsTypingMode(false)
+                setTypingMode("")
+                setInputText("")
+                setShowSendButton(false)
+                Animated.timing(inputWidthAnimation, {
+                  toValue: 1,
+                  duration: 300,
+                  useNativeDriver: false,
+                }).start()
+              }}>
+                <Ionicons name="close" size={24} color="#5E5E5E" />
+              </TouchableOpacity>
             )}
-          </View>
+      </View>
         </BlurView>
       </Animated.View>
     </>
@@ -424,7 +418,7 @@ export default function WhatsAppChat() {
             <SafeAreaView style={styles.safeArea}>
               <StatusBar barStyle="dark-content" />
               {renderMainContent()}
-            </SafeAreaView>
+    </SafeAreaView>
           </View>
         </ImageBackground>
       )}
