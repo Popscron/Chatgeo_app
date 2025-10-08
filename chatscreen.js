@@ -69,7 +69,30 @@ export default function WhatsAppChat() {
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
+  const [inputText, setInputText] = useState("")
+  const [showSendButton, setShowSendButton] = useState(false)
   
+  // Handle text input changes
+  const handleTextChange = (text) => {
+    setInputText(text)
+    setShowSendButton(text.trim().length > 0)
+  }
+
+  // Handle send message
+  const handleSendMessage = () => {
+    if (inputText.trim().length > 0) {
+      // Add the message to the messages array
+      const newMessage = {
+        id: Date.now(),
+        text: inputText.trim(),
+        isSender: true,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      setMessages(prev => [...prev, newMessage])
+      setInputText("")
+      setShowSendButton(false)
+    }
+  }
 
   const addReceiverMessage = () => {
     const receiverMessages = [
@@ -325,28 +348,38 @@ export default function WhatsAppChat() {
               ]}
             >
         <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
-          <View style={styles.inputContent}>
+          <View style={[styles.inputContent, showSendButton && styles.inputContentExpanded]}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
               <Ionicons name="add" size={26} color="#5E5E5E" />
             </TouchableOpacity>
-            <View style={styles.textInputContainer}>
+            <View style={[styles.textInputContainer, showSendButton && styles.textInputContainerExpanded]}>
               <TextInput 
-                style={styles.textInput} 
-                placeholder="" 
+                style={[styles.textInput, showSendButton && styles.textInputExpanded]} 
+                placeholder="Message" 
                 placeholderTextColor="#999" 
                 multiline={true}
-                maxHeight={100}
+                maxHeight={showSendButton ? 120 : 100}
+                value={inputText}
+                onChangeText={handleTextChange}
               />
               <TouchableOpacity style={styles.emojiButton}>
                 <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-              <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-              <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
-            </TouchableOpacity>
+            {!showSendButton ? (
+              <>
+                <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
+                  <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
+                  <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                <Ionicons name="send" size={24} color="#25D366" />
+              </TouchableOpacity>
+            )}
           </View>
         </BlurView>
       </Animated.View>
@@ -637,6 +670,10 @@ const styles = StyleSheet.create({
     paddingBottom: 34, // Account for safe area
     minHeight: 60,
   },
+  inputContentExpanded: {
+    minHeight: 80, // Increased height when typing
+    paddingVertical: 12,
+  },
   inputIcon: {
     padding: 8,
   },
@@ -649,6 +686,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginHorizontal: 4,
   },
+  textInputContainerExpanded: {
+    borderRadius: 25, // Slightly more rounded when expanded
+    paddingHorizontal: 16,
+  },
   textInput: {
     flex: 1,
     fontSize: 16,
@@ -658,7 +699,18 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     textAlignVertical: "top",
   },
+  textInputExpanded: {
+    fontSize: 17, // Slightly larger text when typing
+    paddingVertical: 12,
+    minHeight: 50,
+  },
   emojiButton: {
     padding: 4,
+  },
+  sendButton: {
+    padding: 8,
+    backgroundColor: "#25D366",
+    borderRadius: 20,
+    marginLeft: 4,
   },
 })
