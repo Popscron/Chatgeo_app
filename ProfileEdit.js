@@ -145,6 +145,7 @@ const ProfileEdit = ({
               />
               <Text style={styles.helperText}>Number of unread messages to display</Text>
             </View>
+
           </View>
           
           <View style={styles.modalFooter}>
