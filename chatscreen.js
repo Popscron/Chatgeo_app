@@ -69,6 +69,7 @@ export default function WhatsAppChat() {
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
+  const inputScaleAnimation = useState(new Animated.Value(1))[0]
   
 
   const addReceiverMessage = () => {
@@ -192,38 +193,67 @@ export default function WhatsAppChat() {
 
   const currentBackgroundUri = getCurrentBackgroundUri()
 
-  // Keyboard event listeners with smooth transitions
+  // Keyboard event listeners with immediate smooth transitions
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
-      // Very smooth transition when keyboard opens
-      Animated.timing(inputContainerAnimation, {
-        toValue: -e.endCoordinates.height,
-        duration: 300,
-        useNativeDriver: true,
-      }).start()
+      // Immediate smooth transition when keyboard opens with scale effect
+      Animated.parallel([
+        Animated.timing(inputContainerAnimation, {
+          toValue: -e.endCoordinates.height,
+          duration: 200, // Faster for immediate response
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(inputScaleAnimation, {
+            toValue: 1.02, // Slight scale up
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(inputScaleAnimation, {
+            toValue: 1, // Back to normal
+            duration: 100,
+            useNativeDriver: true,
+          })
+        ])
+      ]).start()
     })
 
     const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
+      // Smooth transition when keyboard closes
       Animated.timing(inputContainerAnimation, {
         toValue: 0,
-        duration: 300,
+        duration: 250, // Slightly slower for smooth close
         useNativeDriver: true,
       }).start()
     })
 
-    // Fallback for Android with smooth transitions
+    // Fallback for Android with immediate smooth transitions
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
-      Animated.timing(inputContainerAnimation, {
-        toValue: -e.endCoordinates.height,
-        duration: 300,
-        useNativeDriver: true,
-      }).start()
+      Animated.parallel([
+        Animated.timing(inputContainerAnimation, {
+          toValue: -e.endCoordinates.height,
+          duration: 200, // Faster for immediate response
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(inputScaleAnimation, {
+            toValue: 1.02, // Slight scale up
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(inputScaleAnimation, {
+            toValue: 1, // Back to normal
+            duration: 100,
+            useNativeDriver: true,
+          })
+        ])
+      ]).start()
     })
 
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
       Animated.timing(inputContainerAnimation, {
         toValue: 0,
-        duration: 300,
+        duration: 250, // Slightly slower for smooth close
         useNativeDriver: true,
       }).start()
     })
@@ -234,7 +264,7 @@ export default function WhatsAppChat() {
       keyboardDidShowListener?.remove()
       keyboardDidHideListener?.remove()
     }
-  }, [inputContainerAnimation])
+  }, [inputContainerAnimation, inputScaleAnimation])
   
   const renderMainContent = () => (
     <>
@@ -316,13 +346,18 @@ export default function WhatsAppChat() {
         ))}
       </ScrollView>
 
-      {/* Input Bar */}
-      <Animated.View 
-        style={[
-          styles.inputContainer,
-          { transform: [{ translateY: inputContainerAnimation }] }
-        ]}
-      >
+            {/* Input Bar */}
+            <Animated.View 
+              style={[
+                styles.inputContainer,
+                { 
+                  transform: [
+                    { translateY: inputContainerAnimation },
+                    { scale: inputScaleAnimation }
+                  ] 
+                }
+              ]}
+            >
         <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
