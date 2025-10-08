@@ -12,6 +12,7 @@ import {
   Alert,
   ImageBackground,
 } from "react-native"
+import * as ImagePicker from 'expo-image-picker'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
 import { useState } from "react"
@@ -58,6 +59,7 @@ export default function WhatsAppChat() {
   
   const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
   const [selectedBackground, setSelectedBackground] = useState("default")
+  const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
   
   const backgroundOptions = [
     { id: "default", name: "Default", uri: null },
@@ -161,7 +163,6 @@ export default function WhatsAppChat() {
   }
 
   const selectBackground = (backgroundId) => {
-    console.log('Selecting background:', backgroundId)
     setSelectedBackground(backgroundId)
     // Auto-apply the background when selected
     setBackgroundModalVisible(false)
@@ -175,9 +176,35 @@ export default function WhatsAppChat() {
     setBackgroundModalVisible(false)
   }
 
+  const pickProfileImage = async () => {
+    try {
+      // Request permission to access media library
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission Required", "Permission to access camera roll is required!")
+        return
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      })
+
+      if (!result.canceled) {
+        setProfileImageUri(result.assets[0].uri)
+        Alert.alert("Success", "Profile image updated!")
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to pick image. Please try again.")
+      console.error("Image picker error:", error)
+    }
+  }
+
   const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
-  console.log('Current selectedBackground:', selectedBackground)
-  console.log('Current background object:', currentBackground)
   
   const renderMainContent = () => (
     <>
@@ -189,12 +216,12 @@ export default function WhatsAppChat() {
             <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.unreadCount}>34</Text>
-          <View style={styles.profileContainer}>
-            <Image source={{ uri: "https://i.pravatar.cc/150?img=12" }} style={styles.profileImage} />
+          <TouchableOpacity style={styles.profileContainer} onPress={pickProfileImage}>
+            <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark" size={10} color="#fff" />
             </View>
-          </View>
+          </TouchableOpacity>
           <Text style={styles.contactName}>Derrick Koftown</Text>
         </View>
         <View style={styles.headerRight}>
