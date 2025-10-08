@@ -183,6 +183,9 @@ export default function WhatsAppChat() {
   }
 
   const currentBackground = backgroundOptions.find(bg => bg.id === selectedBackground)
+  console.log('Selected background ID:', selectedBackground)
+  console.log('Current background object:', currentBackground)
+  console.log('Background URI:', currentBackground?.uri)
   
   const renderMainContent = () => (
     <>
@@ -295,13 +298,13 @@ export default function WhatsAppChat() {
           source={{ uri: currentBackground?.uri }} 
           style={styles.backgroundImage}
           resizeMode="cover"
+          onError={(error) => console.log('ImageBackground error:', error)}
+          onLoad={() => console.log('ImageBackground loaded successfully')}
         >
-          <View style={styles.backgroundOverlay}>
-            <SafeAreaView style={styles.safeArea}>
-              <StatusBar barStyle="dark-content" />
-              {renderMainContent()}
-    </SafeAreaView>
-          </View>
+          <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle="dark-content" />
+            {renderMainContent()}
+          </SafeAreaView>
         </ImageBackground>
       )}
 
