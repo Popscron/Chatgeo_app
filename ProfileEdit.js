@@ -18,7 +18,8 @@ const ProfileEdit = ({
   profileImageUri, 
   onProfileImageChange,
   contactName,
-  onContactNameChange 
+  onContactNameChange,
+  onSwitchToBackground
 }) => {
   const [editContactName, setEditContactName] = useState(contactName);
 
@@ -75,9 +76,14 @@ const ProfileEdit = ({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit Profile</Text>
-            <TouchableOpacity onPress={cancelEdit} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#000" />
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity onPress={onSwitchToBackground} style={styles.switchButton}>
+                <Ionicons name="color-palette-outline" size={24} color="#25D366" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={cancelEdit} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
           </View>
           
           <View style={styles.modalBody}>
@@ -141,6 +147,16 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  switchButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F8F0',
   },
   modalTitle: {
     fontSize: 18,

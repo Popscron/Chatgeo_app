@@ -491,15 +491,19 @@ export default function WhatsAppChat() {
       />
 
 
-      {/* Profile Edit Modal */}
-      <ProfileEdit
-        visible={profileEditModalVisible}
-        onClose={() => setProfileEditModalVisible(false)}
-        profileImageUri={profileImageUri}
-        onProfileImageChange={setProfileImageUri}
-        contactName={contactName}
-        onContactNameChange={setContactName}
-      />
+            {/* Profile Edit Modal */}
+            <ProfileEdit
+              visible={profileEditModalVisible}
+              onClose={() => setProfileEditModalVisible(false)}
+              profileImageUri={profileImageUri}
+              onProfileImageChange={setProfileImageUri}
+              contactName={contactName}
+              onContactNameChange={setContactName}
+              onSwitchToBackground={() => {
+                setProfileEditModalVisible(false)
+                setBackgroundModalVisible(true)
+              }}
+            />
 
       {/* Chat Background Modal */}
       <ChatBackground
@@ -509,6 +513,10 @@ export default function WhatsAppChat() {
         onBackgroundSelect={handleBackgroundSelect}
         customBackgroundUri={customBackgroundUri}
         onCustomBackgroundChange={setCustomBackgroundUri}
+        onSwitchToProfile={() => {
+          setBackgroundModalVisible(false)
+          setProfileEditModalVisible(true)
+        }}
       />
     </View>
   )

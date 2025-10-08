@@ -18,7 +18,8 @@ const ChatBackground = ({
   selectedBackground, 
   onBackgroundSelect,
   customBackgroundUri,
-  onCustomBackgroundChange 
+  onCustomBackgroundChange,
+  onSwitchToProfile
 }) => {
   const backgroundOptions = [
     { id: "default", name: "Default", uri: null },
@@ -76,9 +77,14 @@ const ChatBackground = ({
         <View style={styles.backgroundModalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Choose Background</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#000" />
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity onPress={onSwitchToProfile} style={styles.switchButton}>
+                <Ionicons name="person-outline" size={24} color="#25D366" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
           </View>
           
           <ScrollView style={styles.backgroundGrid}>
@@ -151,6 +157,16 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  switchButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F8F0',
   },
   modalTitle: {
     fontSize: 18,
