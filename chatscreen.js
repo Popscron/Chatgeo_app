@@ -69,13 +69,22 @@ export default function WhatsAppChat() {
   const [contactName, setContactName] = useState("Derrick Koftown")
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
+  const inputWidthAnimation = useState(new Animated.Value(1))[0]
   const [inputText, setInputText] = useState("")
   const [showSendButton, setShowSendButton] = useState(false)
   
   // Handle text input changes
   const handleTextChange = (text) => {
     setInputText(text)
-    setShowSendButton(text.trim().length > 0)
+    const hasText = text.trim().length > 0
+    setShowSendButton(hasText)
+    
+    // Animate width expansion
+    Animated.timing(inputWidthAnimation, {
+      toValue: hasText ? 1.15 : 1, // Expand to 115% width when typing
+      duration: 300,
+      useNativeDriver: false, // Width animation needs layout
+    }).start()
   }
 
   // Handle send message
@@ -348,24 +357,32 @@ export default function WhatsAppChat() {
               ]}
             >
         <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
-          <View style={[styles.inputContent, showSendButton && styles.inputContentExpanded]}>
+          <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
               <Ionicons name="add" size={26} color="#5E5E5E" />
             </TouchableOpacity>
-            <View style={[styles.textInputContainer, showSendButton && styles.textInputContainerExpanded]}>
+            <Animated.View 
+              style={[
+                styles.textInputContainer, 
+                { 
+                  transform: [{ scaleX: inputWidthAnimation }],
+                  transformOrigin: 'left'
+                }
+              ]}
+            >
               <TextInput 
-                style={[styles.textInput, showSendButton && styles.textInputExpanded]} 
+                style={styles.textInput} 
                 placeholder="Message" 
                 placeholderTextColor="#999" 
                 multiline={true}
-                maxHeight={showSendButton ? 120 : 100}
+                maxHeight={100}
                 value={inputText}
                 onChangeText={handleTextChange}
               />
               <TouchableOpacity style={styles.emojiButton}>
                 <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
               </TouchableOpacity>
-            </View>
+            </Animated.View>
             {!showSendButton ? (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
@@ -670,10 +687,6 @@ const styles = StyleSheet.create({
     paddingBottom: 34, // Account for safe area
     minHeight: 60,
   },
-  inputContentExpanded: {
-    minHeight: 80, // Increased height when typing
-    paddingVertical: 12,
-  },
   inputIcon: {
     padding: 8,
   },
@@ -686,10 +699,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginHorizontal: 4,
   },
-  textInputContainerExpanded: {
-    borderRadius: 25, // Slightly more rounded when expanded
-    paddingHorizontal: 16,
-  },
   textInput: {
     flex: 1,
     fontSize: 16,
@@ -698,11 +707,6 @@ const styles = StyleSheet.create({
     minHeight: 40,
     maxHeight: 100,
     textAlignVertical: "top",
-  },
-  textInputExpanded: {
-    fontSize: 17, // Slightly larger text when typing
-    paddingVertical: 12,
-    minHeight: 50,
   },
   emojiButton: {
     padding: 4,
