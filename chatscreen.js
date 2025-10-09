@@ -208,8 +208,7 @@ export default function WhatsAppChat() {
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
+        allowsEditing: false,
         quality: 0.8,
       })
 
@@ -918,12 +917,14 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   imageMessageContainer: {
-    marginBottom: 4,
+    marginBottom: -8,
+    marginHorizontal: -13,
+    marginTop: 1,
   },
   messageImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 12,
-    marginBottom: 4,
+    width: 250,
+    height: 300,
+    borderRadius: 8,
+    marginBottom: 2,
   },
 })
