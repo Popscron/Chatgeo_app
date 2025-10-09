@@ -684,6 +684,16 @@ export default function WhatsAppChat() {
                         {message.text}
                       </Text>
                     ) : null}
+                    
+                    {/* Time and read ticks for images - positioned at bottom left */}
+                    <View style={styles.imageTimeContainer}>
+                      <Text style={styles.imageTime}>
+                        {message.time}
+                      </Text>
+                      {!message.isReceived && (
+                        <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                      )}
+                    </View>
                   </View>
                 ) : (
                   <Text style={[
@@ -698,35 +708,9 @@ export default function WhatsAppChat() {
                   </Text>
                 )}
                 
-                {isShortMessage ? (
-                  // Short message layout: text and time side by side
-                  <>
-                    <Text style={{
-                      fontSize: 11,
-                      color: "#667781",
-                      paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
-                      marginLeft: 8,
-                    }}>
-                      {message.time}
-                    </Text>
-                    {!message.isReceived && (
-                      <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
-                    )}
-                  </>
-                ) : (
-                  // Long message layout: time below text
-                  <View style={styles.messageFooter}>
-                    <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
-                      {message.time}
-                    </Text>
-                    {!message.isReceived && (
-                      <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
-                    )}
-                  </View>
-                )}
                 
-                {/* Moon Icon Bubble Tail - Only show on last message in sequence */}
-                {isLastInSequence && (
+                {/* Moon Icon Bubble Tail - Only show on last message in sequence, but not for images without caption */}
+                {isLastInSequence && !(message.type === "image" && (!message.text || message.text.trim().length === 0)) && (
                   <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
                     <MaterialIcons 
                       name="brightness-3" 
@@ -1207,14 +1191,26 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   imageMessageContainer: {
-    marginBottom: -1,
-    marginHorizontal: -13,
-    marginTop: 1,
+    marginBottom: 1,
+    marginHorizontal: -10,
+    marginTop: 2,
   },
   messageImage: {
     width: 250,
     height: 300,
-    borderRadius: 8,
+    borderRadius: 5,
     marginBottom: 2,
+  },
+  imageTimeContainer: {
+    position: "absolute",
+    bottom: 6,
+    right: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  imageTime: {
+    fontSize: 11,
+    color: "#FFFFFF",
+    marginRight: 4,
   },
 })
