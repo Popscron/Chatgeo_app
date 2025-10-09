@@ -228,16 +228,66 @@ export default function WhatsAppChat() {
       })
 
       if (!result.canceled) {
-        // Add image message to chat
-        const newMessage = {
-          id: Date.now(),
-          text: "",
-          isReceived: typingMode === "receiver", // Respect current typing mode
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          imageUri: result.assets[0].uri,
-          type: "image"
-        }
-        setMessages(prev => [...prev, newMessage])
+        console.log('Image picker result:', result)
+        console.log('Selected image URI:', result.assets[0].uri)
+        
+        // Ask user if they want to add caption or send as is
+        Alert.alert(
+          "Add Caption",
+          "Do you want to add a caption to this image?",
+          [
+            {
+              text: "Send as is",
+              onPress: () => {
+                // Add image message without caption
+                const newMessage = {
+                  id: Date.now(),
+                  text: "",
+                  isReceived: typingMode === "receiver",
+                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  imageUri: result.assets[0].uri,
+                  type: "image"
+                }
+                console.log('Creating image message without caption:', newMessage)
+                setMessages(prev => [...prev, newMessage])
+              }
+            },
+            {
+              text: "Add Caption",
+              onPress: () => {
+                // Show input dialog for caption
+                Alert.prompt(
+                  "Add Caption",
+                  "Enter a caption for your image:",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel"
+                    },
+                    {
+                      text: "Send",
+                      onPress: (caption) => {
+                        // Add image message with caption
+                        const newMessage = {
+                          id: Date.now(),
+                          text: caption || "",
+                          isReceived: typingMode === "receiver",
+                          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                          imageUri: result.assets[0].uri,
+                          type: "image"
+                        }
+                        console.log('Creating image message with caption:', newMessage)
+                        setMessages(prev => [...prev, newMessage])
+                      }
+                    }
+                  ],
+                  "plain-text",
+                  ""
+                )
+              }
+            }
+          ]
+        )
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image. Please try again.")
@@ -435,7 +485,7 @@ export default function WhatsAppChat() {
         alignItems: "flex-end", // Align items to bottom
         justifyContent: "space-between", // Space between message and time
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 3, // Reduced from 8 to 3 (5 steps = 10px)
         gap: 12, // 3 steps gap (4px per step = 12px)
       }
     }
@@ -470,7 +520,7 @@ export default function WhatsAppChat() {
       return {
         fontSize: 11, // Keep original font size
         color: "#667781", // Keep original color for both sent and received
-        paddingTop: 4, // Padding top for time
+        paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
       }
     }
@@ -543,9 +593,9 @@ export default function WhatsAppChat() {
             { opacity: dateSeparatorAnimation }
           ]}
         >
-          <View style={styles.dateBadge}>
+          <BlurView intensity={80} tint="light" style={styles.dateBadge}>
             <Text style={styles.dateText}>Monday</Text>
-          </View>
+          </BlurView>
         </Animated.View>
       )}
 
@@ -576,10 +626,11 @@ export default function WhatsAppChat() {
 
         {/* Dynamic Messages */}
         {messages.map((message) => {
-          const charCount = message.text.length
-          const isShortMessage = charCount <= 30
+          const charCount = message.text ? message.text.length : 0
+          const isShortMessage = charCount <= 30 && message.type !== "image" // Don't apply short layout to images
           
           console.log(`Message ${message.id}: "${message.text}" (${charCount} chars) - isShort: ${isShortMessage}`)
+          console.log(`Message type: ${message.type}`)
           console.log(`Message object:`, message)
           
           return (
@@ -597,20 +648,43 @@ export default function WhatsAppChat() {
                   alignItems: "flex-end",
                   justifyContent: "space-between",
                   paddingHorizontal: 16,
-                  paddingVertical: 8,
+                  paddingVertical: 3, // Reduced from 8 to 3 (5 steps = 10px)
                   gap: 12,
                 } : {}
               ]}>
-                <Text style={[
-                  message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
-                  isShortMessage ? {
-                    marginBottom: 0,
-                    fontSize: 16,
-                    color: "#000",
-                  } : {}
-                ]}>
-                  {message.text || "NO TEXT"}
-                </Text>
+                {message.type === "image" ? (
+                  <View style={styles.imageMessageContainer}>
+                    <Image 
+                      source={{ uri: message.imageUri }} 
+                      style={styles.messageImage}
+                      onError={(error) => console.log('Image load error:', error)}
+                      onLoad={() => console.log('Image loaded successfully:', message.imageUri)}
+                    />
+                    {message.text && message.text.trim().length > 0 ? (
+                      <Text style={[
+                        message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
+                        isShortMessage ? {
+                          marginBottom: 0,
+                          fontSize: 16,
+                          color: "#000",
+                        } : {}
+                      ]}>
+                        {message.text}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : (
+                  <Text style={[
+                    message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
+                    isShortMessage ? {
+                      marginBottom: 0,
+                      fontSize: 16,
+                      color: "#000",
+                    } : {}
+                  ]}>
+                    {message.text || "Empty message"}
+                  </Text>
+                )}
                 
                 {isShortMessage ? (
                   // Short message layout: text and time side by side
@@ -618,7 +692,7 @@ export default function WhatsAppChat() {
                     <Text style={{
                       fontSize: 11,
                       color: "#667781",
-                      paddingTop: 4,
+                      paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
                       marginLeft: 8,
                     }}>
                       {message.time}
@@ -639,11 +713,6 @@ export default function WhatsAppChat() {
                   </View>
                 )}
                 
-                {/* Bubble Tail */}
-                <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
-                  {/* Overlay only for sent bubble tail */}
-                  {!message.isReceived && <View style={styles.senderBubbleOverlay} />}
-                </View>
               </View>
             </TouchableOpacity>
           )
@@ -893,7 +962,7 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: "#E8D7C6", // Default background, will be overridden by dynamic style
+    backgroundColor: "#fff", // Default background, will be overridden by dynamic style
     paddingTop: 112, // Account for fixed header (adjusted)
     paddingBottom: 100, // Account for fixed input bar
   },
@@ -915,12 +984,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dateBadge: {
-    backgroundColor: "rgba(240, 235, 235, 0.86)",
     paddingHorizontal: 8,
     paddingVertical: 1,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(213, 204, 204, 0.77)",
+    overflow: "hidden", // Ensure blur effect is contained within rounded corners
   },
   dateText: {
     fontSize: 13,
@@ -963,9 +1030,9 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: "80%",
-    borderRadius: 10,
+    borderRadius: 15,
     padding: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 13, // Reduced from 16 to 13 (3 steps = 6px)
   },
   sentBubble: {
     backgroundColor: "#D9FDD3",
@@ -981,30 +1048,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
     position: "relative",
   },
-  sentBubbleTail: {
-    position: "absolute",
-    right: -20,
-    bottom: 0,
-    width: 20,
-    height: 20,
-    backgroundColor: "#D9FDD3",
- //   borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-  //  borderTopRightRadius: 2,
- //   borderBottomRightRadius: 2,
-  },
-  receivedBubbleTail: {
-    position: "absolute",
-    left: -20,
-    bottom: 0,
-    width: 20,
-    height: 16,
-    backgroundColor: "#FFFFFF",
-    borderTopRightRadius: 20,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 2,
-    borderBottomLeftRadius: 2,
-  },
   receiverBubbleOverlay: {
     position: "absolute",
     top: 0,
@@ -1017,34 +1060,21 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
     zIndex: 1,
   },
-  senderBubbleOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(217, 253, 211, 0.3)",
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-    borderTopRightRadius: 2,
-    borderBottomRightRadius: 2,
-    zIndex: 1,
-  },
   sentMessageText: {
     fontSize: 16,
     color: "#000",
-    marginBottom: 2,
+    marginBottom: 0, // Reduced from 2 to 0 (3 steps = 6px)
   },
   receivedMessageText: {
     fontSize: 16,
     color: "#000",
-    marginBottom: 2,
+    marginBottom: 0, // Reduced from 2 to 0 (3 steps = 6px)
   },
   messageFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: 1,
+    marginTop: 0, // Reduced from 1 to 0 (3 steps = 6px)
   },
   sentTime: {
     fontSize: 11,
