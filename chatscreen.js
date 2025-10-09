@@ -26,43 +26,7 @@ import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
 
 export default function WhatsAppChat() {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: "Hey! How are you doing?",
-      isReceived: true,
-      time: "11:25 AM",
-      status: "read"
-    },
-    {
-      id: 2,
-      text: "I'm doing great! Just working on some new projects. How about you?",
-      isReceived: false,
-      time: "11:26 AM",
-      status: "read"
-    },
-    {
-      id: 3,
-      text: "That sounds awesome! I'm also working on something exciting. Want to grab coffee later?",
-      isReceived: true,
-      time: "11:28 AM",
-      status: "read"
-    },
-    {
-      id: 4,
-      text: "Sure! I'd love to. What time works for you?",
-      isReceived: false,
-      time: "11:29 AM",
-      status: "read"
-    },
-    {
-      id: 5,
-      text: "hello",
-      isReceived: true,
-      time: "11:30 AM",
-      status: "read"
-    }
-  ])
+  const [messages, setMessages] = useState([])
 
   const [senderEditModalVisible, setSenderEditModalVisible] = useState(false)
   const [receiverEditModalVisible, setReceiverEditModalVisible] = useState(false)
