@@ -729,7 +729,7 @@ export default function WhatsAppChat() {
                 {isLastInSequence && (
                   <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
                     <MaterialIcons 
-                      name="brightness-2" 
+                      name="brightness-3" 
                       size={16} 
                       color={message.isReceived ? "#FFFFFF" : "#D9FDD3"}
                       style={{ transform: [{ rotate: message.isReceived ? '32deg' : '150deg' }] }}
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
   },
   messageRow: {
     flexDirection: "row",
-    marginVertical: 6,
+    marginVertical: 2,
     paddingHorizontal: 8,
     justifyContent: "center", // Center all messages
   },
