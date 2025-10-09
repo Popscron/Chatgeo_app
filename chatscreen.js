@@ -53,7 +53,7 @@ export default function WhatsAppChat() {
   const scrollTimeoutRef = useRef(null)
   const [readMode, setReadMode] = useState(false)
   const [useApiNames, setUseApiNames] = useState(false)
-  const [mondayText, setMondayText] = useState("Monday")
+  const [dateText, setDateText] = useState("Monday")
   
   // Handle text input changes
   const handleTextChange = (text) => {
@@ -559,7 +559,7 @@ export default function WhatsAppChat() {
           ]}
         >
           <BlurView intensity={80} tint="light" style={styles.dateBadge}>
-            <Text style={styles.dateText}>Monday</Text>
+            <Text style={styles.dateText}>{dateText}</Text>
           </BlurView>
         </Animated.View>
       )}
@@ -849,6 +849,8 @@ export default function WhatsAppChat() {
               onReadModeChange={setReadMode}
               useApiNames={useApiNames}
               onUseApiNamesChange={handleUseApiNamesChange}
+              dateText={dateText}
+              onDateTextChange={setDateText}
               onSwitchToBackground={() => {
                 setProfileEditModalVisible(false)
                 setBackgroundModalVisible(true)
@@ -979,7 +981,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 13,
-    color: "#000",
+    color: "#000000",
     fontWeight: "600",
   },
   systemMessage: {

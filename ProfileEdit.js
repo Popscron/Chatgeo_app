@@ -28,14 +28,14 @@ const ProfileEdit = ({
   onReadModeChange,
   useApiNames,
   onUseApiNamesChange,
-  mondayText,
-  onMondayTextChange
+  dateText,
+  onDateTextChange
 }) => {
   const [editContactName, setEditContactName] = useState(contactName);
   const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
   const [isReadMode, setIsReadMode] = useState(readMode || false);
   const [useApiNamesToggle, setUseApiNamesToggle] = useState(useApiNames || false);
-  const [editMondayText, setEditMondayText] = useState(mondayText || "Monday");
+  const [editDateText, setEditDateText] = useState(dateText || "Monday");
 
   // Sync state when modal opens
   useEffect(() => {
@@ -44,9 +44,9 @@ const ProfileEdit = ({
       setEditUnreadCount(unreadCount.toString());
       setIsReadMode(readMode || false);
       setUseApiNamesToggle(useApiNames || false);
-      setEditMondayText(mondayText || "Monday");
+      setEditDateText(dateText || "Monday");
     }
-  }, [visible, contactName, unreadCount, readMode, useApiNames, mondayText]);
+  }, [visible, contactName, unreadCount, readMode, useApiNames, dateText]);
 
   const pickProfileImage = async () => {
     try {
@@ -98,8 +98,8 @@ const ProfileEdit = ({
       return
     }
     
-    // Validate Monday text
-    if (!editMondayText.trim()) {
+    // Validate date text
+    if (!editDateText.trim()) {
       Alert.alert("Error", "Date text cannot be empty")
       return
     }
@@ -108,7 +108,7 @@ const ProfileEdit = ({
     onUnreadCountChange(unreadValue)
     onReadModeChange(isReadMode)
     onUseApiNamesChange(useApiNamesToggle)
-    onMondayTextChange(editMondayText.trim())
+    onDateTextChange(editDateText.trim())
     onClose()
   }
 
@@ -123,7 +123,7 @@ const ProfileEdit = ({
   const cancelEdit = () => {
     setEditContactName(contactName)
     setEditUnreadCount(unreadCount.toString())
-    setEditMondayText(mondayText || "Monday")
+    setEditDateText(dateText || "Monday")
     onClose()
   }
 
@@ -220,8 +220,8 @@ const ProfileEdit = ({
               <Text style={styles.sectionTitle}>Date Text</Text>
               <TextInput
                 style={styles.dateTextInput}
-                value={editMondayText}
-                onChangeText={setEditMondayText}
+                value={editDateText}
+                onChangeText={setEditDateText}
                 placeholder="Enter date text (e.g., Monday)"
                 maxLength={20}
               />
