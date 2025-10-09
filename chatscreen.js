@@ -18,7 +18,7 @@ import {
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
@@ -75,21 +75,32 @@ export default function WhatsAppChat() {
   const [showSendButton, setShowSendButton] = useState(false)
   const [isTypingMode, setIsTypingMode] = useState(false)
   const [typingMode, setTypingMode] = useState("") // "receiver" or "sender"
+  const [isScrolling, setIsScrolling] = useState(false)
+  const [showDateSeparator, setShowDateSeparator] = useState(false)
+  const dateSeparatorAnimation = useState(new Animated.Value(0))[0]
+  const scrollTimeoutRef = useRef(null)
   
   // Handle text input changes
   const handleTextChange = (text) => {
     setInputText(text)
     const hasText = text.trim().length > 0
-    setShowSendButton(hasText && isTypingMode)
+    
+    // Auto-enable typing mode when user starts typing
+    if (hasText && !isTypingMode) {
+      setIsTypingMode(true)
+      setTypingMode("sender") // Default to sender when typing
+    }
+    
+    setShowSendButton(hasText)
     
     // Animate width expansion only when user actually types text
-    if (isTypingMode && hasText) {
+    if (hasText) {
       Animated.timing(inputWidthAnimation, {
         toValue: 1.15, // Expand to 115% width when typing
         duration: 300,
         useNativeDriver: false, // Width animation needs layout
       }).start()
-    } else if (isTypingMode && !hasText) {
+    } else {
       // Contract back to normal when text is cleared
       Animated.timing(inputWidthAnimation, {
         toValue: 1,
@@ -228,6 +239,53 @@ export default function WhatsAppChat() {
     setProfileEditModalVisible(true)
   }
 
+  // Handle scroll events
+  const handleScrollBegin = () => {
+    console.log("Scroll begin triggered")
+    setIsScrolling(true)
+    setShowDateSeparator(true)
+    // Fade in animation
+    Animated.timing(dateSeparatorAnimation, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start()
+  }
+
+  const handleScrollEnd = () => {
+    console.log("Scroll end triggered")
+    setIsScrolling(false)
+    // Fade out animation
+    Animated.timing(dateSeparatorAnimation, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowDateSeparator(false)
+    })
+  }
+
+  const handleScroll = (event) => {
+    const { contentOffset } = event.nativeEvent
+    if (contentOffset.y > 0) {
+      console.log("Scroll detected")
+      if (!isScrolling) {
+        handleScrollBegin()
+      }
+      
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+      
+      // Set new timeout to hide date after scrolling stops
+      scrollTimeoutRef.current = setTimeout(() => {
+        console.log("Scroll timeout - hiding date")
+        handleScrollEnd()
+      }, 2000)
+    }
+  }
+
 
 
   // Get current background URI based on selection
@@ -293,9 +351,31 @@ export default function WhatsAppChat() {
       keyboardDidHideListener?.remove()
     }
   }, [inputContainerAnimation])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+    }
+  }, [])
   
   const renderMainContent = () => (
     <>
+      {/* Fixed Date Separator - Only show when scrolling */}
+      {showDateSeparator && (
+        <Animated.View 
+          style={[
+            styles.fixedDateSeparator,
+            { opacity: dateSeparatorAnimation }
+          ]}
+        >
+          <View style={styles.dateBadge}>
+            <Text style={styles.dateText}>Monday</Text>
+          </View>
+        </Animated.View>
+      )}
 
       {/* Chat Messages */}
             <ScrollView 
@@ -304,13 +384,13 @@ export default function WhatsAppChat() {
                 selectedBackground !== "default" && { backgroundColor: "transparent" }
               ]} 
               contentContainerStyle={styles.chatContent}
+              onScroll={handleScroll}
+              onScrollBeginDrag={handleScrollBegin}
+              onScrollEndDrag={handleScrollEnd}
+              onMomentumScrollBegin={handleScrollBegin}
+              onMomentumScrollEnd={handleScrollEnd}
+              scrollEventThrottle={16}
             >
-        {/* Date Separator */}
-        <View style={styles.dateSeparator}>
-          <View style={styles.dateBadge}>
-            <Text style={styles.dateText}>Monday</Text>
-          </View>
-        </View>
 
         {/* Encryption Message */}
         <View style={styles.systemMessage}>
@@ -336,24 +416,27 @@ export default function WhatsAppChat() {
                   {message.text ? (
                     <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                       {message.text}
-          </Text>
+                    </Text>
                   ) : null}
-        </View>
+                </View>
               ) : (
                 <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
                   {message.text}
                 </Text>
               )}
-            <View style={styles.messageFooter}>
+              <View style={styles.messageFooter}>
                 <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
                   {message.time}
                 </Text>
                 {!message.isReceived && (
-              <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                  <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
                 )}
               </View>
               {/* Bubble Tail */}
-              <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail} />
+              <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
+                {/* Overlay only for sent bubble tail */}
+                {!message.isReceived && <View style={styles.senderBubbleOverlay} />}
+              </View>
             </View>
           </TouchableOpacity>
         ))}
@@ -394,7 +477,11 @@ export default function WhatsAppChat() {
             <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
           </TouchableOpacity>
             </Animated.View>
-            {!isTypingMode ? (
+            {showSendButton ? (
+              <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+                <Ionicons name="send" size={24} color="#25D366" />
+              </TouchableOpacity>
+            ) : (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
                   <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
@@ -402,19 +489,6 @@ export default function WhatsAppChat() {
                 <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
                   <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
                 </TouchableOpacity>
-              </>
-            ) : showSendButton ? (
-              <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                <Ionicons name="send" size={24} color="#25D366" />
-              </TouchableOpacity>
-            ) : (
-              <>
-                <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-          <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
-        </TouchableOpacity>
-                <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-          <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
-        </TouchableOpacity>
               </>
             )}
       </View>
@@ -630,13 +704,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 12,
   },
+  fixedDateSeparator: {
+    position: "absolute",
+    top: 120, // Position below header
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    alignItems: "center",
+  },
   dateBadge: {
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: "rgba(240, 235, 235, 0.86)",
+    paddingHorizontal: 8,
+    paddingVertical: 1,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderColor: "rgba(213, 204, 204, 0.77)",
   },
   dateText: {
     fontSize: 13,
@@ -669,22 +751,22 @@ const styles = StyleSheet.create({
   },
   messageRow: {
     flexDirection: "row",
-    marginVertical: 2,
+    marginVertical: 6,
     paddingHorizontal: 8,
   },
   receivedRow: {
     justifyContent: "flex-start",
   },
   messageBubble: {
-    maxWidth: "85%",
-    borderRadius: 20,
-    padding: 12,
+    maxWidth: "80%",
+    borderRadius: 10,
+    padding: 1,
     paddingHorizontal: 16,
   },
   sentBubble: {
     backgroundColor: "#D9FDD3",
     marginLeft: "auto",
-    borderTopRightRadius: 4,
+   // borderTopRightRadius: 4,
     borderBottomRightRadius: 4,
     position: "relative",
   },
@@ -700,12 +782,12 @@ const styles = StyleSheet.create({
     right: -20,
     bottom: 0,
     width: 20,
-    height: 16,
+    height: 20,
     backgroundColor: "#D9FDD3",
-    borderTopLeftRadius: 20,
+ //   borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
-    borderTopRightRadius: 2,
-    borderBottomRightRadius: 2,
+  //  borderTopRightRadius: 2,
+ //   borderBottomRightRadius: 2,
   },
   receivedBubbleTail: {
     position: "absolute",
@@ -718,6 +800,31 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
     borderTopLeftRadius: 2,
     borderBottomLeftRadius: 2,
+  },
+  receiverBubbleOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 20,
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+    zIndex: 1,
+  },
+  senderBubbleOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(217, 253, 211, 0.3)",
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
+    zIndex: 1,
   },
   sentMessageText: {
     fontSize: 16,
