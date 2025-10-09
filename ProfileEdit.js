@@ -7,7 +7,9 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   Alert,
-  Image 
+  Image,
+  ScrollView,
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -25,12 +27,15 @@ const ProfileEdit = ({
   readMode,
   onReadModeChange,
   useApiNames,
-  onUseApiNamesChange
+  onUseApiNamesChange,
+  mondayText,
+  onMondayTextChange
 }) => {
   const [editContactName, setEditContactName] = useState(contactName);
   const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
   const [isReadMode, setIsReadMode] = useState(readMode || false);
   const [useApiNamesToggle, setUseApiNamesToggle] = useState(useApiNames || false);
+  const [editMondayText, setEditMondayText] = useState(mondayText || "Monday");
 
   // Sync state when modal opens
   useEffect(() => {
@@ -39,8 +44,9 @@ const ProfileEdit = ({
       setEditUnreadCount(unreadCount.toString());
       setIsReadMode(readMode || false);
       setUseApiNamesToggle(useApiNames || false);
+      setEditMondayText(mondayText || "Monday");
     }
-  }, [visible, contactName, unreadCount, readMode, useApiNames]);
+  }, [visible, contactName, unreadCount, readMode, useApiNames, mondayText]);
 
   const pickProfileImage = async () => {
     try {
@@ -92,10 +98,17 @@ const ProfileEdit = ({
       return
     }
     
+    // Validate Monday text
+    if (!editMondayText.trim()) {
+      Alert.alert("Error", "Date text cannot be empty")
+      return
+    }
+    
     onContactNameChange(editContactName.trim())
     onUnreadCountChange(unreadValue)
     onReadModeChange(isReadMode)
     onUseApiNamesChange(useApiNamesToggle)
+    onMondayTextChange(editMondayText.trim())
     onClose()
   }
 
@@ -110,6 +123,7 @@ const ProfileEdit = ({
   const cancelEdit = () => {
     setEditContactName(contactName)
     setEditUnreadCount(unreadCount.toString())
+    setEditMondayText(mondayText || "Monday")
     onClose()
   }
 
@@ -134,7 +148,7 @@ const ProfileEdit = ({
             </View>
           </View>
           
-          <View style={styles.modalBody}>
+          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
             {/* Profile Image Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Profile Picture</Text>
@@ -201,6 +215,19 @@ const ProfileEdit = ({
               <Text style={styles.helperText}>Number of unread messages to display</Text>
             </View>
 
+            {/* Date Text Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Date Text</Text>
+              <TextInput
+                style={styles.dateTextInput}
+                value={editMondayText}
+                onChangeText={setEditMondayText}
+                placeholder="Enter date text (e.g., Monday)"
+                maxLength={20}
+              />
+              <Text style={styles.helperText}>Text displayed in the date separator when scrolling</Text>
+            </View>
+
             {/* Read Mode Toggle Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Read Mode</Text>
@@ -224,7 +251,7 @@ const ProfileEdit = ({
               </Text>
             </View>
 
-          </View>
+          </ScrollView>
           
           <View style={styles.modalFooter}>
             <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit}>
@@ -240,19 +267,25 @@ const ProfileEdit = ({
   );
 };
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    width: '90%',
-    maxWidth: 400,
-    maxHeight: '80%',
+    width: '100%',
+    maxWidth: screenWidth > 600 ? 500 : screenWidth * 0.95,
+    maxHeight: screenHeight * 0.9,
+    minHeight: screenHeight * 0.4,
+    flex: screenHeight < 600 ? 1 : 0,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -281,10 +314,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   modalBody: {
-    padding: 20,
+    padding: screenWidth < 400 ? 15 : 20,
+    flex: 1,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: screenHeight < 600 ? 15 : 20,
   },
   sectionTitle: {
     fontSize: 16,
@@ -335,6 +369,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     maxWidth: 100,
+  },
+  dateTextInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    textAlign: 'center',
   },
   modalFooter: {
     flexDirection: 'row',

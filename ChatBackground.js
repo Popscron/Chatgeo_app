@@ -22,7 +22,7 @@ const ChatBackground = ({
   onSwitchToProfile
 }) => {
   const backgroundOptions = [
-    { id: "default", name: "Default", uri: null },
+    { id: "default", name: "Default Chat Cover", uri: require('./assets/defualtbg.jpg') },
     { id: "defualtbg", name: "Default Background", uri: require('./assets/defualtbg.jpg') },
     { id: "gradient1", name: "Blue Gradient", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
     { id: "gradient2", name: "Purple Gradient", uri: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop" },
@@ -109,10 +109,10 @@ const ChatBackground = ({
                     <Text style={styles.customBackgroundText}>Add Photo</Text>
                   </View>
                 ) : background.id === "default" ? (
-                  <View style={styles.defaultBackgroundPreview}>
-                    <Ionicons name="chatbubbles" size={30} color="#25D366" />
-                    <Text style={styles.defaultBackgroundText}>Default</Text>
-                  </View>
+                  <Image 
+                    source={require('./assets/defualtbg.jpg')} 
+                    style={styles.backgroundPreview} 
+                  />
                 ) : background.uri ? (
                   <Image 
                     source={typeof background.uri === 'string' ? { uri: background.uri } : background.uri} 

@@ -89,6 +89,7 @@ export default function WhatsAppChat() {
   const scrollTimeoutRef = useRef(null)
   const [readMode, setReadMode] = useState(false)
   const [useApiNames, setUseApiNames] = useState(false)
+  const [mondayText, setMondayText] = useState("Monday")
   
   // Handle text input changes
   const handleTextChange = (text) => {
@@ -643,7 +644,7 @@ export default function WhatsAppChat() {
               key={message.id} 
               style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}
               onPress={() => handleMessagePress(message)}
-              activeOpacity={0.7}
+              activeOpacity={readMode ? 1 : 0.7}
             >
               <View style={[
                 styles.messageBubble, 
@@ -685,8 +686,13 @@ export default function WhatsAppChat() {
                       </Text>
                     ) : null}
                     
-                    {/* Time and read ticks for images - positioned at bottom left */}
-                    <View style={styles.imageTimeContainer}>
+                    {/* Time and read ticks for images - dynamic positioning based on caption */}
+                    <View style={[
+                      styles.imageTimeContainer,
+                      message.text && message.text.trim().length > 0 
+                        ? styles.imageTimeWithCaption 
+                        : styles.imageTimeWithoutCaption
+                    ]}>
                       <Text style={styles.imageTime}>
                         {message.time}
                       </Text>
@@ -708,6 +714,17 @@ export default function WhatsAppChat() {
                   </Text>
                 )}
                 
+                {/* Time and read ticks for text messages */}
+                {message.type !== "image" && (
+                  <View style={styles.messageFooter}>
+                    <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
+                      {message.time}
+                    </Text>
+                    {!message.isReceived && (
+                      <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                    )}
+                  </View>
+                )}
                 
                 {/* Moon Icon Bubble Tail - Only show on last message in sequence, but not for images without caption */}
                 {isLastInSequence && !(message.type === "image" && (!message.text || message.text.trim().length === 0)) && (
@@ -1203,14 +1220,20 @@ const styles = StyleSheet.create({
   },
   imageTimeContainer: {
     position: "absolute",
-    bottom: 6,
-    right: 8,
     flexDirection: "row",
     alignItems: "center",
   },
+  imageTimeWithCaption: {
+    bottom: -2,
+    right: 8,
+  },
+  imageTimeWithoutCaption: {
+    bottom: 8,
+    right: 8,
+  },
   imageTime: {
     fontSize: 11,
-    color: "#FFFFFF",
+    color: "#333333",
     marginRight: 4,
   },
 })
