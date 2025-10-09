@@ -21,40 +21,57 @@ const ProfileEdit = ({
   onContactNameChange,
   unreadCount,
   onUnreadCountChange,
-  onSwitchToBackground
+  onSwitchToBackground,
+  readMode,
+  onReadModeChange,
+  useApiNames,
+  onUseApiNamesChange
 }) => {
   const [editContactName, setEditContactName] = useState(contactName);
   const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
+  const [isReadMode, setIsReadMode] = useState(readMode || false);
+  const [useApiNamesToggle, setUseApiNamesToggle] = useState(useApiNames || false);
 
   // Sync state when modal opens
   useEffect(() => {
     if (visible) {
       setEditContactName(contactName);
       setEditUnreadCount(unreadCount.toString());
+      setIsReadMode(readMode || false);
+      setUseApiNamesToggle(useApiNames || false);
     }
-  }, [visible, contactName, unreadCount]);
+  }, [visible, contactName, unreadCount, readMode, useApiNames]);
 
   const pickProfileImage = async () => {
     try {
+      console.log("pickProfileImage called")
+      
       // Request permission to access media library
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      console.log("Permission result:", permissionResult)
       
       if (permissionResult.granted === false) {
         Alert.alert("Permission Required", "Permission to access camera roll is required!")
         return
       }
 
+      console.log("Launching image picker...")
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaType.Images,
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
       })
+      
+      console.log("Image picker result:", result)
 
       if (!result.canceled) {
+        console.log("Image selected:", result.assets[0].uri)
         onProfileImageChange(result.assets[0].uri)
         Alert.alert("Success", "Profile image updated!")
+      } else {
+        console.log("Image picker canceled")
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image. Please try again.")
@@ -63,7 +80,7 @@ const ProfileEdit = ({
   }
 
   const saveContactName = () => {
-    if (!editContactName.trim()) {
+    if (!useApiNamesToggle && !editContactName.trim()) {
       Alert.alert("Error", "Contact name cannot be empty")
       return
     }
@@ -77,7 +94,17 @@ const ProfileEdit = ({
     
     onContactNameChange(editContactName.trim())
     onUnreadCountChange(unreadValue)
+    onReadModeChange(isReadMode)
+    onUseApiNamesChange(useApiNamesToggle)
     onClose()
+  }
+
+  const toggleReadMode = () => {
+    setIsReadMode(!isReadMode)
+  }
+
+  const toggleUseApiNames = () => {
+    setUseApiNamesToggle(!useApiNamesToggle)
   }
 
   const cancelEdit = () => {
@@ -123,13 +150,41 @@ const ProfileEdit = ({
             {/* Contact Name Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Contact Name</Text>
-              <TextInput
-                style={styles.contactNameInput}
-                value={editContactName}
-                onChangeText={setEditContactName}
-                placeholder="Enter contact name"
-                maxLength={50}
-              />
+              
+              {/* API Names Toggle */}
+              <TouchableOpacity style={styles.toggleContainer} onPress={toggleUseApiNames}>
+                <View style={styles.toggleInfo}>
+                  <Ionicons 
+                    name={useApiNamesToggle ? "globe" : "person"} 
+                    size={20} 
+                    color={useApiNamesToggle ? "#25D366" : "#666"} 
+                  />
+                  <Text style={[styles.toggleLabel, useApiNamesToggle && styles.toggleLabelActive]}>
+                    {useApiNamesToggle ? "Using Ghanaian Nicknames" : "Manual Name Entry"}
+                  </Text>
+                </View>
+                <View style={[styles.toggleSwitch, useApiNamesToggle && styles.toggleSwitchActive]}>
+                  <View style={[styles.toggleThumb, useApiNamesToggle && styles.toggleThumbActive]} />
+                </View>
+              </TouchableOpacity>
+              
+              <Text style={styles.helperText}>
+                {useApiNamesToggle 
+                  ? "Contact name will be generated from Ghanaian nicknames API (5 sources)" 
+                  : "Enter a custom contact name manually"
+                }
+              </Text>
+
+              {/* Manual Name Input - Only show when API names is OFF */}
+              {!useApiNamesToggle && (
+                <TextInput
+                  style={styles.contactNameInput}
+                  value={editContactName}
+                  onChangeText={setEditContactName}
+                  placeholder="Enter contact name"
+                  maxLength={50}
+                />
+              )}
             </View>
 
             {/* Unread Count Section */}
@@ -144,6 +199,29 @@ const ProfileEdit = ({
                 maxLength={3}
               />
               <Text style={styles.helperText}>Number of unread messages to display</Text>
+            </View>
+
+            {/* Read Mode Toggle Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Read Mode</Text>
+              <TouchableOpacity style={styles.toggleContainer} onPress={toggleReadMode}>
+                <View style={styles.toggleInfo}>
+                  <Ionicons 
+                    name={isReadMode ? "eye" : "eye-off"} 
+                    size={20} 
+                    color={isReadMode ? "#25D366" : "#666"} 
+                  />
+                  <Text style={[styles.toggleLabel, isReadMode && styles.toggleLabelActive]}>
+                    {isReadMode ? "Read Mode ON" : "Read Mode OFF"}
+                  </Text>
+                </View>
+                <View style={[styles.toggleSwitch, isReadMode && styles.toggleSwitchActive]}>
+                  <View style={[styles.toggleThumb, isReadMode && styles.toggleThumbActive]} />
+                </View>
+              </TouchableOpacity>
+              <Text style={styles.helperText}>
+                When ON, message editing will be disabled
+              </Text>
             </View>
 
           </View>
@@ -288,6 +366,56 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  toggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  toggleLabelActive: {
+    color: '#25D366',
+    fontWeight: '600',
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#DDD',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleSwitchActive: {
+    backgroundColor: '#25D366',
+  },
+  toggleThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    transform: [{ translateX: 20 }],
   },
 });
 

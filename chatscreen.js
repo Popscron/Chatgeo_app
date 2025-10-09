@@ -22,6 +22,7 @@ import { useState, useEffect, useRef } from "react"
 import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
+import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
 
 export default function WhatsAppChat() {
@@ -79,6 +80,8 @@ export default function WhatsAppChat() {
   const [showDateSeparator, setShowDateSeparator] = useState(false)
   const dateSeparatorAnimation = useState(new Animated.Value(0))[0]
   const scrollTimeoutRef = useRef(null)
+  const [readMode, setReadMode] = useState(false)
+  const [useApiNames, setUseApiNames] = useState(false)
   
   // Handle text input changes
   const handleTextChange = (text) => {
@@ -158,6 +161,11 @@ export default function WhatsAppChat() {
   }
 
   const handleMessagePress = (message) => {
+    // Don't allow editing if read mode is enabled
+    if (readMode) {
+      return
+    }
+    
     setEditingMessage(message)
     setEditText(message.text)
     setEditTime(message.time)
@@ -238,18 +246,116 @@ export default function WhatsAppChat() {
     setProfileEditModalVisible(true)
   }
 
+  // Generate new Ghanaian nickname
+  const generateNewApiName = async () => {
+    try {
+      console.log("=== GENERATING NEW NICKNAME ===")
+      console.log("Current contact name:", contactName)
+      
+      // Test if the function is available
+      if (typeof generateGhanaianNickname !== 'function') {
+        console.error("generateGhanaianNickname is not a function!")
+        throw new Error("generateGhanaianNickname function not available")
+      }
+      
+      console.log("Calling generateGhanaianNickname...")
+      const newName = await generateGhanaianNickname()
+      console.log("Generated nickname from API:", newName)
+      
+      if (!newName) {
+        console.error("API returned empty name!")
+        throw new Error("API returned empty name")
+      }
+      
+      console.log("Setting contact name to:", newName)
+      setContactName(newName)
+      console.log("Contact name updated!")
+      
+      // Force immediate update
+      setTimeout(() => {
+        console.log("Forcing immediate update with:", newName)
+        setContactName(newName)
+      }, 50)
+      
+    } catch (error) {
+      console.error("Error generating Ghanaian nickname from API:", error)
+      console.log("Using fallback names...")
+      
+      // Fallback to a simple nickname if API fails
+      const fallbackNames = ["Kwame", "Akosua", "Kofi", "Adwoa", "Yaw", "Ama", "Kojo", "Efua", "Nana", "Osei", "Boateng", "Mensah", "Owusu", "Asante", "Darko"]
+      const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)]
+      
+      console.log("Setting fallback name:", randomName)
+      setContactName(randomName)
+      console.log("Fallback name updated!")
+      
+      // Force immediate update
+      setTimeout(() => {
+        console.log("Forcing immediate fallback update with:", randomName)
+        setContactName(randomName)
+      }, 50)
+    }
+  }
+
+  // Simple test function to verify the refresh works
+  const testRefresh = () => {
+    console.log("Test refresh called!")
+    const testNames = ["Kwame", "Akosua", "Kofi", "Adwoa", "Yaw", "Ama", "Kojo", "Efua", "Nana", "Osei"]
+    const randomName = testNames[Math.floor(Math.random() * testNames.length)]
+    console.log("Setting test name to:", randomName)
+    setContactName(randomName)
+    console.log("Test name set to:", randomName)
+  }
+
+  // Force update test
+  const forceUpdateTest = () => {
+    console.log("Force update test called!")
+    const timestamp = new Date().toLocaleTimeString()
+    const newName = `Test-${timestamp}`
+    console.log("Setting name to:", newName)
+    setContactName(newName)
+  }
+
+  // Simple name cycling test
+  const cycleNames = () => {
+    const names = ["Kwame", "Akosua", "Kofi", "Adwoa", "Yaw", "Ama", "Kojo", "Efua"]
+    const currentIndex = names.indexOf(contactName)
+    const nextIndex = (currentIndex + 1) % names.length
+    const nextName = names[nextIndex]
+    
+    console.log("Current name:", contactName)
+    console.log("Next name:", nextName)
+    setContactName(nextName)
+    console.log("Name set to:", nextName)
+  }
+
+  // Handle API names toggle
+  const handleUseApiNamesChange = (useApi) => {
+    setUseApiNames(useApi)
+    if (useApi) {
+      generateNewApiName()
+    }
+  }
+
+  // Test function to manually show date separator
+  const testDateSeparator = () => {
+    console.log("Testing date separator")
+    setShowDateSeparator(true)
+    Animated.timing(dateSeparatorAnimation, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start()
+  }
+
 
   // Handle scroll events
   const handleScrollBegin = () => {
     console.log("Scroll begin triggered")
     setIsScrolling(true)
     setShowDateSeparator(true)
-    // Fade in animation
-    Animated.timing(dateSeparatorAnimation, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start()
+    // Instant appearance - no animation delay
+    dateSeparatorAnimation.setValue(1)
   }
 
   const handleScrollEnd = () => {
@@ -267,11 +373,13 @@ export default function WhatsAppChat() {
 
   const handleScroll = (event) => {
     const { contentOffset } = event.nativeEvent
+    console.log("Scroll event fired, contentOffset.y:", contentOffset.y)
+    
+    // Always show date when scrolling (any amount)
     if (contentOffset.y > 0) {
-      console.log("Scroll detected")
-      if (!isScrolling) {
-        handleScrollBegin()
-      }
+      console.log("Scroll detected - showing date")
+      // Always trigger show date immediately
+      handleScrollBegin()
       
       // Clear existing timeout
       if (scrollTimeoutRef.current) {
@@ -282,7 +390,7 @@ export default function WhatsAppChat() {
       scrollTimeoutRef.current = setTimeout(() => {
         console.log("Scroll timeout - hiding date")
         handleScrollEnd()
-      }, 2000)
+      }, 60000) // 1 minute (60 seconds) timeout
     }
   }
 
@@ -383,13 +491,14 @@ export default function WhatsAppChat() {
                 styles.chatContainer, 
                 selectedBackground !== "default" && { backgroundColor: "transparent" }
               ]} 
-              contentContainerStyle={styles.chatContent}
+              contentContainerStyle={[styles.chatContent, { minHeight: 1000 }]}
               onScroll={handleScroll}
               onScrollBeginDrag={handleScrollBegin}
               onScrollEndDrag={handleScrollEnd}
               onMomentumScrollBegin={handleScrollBegin}
               onMomentumScrollEnd={handleScrollEnd}
               scrollEventThrottle={16}
+              showsVerticalScrollIndicator={true}
             >
 
         {/* Encryption Message 
@@ -509,22 +618,23 @@ export default function WhatsAppChat() {
           <Text style={styles.unreadCount}>{unreadCount}</Text>
           <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
             <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark" size={10} color="#fff" />
-            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleProfilePress}>
             <Text style={styles.contactName}>{contactName}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={useApiNames ? async () => {
+            console.log("Video icon pressed - generating new nickname!")
+            await generateNewApiName()
+            console.log("generateNewApiName completed!")
+          } : undefined}>
             <Ionicons name="videocam-outline" size={26} color="#000" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="call-outline" size={24} color="#000" />
           </TouchableOpacity>
-        
+         
         </View>
         </View>
       </BlurView>
@@ -588,6 +698,10 @@ export default function WhatsAppChat() {
               onContactNameChange={setContactName}
               unreadCount={unreadCount}
               onUnreadCountChange={setUnreadCount}
+              readMode={readMode}
+              onReadModeChange={setReadMode}
+              useApiNames={useApiNames}
+              onUseApiNamesChange={handleUseApiNamesChange}
               onSwitchToBackground={() => {
                 setProfileEditModalVisible(false)
                 setBackgroundModalVisible(true)
@@ -917,7 +1031,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   imageMessageContainer: {
-    marginBottom: -8,
+    marginBottom: -1,
     marginHorizontal: -13,
     marginTop: 1,
   },
