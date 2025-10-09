@@ -54,6 +54,13 @@ export default function WhatsAppChat() {
       isReceived: false,
       time: "11:29 AM",
       status: "read"
+    },
+    {
+      id: 5,
+      text: "hello",
+      isReceived: true,
+      time: "11:30 AM",
+      status: "read"
     }
   ])
 
@@ -414,7 +421,63 @@ export default function WhatsAppChat() {
     return predefinedBackgrounds[selectedBackground] || null
   }
 
+
   const currentBackgroundUri = getCurrentBackgroundUri()
+
+  // Function to get message bubble styling for short messages
+  const getMessageBubbleStyle = (message) => {
+    const charCount = message.text.length
+    
+    // Consider messages with 30 or fewer characters as short
+    if (charCount <= 30) {
+      return {
+        flexDirection: "row", // Horizontal layout
+        alignItems: "flex-end", // Align items to bottom
+        justifyContent: "space-between", // Space between message and time
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        gap: 12, // 3 steps gap (4px per step = 12px)
+      }
+    }
+    
+    return {} // Default styling for long messages
+  }
+
+  // Function to get message text styling for short messages
+  const getMessageTextStyle = (message) => {
+    const charCount = message.text.length
+    
+    // For short messages, remove marginBottom to work with flex layout
+    if (charCount <= 30) {
+      return {
+        fontSize: 16,
+        color: "#000",
+        marginBottom: 0, // Remove default margin
+        flex: 1, // Take available space
+      }
+    }
+    
+    // Default text styling for long messages
+    return message.isReceived ? styles.receivedMessageText : styles.sentMessageText
+  }
+
+  // Function to get time styling for short messages
+  const getTimeStyle = (message) => {
+    const charCount = message.text.length
+    
+    // For short messages, add padding top but keep original colors
+    if (charCount <= 30) {
+      return {
+        fontSize: 11, // Keep original font size
+        color: "#667781", // Keep original color for both sent and received
+        paddingTop: 4, // Padding top for time
+        marginLeft: 8, // Small gap from text
+      }
+    }
+    
+    // Default time styling for long messages
+    return message.isReceived ? styles.receivedTime : styles.sentTime
+  }
 
   // Keyboard event listeners with immediate smooth transitions
   useEffect(() => {
@@ -512,44 +575,79 @@ export default function WhatsAppChat() {
         </View>*/}
 
         {/* Dynamic Messages */}
-        {messages.map((message) => (
-          <TouchableOpacity 
-            key={message.id} 
-            style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}
-            onPress={() => handleMessagePress(message)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.messageBubble, message.isReceived ? styles.receivedBubble : styles.sentBubble]}>
-              {message.type === "image" ? (
-                <View style={styles.imageMessageContainer}>
-                  <Image source={{ uri: message.imageUri }} style={styles.messageImage} />
-                  {message.text ? (
-                    <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
-                      {message.text}
+        {messages.map((message) => {
+          const charCount = message.text.length
+          const isShortMessage = charCount <= 30
+          
+          console.log(`Message ${message.id}: "${message.text}" (${charCount} chars) - isShort: ${isShortMessage}`)
+          console.log(`Message object:`, message)
+          
+          return (
+            <TouchableOpacity 
+              key={message.id} 
+              style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}
+              onPress={() => handleMessagePress(message)}
+              activeOpacity={0.7}
+            >
+              <View style={[
+                styles.messageBubble, 
+                message.isReceived ? styles.receivedBubble : styles.sentBubble,
+                isShortMessage ? {
+                  flexDirection: "row",
+                  alignItems: "flex-end",
+                  justifyContent: "space-between",
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  gap: 12,
+                } : {}
+              ]}>
+                <Text style={[
+                  message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
+                  isShortMessage ? {
+                    marginBottom: 0,
+                    fontSize: 16,
+                    color: "#000",
+                  } : {}
+                ]}>
+                  {message.text || "NO TEXT"}
+                </Text>
+                
+                {isShortMessage ? (
+                  // Short message layout: text and time side by side
+                  <>
+                    <Text style={{
+                      fontSize: 11,
+                      color: "#667781",
+                      paddingTop: 4,
+                      marginLeft: 8,
+                    }}>
+                      {message.time}
                     </Text>
-                  ) : null}
-                </View>
-              ) : (
-                <Text style={message.isReceived ? styles.receivedMessageText : styles.sentMessageText}>
-                  {message.text}
-                </Text>
-              )}
-              <View style={styles.messageFooter}>
-                <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
-                  {message.time}
-                </Text>
-                {!message.isReceived && (
-                  <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                    {!message.isReceived && (
+                      <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                    )}
+                  </>
+                ) : (
+                  // Long message layout: time below text
+                  <View style={styles.messageFooter}>
+                    <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
+                      {message.time}
+                    </Text>
+                    {!message.isReceived && (
+                      <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                    )}
+                  </View>
                 )}
+                
+                {/* Bubble Tail */}
+                <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
+                  {/* Overlay only for sent bubble tail */}
+                  {!message.isReceived && <View style={styles.senderBubbleOverlay} />}
+                </View>
               </View>
-              {/* Bubble Tail */}
-              <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
-                {/* Overlay only for sent bubble tail */}
-                {!message.isReceived && <View style={styles.senderBubbleOverlay} />}
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          )
+        })}
       </ScrollView>
 
       {/* Input Bar */}
@@ -858,9 +956,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginVertical: 6,
     paddingHorizontal: 8,
+    justifyContent: "center", // Center all messages
   },
   receivedRow: {
-    justifyContent: "flex-start",
+    justifyContent: "center", // Center received messages too
   },
   messageBubble: {
     maxWidth: "80%",
