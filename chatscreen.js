@@ -239,6 +239,7 @@ export default function WhatsAppChat() {
     setProfileEditModalVisible(true)
   }
 
+
   // Handle scroll events
   const handleScrollBegin = () => {
     console.log("Scroll begin triggered")
@@ -392,14 +393,14 @@ export default function WhatsAppChat() {
               scrollEventThrottle={16}
             >
 
-        {/* Encryption Message */}
+        {/* Encryption Message 
         <View style={styles.systemMessage}>
           <Ionicons name="lock-closed" size={14} color="#5E5E5E" style={styles.lockIcon} />
           <Text style={styles.systemMessageText}>
             Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them.{" "}
             <Text style={styles.learnMore}>Learn more</Text>
           </Text>
-        </View>
+        </View>*/}
 
         {/* Dynamic Messages */}
         {messages.map((message) => (
@@ -524,9 +525,7 @@ export default function WhatsAppChat() {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="call-outline" size={24} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="ellipsis-vertical" size={20} color="#000" />
-          </TouchableOpacity>
+        
         </View>
         </View>
       </BlurView>
@@ -645,7 +644,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    padding: 4,
+    padding: -8,
   },
   unreadCount: {
     fontSize: 18,
@@ -726,7 +725,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   systemMessage: {
-    backgroundColor: "#F7EFE5",
+    backgroundColor: "#F0E0C2",
     borderRadius: 8,
     padding: 12,
     marginVertical: 8,
@@ -737,11 +736,12 @@ const styles = StyleSheet.create({
   lockIcon: {
     marginRight: 6,
     marginTop: 2,
+    paddingHorizontal:10
   },
   systemMessageText: {
     fontSize: 14,
-    color: "#5E5E5E",
-    lineHeight: 20,
+    color: "#000",
+    lineHeight: 15,
     flex: 1,
     textAlign: "center",
   },
@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    marginTop: 2,
+    marginTop: 1,
   },
   sentTime: {
     fontSize: 11,
