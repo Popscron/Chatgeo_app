@@ -3,6 +3,7 @@
     "name": "Minichat",
     "slug": "minichat",
     "version": "1.0.0",
+    "owner": "popscorn",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,16 +14,21 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.whatsappclone.app"
+      "bundleIdentifier": "com.minichat.app2024",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.minichat.app2024",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#008069"
       },
       "permissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -39,6 +45,12 @@
           "cameraPermission": "The app accesses your camera to let you take photos."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b8bbc7d6-9aeb-46ef-8795-68332e8d9724"
+      }
+    }
   }
 }
