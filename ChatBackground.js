@@ -23,6 +23,7 @@ const ChatBackground = ({
 }) => {
   const backgroundOptions = [
     { id: "default", name: "Default", uri: null },
+    { id: "defualtbg", name: "Default Background", uri: require('./assets/defualtbg.jpg') },
     { id: "gradient1", name: "Blue Gradient", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
     { id: "gradient2", name: "Purple Gradient", uri: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop" },
     { id: "gradient3", name: "Green Gradient", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
@@ -49,8 +50,7 @@ const ChatBackground = ({
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [9, 16], // Portrait aspect ratio for chat background
+        allowsEditing: false,
         quality: 0.8,
       })
 
@@ -108,8 +108,16 @@ const ChatBackground = ({
                     <Ionicons name="camera" size={30} color="#25D366" />
                     <Text style={styles.customBackgroundText}>Add Photo</Text>
                   </View>
+                ) : background.id === "default" ? (
+                  <View style={styles.defaultBackgroundPreview}>
+                    <Ionicons name="chatbubbles" size={30} color="#25D366" />
+                    <Text style={styles.defaultBackgroundText}>Default</Text>
+                  </View>
                 ) : background.uri ? (
-                  <Image source={{ uri: background.uri }} style={styles.backgroundPreview} />
+                  <Image 
+                    source={typeof background.uri === 'string' ? { uri: background.uri } : background.uri} 
+                    style={styles.backgroundPreview} 
+                  />
                 ) : (
                   <View style={styles.defaultBackgroundPreview}>
                     <Text style={styles.defaultBackgroundText}>Default</Text>

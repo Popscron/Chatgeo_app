@@ -399,6 +399,7 @@ export default function WhatsAppChat() {
   // Get current background URI based on selection
   const getCurrentBackgroundUri = () => {
     if (selectedBackground === "default") return null
+    if (selectedBackground === "defualtbg") return require('./assets/defualtbg.jpg')
     if (selectedBackground === "custom") return customBackgroundUri
     
     // Predefined backgrounds
@@ -639,29 +640,20 @@ export default function WhatsAppChat() {
         </View>
       </BlurView>
 
-      {selectedBackground === "default" ? (
-        <BlurView intensity={20} tint="light" style={styles.container}>
+      <ImageBackground 
+        source={selectedBackground === "default" ? null : (typeof currentBackgroundUri === 'string' ? { uri: currentBackgroundUri } : currentBackgroundUri)} 
+        style={styles.backgroundImage}
+        resizeMode="cover"
+        onError={(error) => console.log('ImageBackground error:', error)}
+        onLoad={() => console.log('ImageBackground loaded successfully')}
+      >
+        <View style={styles.backgroundOverlay}>
           <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="dark-content" />
             {renderMainContent()}
           </SafeAreaView>
-        </BlurView>
-      ) : (
-        <ImageBackground 
-          source={{ uri: currentBackgroundUri }} 
-          style={styles.backgroundImage}
-          resizeMode="cover"
-          onError={(error) => console.log('ImageBackground error:', error)}
-          onLoad={() => console.log('ImageBackground loaded successfully')}
-        >
-          <View style={styles.backgroundOverlay}>
-            <SafeAreaView style={styles.safeArea}>
-              <StatusBar barStyle="dark-content" />
-              {renderMainContent()}
-    </SafeAreaView>
-          </View>
-        </ImageBackground>
-      )}
+        </View>
+      </ImageBackground>
 
       {/* Sender Edit Modal */}
       <SenderEditModal
