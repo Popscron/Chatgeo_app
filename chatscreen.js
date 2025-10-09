@@ -1037,15 +1037,15 @@ const styles = StyleSheet.create({
   sentBubble: {
     backgroundColor: "#D9FDD3",
     marginLeft: "auto",
-   // borderTopRightRadius: 4,
-    borderBottomRightRadius: 4,
+   borderTopRightRadius: 10,
+    borderBottomRightRadius: 0,
     position: "relative",
   },
   receivedBubble: {
     backgroundColor: "#FFFFFF",
     marginRight: "auto",
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 0,
     position: "relative",
   },
   receiverBubbleOverlay: {
