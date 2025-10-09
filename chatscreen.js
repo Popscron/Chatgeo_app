@@ -625,13 +625,18 @@ export default function WhatsAppChat() {
         </View>*/}
 
         {/* Dynamic Messages */}
-        {messages.map((message) => {
+        {messages.map((message, index) => {
           const charCount = message.text ? message.text.length : 0
           const isShortMessage = charCount <= 30 && message.type !== "image" // Don't apply short layout to images
+          
+          // Check if this is the last message in a consecutive sequence from the same sender
+          const isLastInSequence = index === messages.length - 1 || 
+            messages[index + 1].isReceived !== message.isReceived
           
           console.log(`Message ${message.id}: "${message.text}" (${charCount} chars) - isShort: ${isShortMessage}`)
           console.log(`Message type: ${message.type}`)
           console.log(`Message object:`, message)
+          console.log(`Is last in sequence: ${isLastInSequence}`)
           
           return (
             <TouchableOpacity 
@@ -650,7 +655,14 @@ export default function WhatsAppChat() {
                   paddingHorizontal: 16,
                   paddingVertical: 3, // Reduced from 8 to 3 (5 steps = 10px)
                   gap: 12,
-                } : {}
+                } : {},
+                // Add border radius for consecutive messages
+                !isLastInSequence && {
+                  ...(message.isReceived 
+                    ? { borderBottomLeftRadius: 10 } 
+                    : { borderBottomRightRadius: 10 }
+                  )
+                }
               ]}>
                 {message.type === "image" ? (
                   <View style={styles.imageMessageContainer}>
@@ -713,6 +725,13 @@ export default function WhatsAppChat() {
                   </View>
                 )}
                 
+                {/* Curved Bubble Tail - Only show on last message in sequence */}
+                {isLastInSequence && (
+                  <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
+                    {/* Overlay only for sent bubble tail */}
+                    {!message.isReceived && <View style={styles.senderBubbleOverlay} />}
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           )
@@ -1047,6 +1066,45 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 0,
     position: "relative",
+  },
+  sentBubbleTail: {
+    position: "absolute",
+    right: -5,
+    bottom: -3,
+    width:5,
+    height: 7,
+    backgroundColor: "#D9FDD3",
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 100,
+    borderTopRightRadius: 100,
+    borderBottomRightRadius: 10,
+    transform: [{ rotate: '140deg' }],
+  },
+  receivedBubbleTail: {
+    position: "absolute",
+    left: -5,
+    bottom: -3,
+    width: 5,
+    height: 7,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 100,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 100,
+    transform: [{ rotate: '40deg' }],
+  },
+  senderBubbleOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(217, 253, 211, 0.3)",
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
+    zIndex: 1,
   },
   receiverBubbleOverlay: {
     position: "absolute",
