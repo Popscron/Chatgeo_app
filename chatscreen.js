@@ -725,11 +725,15 @@ export default function WhatsAppChat() {
                   </View>
                 )}
                 
-                {/* Curved Bubble Tail - Only show on last message in sequence */}
+                {/* Moon Icon Bubble Tail - Only show on last message in sequence */}
                 {isLastInSequence && (
                   <View style={message.isReceived ? styles.receivedBubbleTail : styles.sentBubbleTail}>
-                    {/* Overlay only for sent bubble tail */}
-                    {!message.isReceived && <View style={styles.senderBubbleOverlay} />}
+                    <MaterialIcons 
+                      name="brightness-2" 
+                      size={16} 
+                      color={message.isReceived ? "#FFFFFF" : "#D9FDD3"}
+                      style={{ transform: [{ rotate: message.isReceived ? '32deg' : '150deg' }] }}
+                    />
                   </View>
                 )}
               </View>
@@ -1069,29 +1073,22 @@ const styles = StyleSheet.create({
   },
   sentBubbleTail: {
     position: "absolute",
-    right: -2,
-    bottom: -2,
-    width:5,
-    height: 10,
-    backgroundColor: "#D9FDD3",
-   // borderTopLeftRadius: ,
-    borderBottomLeftRadius: 110,
-    borderTopRightRadius: 150,
-    borderBottomRightRadius: 1,
-    transform: [{ rotate: '140deg' }],
+    right: -15,
+    bottom: -7,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    
   },
   receivedBubbleTail: {
     position: "absolute",
-    left: -2,
-    bottom: -1,
-    width: 5,
-    height: 13,
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 5,
-    borderTopRightRadius: 100,
-    borderBottomRightRadius: 100,
-    transform: [{ rotate: '40deg' }],
+    left: -15,
+    bottom: -7,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
   },
   senderBubbleOverlay: {
     position: "absolute",
