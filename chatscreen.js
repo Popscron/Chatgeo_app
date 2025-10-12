@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
   },
   dateSeparator: {
     alignItems: "center",
-    marginVertical: 12,
+    marginVertical:4,
   },
   fixedDateSeparator: {
     position: "absolute",
@@ -1040,13 +1040,13 @@ const styles = StyleSheet.create({
   },
   messageRow: {
     flexDirection: "row",
-    marginVertical: 0,
+    marginVertical: 3, // Increased by 2 steps (8px) for gap between normal and short messages
     paddingHorizontal: 4,
     justifyContent: "center", // Center all messages
   },
   receivedRow: {
     justifyContent: "center", 
-    marginVertical: -2,
+    marginVertical: 3, // Increased by 2 steps (8px) from -2 to 6 for receiver message spacing
     
     // Center received messages too
   },
