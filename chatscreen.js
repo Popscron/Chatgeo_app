@@ -487,6 +487,8 @@ export default function WhatsAppChat() {
         color: "#667781", // Keep original color for both sent and received
         paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
+        // Add marginTop for receiver messages only
+        ...(message.isReceived ? { marginTop: 12 } : {})
       }
     }
     
@@ -1060,7 +1062,7 @@ const styles = StyleSheet.create({
     marginTop: 8, // Reduced by 1 step (4px) from 12px = 8px
   },
   receiverTextAfterImageSpacing: {
-    marginTop: 8, // Same spacing as sender for consistency
+    marginTop: 0, // Reduced by another 2 steps (4px) from 4px to 0px for receiver image-text gap
   },
   messageBubble: {
     borderRadius: 12,
@@ -1144,15 +1146,19 @@ const styles = StyleSheet.create({
   sentTime: {
     fontSize: 11,
     color: "#667781",
-    marginRight: 4,
+    marginRight: 2,
+    marginBottom:-10,
+  marginHorizontal:8
   },
   receivedTime: {
     fontSize: 11,
     color: "#667781",
     alignSelf: "flex-end",
+    marginBottom:-1
   },
   checkmark: {
-    marginLeft: 2,
+  //  marginLeft: 2,
+    marginBottom:-5
   },
   // Background Styles
   backgroundImage: {
