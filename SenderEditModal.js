@@ -56,7 +56,8 @@ const SenderEditModal = ({
     }
   }
   const handleSave = () => {
-    if (!editText.trim()) {
+    // Only validate text for non-image messages
+    if (message?.type !== "image" && !editText.trim()) {
       Alert.alert("Error", "Message text cannot be empty");
       return;
     }
