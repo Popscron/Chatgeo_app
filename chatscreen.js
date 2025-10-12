@@ -642,6 +642,8 @@ export default function WhatsAppChat() {
               <View style={[
                 styles.messageBubble, 
                 message.isReceived ? styles.receivedBubble : styles.sentBubble,
+                // Apply different maxWidth for text vs image messages
+                message.type === "image" ? { maxWidth: "80%" } : { maxWidth: "71%" },
                 isShortMessage ? {
                   flexDirection: "row",
                   alignItems: "flex-end",
@@ -726,7 +728,7 @@ export default function WhatsAppChat() {
                       name="brightness-3" 
                       size={16} 
                       color={message.isReceived ? "#FFFFFF" : "#D9FDD3"}
-                      style={{ transform: [{ rotate: message.isReceived ? '30deg' : '150deg' }] }}
+                      style={{ transform: [{ rotate: message.isReceived ? '25deg' : '140deg' }] }}
                     />
                   </View>
                 )}
@@ -1061,7 +1063,6 @@ const styles = StyleSheet.create({
     marginTop: 8, // Same spacing as sender for consistency
   },
   messageBubble: {
-    maxWidth: "80%",
     borderRadius: 12,
     padding: 1,
     paddingHorizontal: 13, // Reduced from 16 to 13 (3 steps = 6px)
