@@ -450,7 +450,7 @@ export default function WhatsAppChat() {
         alignItems: "flex-end", // Align items to bottom
         justifyContent: "space-between", // Space between message and time
         paddingHorizontal: 16,
-        paddingVertical: 3, // Reduced from 8 to 3 (5 steps = 10px)
+        paddingVertical: 6, // Reduced from 8 to 3 (5 steps = 10px)
         gap: 12, // 3 steps gap (4px per step = 12px)
       }
     }
@@ -618,7 +618,7 @@ export default function WhatsAppChat() {
                   alignItems: "flex-end",
                   justifyContent: "space-between",
                   paddingHorizontal: 16,
-                  paddingVertical: 3, // Reduced from 8 to 3 (5 steps = 10px)
+                  paddingVertical: 6, // Reduced from 8 to 3 (5 steps = 10px)
                   gap: 12,
                 } : {},
                 // Add border radius for consecutive messages
@@ -637,20 +637,20 @@ export default function WhatsAppChat() {
                       onError={(error) => console.log('Image load error:', error)}
                       onLoad={() => console.log('Image loaded successfully:', message.imageUri)}
                     />
+                    
+                    {/* Caption positioned below the image */}
                     {message.text && message.text.trim().length > 0 ? (
-                      <Text style={[
-                        message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
-                        isShortMessage ? {
-                          marginBottom: 0,
-                          fontSize: 16,
-                          color: "#000",
-                        } : {}
-                      ]}>
-                        {message.text}
-                      </Text>
+                      <View style={styles.imageCaptionContainer}>
+                        <Text style={[
+                          message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
+                          styles.imageCaptionText
+                        ]}>
+                          {message.text}
+                        </Text>
+                      </View>
                     ) : null}
                     
-                    {/* Time and read ticks for images - dynamic positioning based on caption */}
+                    {/* Time and read ticks for images */}
                     <View style={[
                       styles.imageTimeContainer,
                       message.text && message.text.trim().length > 0 
@@ -697,7 +697,7 @@ export default function WhatsAppChat() {
                       name="brightness-3" 
                       size={16} 
                       color={message.isReceived ? "#FFFFFF" : "#D9FDD3"}
-                      style={{ transform: [{ rotate: message.isReceived ? '32deg' : '150deg' }] }}
+                      style={{ transform: [{ rotate: message.isReceived ? '30deg' : '150deg' }] }}
                     />
                   </View>
                 )}
@@ -1012,15 +1012,18 @@ const styles = StyleSheet.create({
   messageRow: {
     flexDirection: "row",
     marginVertical: 2,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     justifyContent: "center", // Center all messages
   },
   receivedRow: {
-    justifyContent: "center", // Center received messages too
+    justifyContent: "center", 
+    marginVertical: 14,
+    
+    // Center received messages too
   },
   messageBubble: {
     maxWidth: "80%",
-    borderRadius: 15,
+    borderRadius: 12,
     padding: 1,
     paddingHorizontal: 13, // Reduced from 16 to 13 (3 steps = 6px)
   },
@@ -1183,6 +1186,16 @@ const styles = StyleSheet.create({
     height: 315,
     borderRadius: 5,
     marginBottom: 2,
+  },
+  imageCaptionContainer: {
+    paddingHorizontal: 13,
+    paddingVertical: -1,
+    marginTop: 4,
+  },
+  imageCaptionText: {
+    fontSize: 16,
+    color: "#000",
+    lineHeight: 20,
   },
   imageTimeContainer: {
     position: "absolute",
