@@ -38,7 +38,7 @@ export default function WhatsAppChat() {
   const [selectedBackground, setSelectedBackground] = useState("default")
   const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
   const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
-  const [contactName, setContactName] = useState("Derrick Koftown")
+  const [contactName, setContactName] = useState("MiniChat")
   const [unreadCount, setUnreadCount] = useState(34)
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
@@ -53,7 +53,7 @@ export default function WhatsAppChat() {
   const scrollTimeoutRef = useRef(null)
   const [readMode, setReadMode] = useState(false)
   const [useApiNames, setUseApiNames] = useState(false)
-  const [dateText, setDateText] = useState("Monday")
+  const [dateText, setDateText] = useState("Today")
   
   // Handle text input changes
   const handleTextChange = (text) => {
@@ -1179,8 +1179,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   messageImage: {
-    width: 250,
-    height: 300,
+    width: 280,
+    height: 315,
     borderRadius: 5,
     marginBottom: 2,
   },
@@ -1200,6 +1200,6 @@ const styles = StyleSheet.create({
   imageTime: {
     fontSize: 11,
     color: "#333333",
-    marginRight: 4,
+    marginRight: 1,
   },
 })
