@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -76,7 +78,11 @@ const SenderEditModal = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView 
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit Sender Message</Text>
@@ -89,12 +95,7 @@ const SenderEditModal = ({
             {/* Show image editing options if it's an image message */}
             {message?.type === "image" ? (
               <>
-                <Text style={styles.inputLabel}>Current Image:</Text>
                 <View style={styles.imagePreviewContainer}>
-                  <Image 
-                    source={{ uri: message.imageUri }} 
-                    style={styles.imagePreview}
-                  />
                   <TouchableOpacity style={styles.replaceImageButton} onPress={pickNewImage}>
                     <Ionicons name="camera" size={20} color="#fff" />
                     <Text style={styles.replaceImageText}>Replace Image</Text>
@@ -151,7 +152,7 @@ const SenderEditModal = ({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    minHeight: 80,
+    minHeight: 40,
     textAlignVertical: 'top',
   },
   editTimeInput: {
