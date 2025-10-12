@@ -598,6 +598,20 @@ export default function WhatsAppChat() {
           const isLastInSequence = index === messages.length - 1 || 
             messages[index + 1].isReceived !== message.isReceived
           
+          // Check if this is a sender text message following a sender image message
+          const isSenderTextAfterImage = !message.isReceived && 
+            message.type !== "image" && 
+            index > 0 && 
+            !messages[index - 1].isReceived && 
+            messages[index - 1].type === "image"
+          
+          // Check if this is a receiver text message following a receiver image message
+          const isReceiverTextAfterImage = message.isReceived && 
+            message.type !== "image" && 
+            index > 0 && 
+            messages[index - 1].isReceived && 
+            messages[index - 1].type === "image"
+          
           console.log(`Message ${message.id}: "${message.text}" (${charCount} chars) - isShort: ${isShortMessage}`)
           console.log(`Message type: ${message.type}`)
           console.log(`Message object:`, message)
@@ -606,7 +620,22 @@ export default function WhatsAppChat() {
           return (
             <TouchableOpacity 
               key={message.id} 
-              style={[styles.messageRow, message.isReceived ? styles.receivedRow : null]}
+              style={[
+                styles.messageRow, 
+                message.isReceived ? styles.receivedRow : null,
+                // Add extra spacing when transitioning between sender and receiver
+                index > 0 && messages[index - 1].isReceived !== message.isReceived 
+                  ? styles.messageTransitionSpacing 
+                  : null,
+                // Add extra spacing when sender sends text after image
+                isSenderTextAfterImage 
+                  ? styles.senderTextAfterImageSpacing 
+                  : null,
+                // Add extra spacing when receiver sends text after image
+                isReceiverTextAfterImage 
+                  ? styles.receiverTextAfterImageSpacing 
+                  : null
+              ]}
               onPress={() => handleMessagePress(message)}
               activeOpacity={readMode ? 1 : 0.7}
             >
@@ -1011,15 +1040,25 @@ const styles = StyleSheet.create({
   },
   messageRow: {
     flexDirection: "row",
-    marginVertical: 2,
+    marginVertical: 0,
     paddingHorizontal: 4,
     justifyContent: "center", // Center all messages
   },
   receivedRow: {
     justifyContent: "center", 
-    marginVertical: 14,
+    marginVertical: -2,
     
     // Center received messages too
+  },
+  messageTransitionSpacing: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  senderTextAfterImageSpacing: {
+    marginTop: 8, // Reduced by 1 step (4px) from 12px = 8px
+  },
+  receiverTextAfterImageSpacing: {
+    marginTop: 8, // Same spacing as sender for consistency
   },
   messageBubble: {
     maxWidth: "80%",
@@ -1212,7 +1251,7 @@ const styles = StyleSheet.create({
   },
   imageTime: {
     fontSize: 11,
-    color: "#333333",
+    color: "gray",
     marginRight: 1,
   },
 })
