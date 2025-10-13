@@ -444,7 +444,7 @@ export default function WhatsAppChat() {
     const charCount = message.text.length
     
     // Consider messages with 30 or fewer characters as short
-    if (charCount <= 30) {
+    if (charCount <= 25) {
       return {
         flexDirection: "row", // Horizontal layout
         alignItems: "flex-end", // Align items to bottom
@@ -463,7 +463,7 @@ export default function WhatsAppChat() {
     const charCount = message.text.length
     
     // For short messages, remove marginBottom to work with flex layout
-    if (charCount <= 30) {
+    if (charCount <= 25) {
       return {
         fontSize: 16,
         color: "#000",
@@ -481,7 +481,7 @@ export default function WhatsAppChat() {
     const charCount = message.text.length
     
     // For short messages, add padding top but keep original colors
-    if (charCount <= 30) {
+    if (charCount <= 25) {
       return {
         fontSize: 11, // Keep original font size
         color: "#667781", // Keep original color for both sent and received
@@ -594,7 +594,7 @@ export default function WhatsAppChat() {
         {/* Dynamic Messages */}
         {messages.map((message, index) => {
           const charCount = message.text ? message.text.length : 0
-          const isShortMessage = charCount <= 30 && message.type !== "image" // Don't apply short layout to images
+          const isShortMessage = charCount <= 25 && message.type !== "image" // Don't apply short layout to images
           
           // Check if this is the last message in a consecutive sequence from the same sender
           const isLastInSequence = index === messages.length - 1 || 
