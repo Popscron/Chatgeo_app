@@ -26,42 +26,50 @@ import ProfileEdit from './ProfileEdit'
 import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
 
-// Custom BlurView component with better device compatibility
+// Custom BlurView component with iOS compatibility
 const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) => {
-  // Create a more reliable blur effect using multiple layers
-  const blurStyle = {
-    ...style,
-    // Use a more opaque background for better visibility
-    backgroundColor: tint === 'light' ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.85)',
-    // Add border for better definition
-    borderWidth: 1,
-    borderColor: tint === 'light' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-    // Add backdrop filter for web compatibility
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-  };
-
-  // For now, let's use a reliable fallback that works on all devices
-  // The native BlurView has too many compatibility issues
-  return (
-    <View style={[
-      blurStyle,
-      {
-        // Add shadow for depth
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 5,
-        // Add subtle gradient for better visual effect
-        ...(Platform.OS === 'ios' && {
-          background: `linear-gradient(135deg, ${tint === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)'}, ${tint === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'})`,
-        }),
-      }
-    ]}>
-      {children}
-    </View>
-  );
+  if (Platform.OS === 'ios') {
+    // Try the standard BlurView first
+    try {
+      return (
+        <BlurView 
+          intensity={intensity} 
+          tint={tint} 
+          style={style}
+          experimentalBlurMethod="dimezisBlurView"
+          reducedTransparencyFallbackColor="rgba(255, 255, 255, 0.8)"
+        >
+          {children}
+        </BlurView>
+      );
+    } catch (error) {
+      // Fallback if BlurView fails
+      console.log('BlurView failed, using fallback:', error);
+      return (
+        <View style={[style, { backgroundColor: 'rgba(255, 255, 255, 0.8)' }]}>
+          {children}
+        </View>
+      );
+    }
+  } else {
+    // Enhanced Android fallback with better blur simulation
+    return (
+      <View style={[
+        style, 
+        { 
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          // Add shadow and border for better visual effect
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }
+      ]}>
+        {children}
+      </View>
+    );
+  }
 };
 
 export default function WhatsAppChat() {
