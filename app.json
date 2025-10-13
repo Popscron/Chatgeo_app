@@ -2,8 +2,8 @@
   "expo": {
     "name": "Minichat",
     "slug": "minichat",
-    "version": "1.0.5",
-    "owner": "popscorn",
+    "version": "1.0.6",
+    
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {

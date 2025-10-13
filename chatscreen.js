@@ -16,6 +16,7 @@ import {
   Animated,
 } from "react-native"
 import * as ImagePicker from 'expo-image-picker'
+import * as ImageManipulator from 'expo-image-manipulator'
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
 import { useState, useEffect, useRef } from "react"
@@ -24,6 +25,61 @@ import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
 import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
+
+// Custom BlurView component with better device compatibility
+const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) => {
+  // Try different approaches based on device capabilities
+  const blurStyle = {
+    ...style,
+    // Add a subtle background for better visibility
+    backgroundColor: tint === 'light' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
+    // Add border for better definition
+    borderWidth: 0.5,
+    borderColor: tint === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
+  };
+
+  if (Platform.OS === 'ios') {
+    // Try the standard BlurView first
+    try {
+      return (
+        <BlurView 
+          intensity={intensity} 
+          tint={tint} 
+          style={blurStyle}
+          experimentalBlurMethod="dimezisBlurView"
+          reducedTransparencyFallbackColor="rgba(255, 255, 255, 0.8)"
+        >
+          {children}
+        </BlurView>
+      );
+    } catch (error) {
+      // Fallback if BlurView fails
+      console.log('BlurView failed, using fallback:', error);
+      return (
+        <View style={blurStyle}>
+          {children}
+        </View>
+      );
+    }
+  } else {
+    // Enhanced Android fallback with better blur simulation
+    return (
+      <View style={[
+        blurStyle,
+        { 
+          // Add shadow and border for better visual effect
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }
+      ]}>
+        {children}
+      </View>
+    );
+  }
+};
 
 export default function WhatsAppChat() {
   const [messages, setMessages] = useState([])
@@ -54,6 +110,26 @@ export default function WhatsAppChat() {
   const [readMode, setReadMode] = useState(false)
   const [useApiNames, setUseApiNames] = useState(false)
   const [dateText, setDateText] = useState("Today")
+  
+  // Image size selection state
+  const [showImageSizeModal, setShowImageSizeModal] = useState(false)
+  const [selectedImageUri, setSelectedImageUri] = useState(null)
+  const [pendingCaption, setPendingCaption] = useState("")
+  
+  // Image size options
+  const imageSizes = [
+    { label: 'Original (Best Quality)', value: 'original' },
+    { label: 'Portrait (Best Quality)', value: 'portrait' },
+  ];
+
+  const getImageDimensions = (size) => {
+    switch (size) {
+      case 'portrait':
+        return { width: 245, height: 340 };
+      default:
+        return null; // Original size
+    }
+  };
   
   // Handle text input changes
   const handleTextChange = (text) => {
@@ -185,78 +261,105 @@ export default function WhatsAppChat() {
         return
       }
 
-      // Launch image picker
+      // Launch image picker with maximum quality settings
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        quality: 0.8,
+        quality: 1.0,
+        allowsMultipleSelection: false,
+        exif: true, // Preserve EXIF data for better quality
       })
 
       if (!result.canceled) {
         console.log('Image picker result:', result)
         console.log('Selected image URI:', result.assets[0].uri)
         
-        // Ask user if they want to add caption or send as is
-        Alert.alert(
-          "Add Caption",
-          "Do you want to add a caption to this image?",
-          [
-            {
-              text: "Send as is",
-              onPress: () => {
-                // Add image message without caption
-                const newMessage = {
-                  id: Date.now(),
-                  text: "",
-                  isReceived: typingMode === "receiver",
-                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                  imageUri: result.assets[0].uri,
-                  type: "image"
-                }
-                console.log('Creating image message without caption:', newMessage)
-                setMessages(prev => [...prev, newMessage])
-              }
-            },
-            {
-              text: "Add Caption",
-              onPress: () => {
-                // Show input dialog for caption
-                Alert.prompt(
-                  "Add Caption",
-                  "Enter a caption for your image:",
-                  [
-                    {
-                      text: "Cancel",
-                      style: "cancel"
-                    },
-                    {
-                      text: "Send",
-                      onPress: (caption) => {
-                        // Add image message with caption
-                        const newMessage = {
-                          id: Date.now(),
-                          text: caption || "",
-                          isReceived: typingMode === "receiver",
-                          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                          imageUri: result.assets[0].uri,
-                          type: "image"
-                        }
-                        console.log('Creating image message with caption:', newMessage)
-                        setMessages(prev => [...prev, newMessage])
-                      }
-                    }
-                  ],
-                  "plain-text",
-                  ""
-                )
-              }
-            }
-          ]
-        )
+        // Store the selected image and show size selection modal
+        setSelectedImageUri(result.assets[0].uri)
+        setShowImageSizeModal(true)
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image. Please try again.")
       console.error("Image picker error:", error)
+    }
+  }
+
+  const handleImageSizeSelection = async (size) => {
+    try {
+      let finalImageUri = selectedImageUri;
+      const dimensions = getImageDimensions(size);
+      
+      // Both original and portrait use the image as-is without any processing for maximum quality
+      finalImageUri = selectedImageUri;
+      
+      // Close size selection modal
+      setShowImageSizeModal(false);
+      
+      // Ask user if they want to add caption or send as is
+      Alert.alert(
+        "Add Caption",
+        "Do you want to add a caption to this image?",
+        [
+          {
+            text: "Send as is",
+            onPress: () => {
+              // Add image message without caption
+              const newMessage = {
+                id: Date.now(),
+                text: "",
+                isReceived: typingMode === "receiver",
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                imageUri: finalImageUri,
+                type: "image",
+                imageSize: size,
+                imageDimensions: dimensions
+              }
+              console.log('Creating image message without caption:', newMessage)
+              setMessages(prev => [...prev, newMessage])
+            }
+          },
+          {
+            text: "Add Caption",
+            onPress: () => {
+              // Show input dialog for caption
+              Alert.prompt(
+                "Add Caption",
+                "Enter a caption for your image:",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel"
+                  },
+                  {
+                    text: "Send",
+                    onPress: (caption) => {
+                      // Add image message with caption
+                      const newMessage = {
+                        id: Date.now(),
+                        text: caption || "",
+                        isReceived: typingMode === "receiver",
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        imageUri: finalImageUri,
+                        type: "image",
+                        imageSize: size,
+                        imageDimensions: dimensions
+                      }
+                      console.log('Creating image message with caption:', newMessage)
+                      setMessages(prev => [...prev, newMessage])
+                    }
+                  }
+                ],
+                "plain-text",
+                ""
+              )
+            }
+          }
+        ]
+      )
+    } catch (error) {
+      Alert.alert("Error", "Failed to process image. Please try again.")
+      console.error("Image processing error:", error)
+      setShowImageSizeModal(false)
     }
   }
 
@@ -498,6 +601,28 @@ export default function WhatsAppChat() {
     return message.isReceived ? styles.receivedTime : styles.sentTime
   }
 
+  // Function to get image dimensions based on message image size
+  const getImageDisplayDimensions = (message) => {
+    console.log('Getting image dimensions for message:', message.id);
+    console.log('Message imageSize:', message.imageSize);
+    console.log('Message imageDimensions:', message.imageDimensions);
+    
+    if (message.imageDimensions) {
+      console.log('Using stored dimensions:', message.imageDimensions);
+      return {
+        width: message.imageDimensions.width,
+        height: message.imageDimensions.height
+      }
+    }
+    
+    // Default dimensions for original size or fallback
+    console.log('Using default dimensions: 280x315');
+    return {
+      width: 250,
+      height: 260
+    }
+  }
+
   // Keyboard event listeners with immediate smooth transitions
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
@@ -562,9 +687,13 @@ export default function WhatsAppChat() {
             { opacity: dateSeparatorAnimation }
           ]}
         >
-          <BlurView intensity={80} tint="light" style={styles.dateBadge}>
+          <CustomBlurView 
+            intensity={100} 
+            tint="light" 
+            style={styles.dateBadge}
+          >
             <Text style={styles.dateText}>{dateText}</Text>
-          </BlurView>
+          </CustomBlurView>
         </Animated.View>
       )}
 
@@ -668,7 +797,10 @@ export default function WhatsAppChat() {
                   <View style={styles.imageMessageContainer}>
                     <Image 
                       source={{ uri: message.imageUri }} 
-                      style={styles.messageImage}
+                      style={[
+                        styles.messageImage,
+                        getImageDisplayDimensions(message)
+                      ]}
                       onError={(error) => console.log('Image load error:', error)}
                       onLoad={() => console.log('Image loaded successfully:', message.imageUri)}
                     />
@@ -757,7 +889,11 @@ export default function WhatsAppChat() {
                 { transform: [{ translateY: inputContainerAnimation }] }
               ]}
             >
-        <BlurView intensity={80} tint="light" style={styles.inputBlurView}>
+        <CustomBlurView 
+          intensity={100} 
+          tint="light" 
+          style={styles.inputBlurView}
+        >
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
           <Ionicons name="add" size={26} color="#5E5E5E" />
@@ -800,7 +936,7 @@ export default function WhatsAppChat() {
               </>
             )}
       </View>
-        </BlurView>
+        </CustomBlurView>
       </Animated.View>
     </>
   )
@@ -808,7 +944,11 @@ export default function WhatsAppChat() {
   return (
     <View style={styles.container}>
       {/* Header - positioned above everything */}
-      <BlurView intensity={90} tint="light" style={styles.header}>
+      <CustomBlurView 
+        intensity={100} 
+        tint="light" 
+        style={styles.header}
+      >
         <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backButton}>
@@ -836,7 +976,7 @@ export default function WhatsAppChat() {
          
         </View>
         </View>
-      </BlurView>
+      </CustomBlurView>
 
       <ImageBackground 
         source={selectedBackground === "default" ? null : (typeof currentBackgroundUri === 'string' ? { uri: currentBackgroundUri } : currentBackgroundUri)} 
@@ -900,6 +1040,47 @@ export default function WhatsAppChat() {
               }}
             />
 
+      {/* Image Size Selection Modal */}
+      <Modal
+        visible={showImageSizeModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowImageSizeModal(false)}
+      >
+        <View style={styles.imageSizeModalOverlay}>
+          <View style={styles.imageSizeModalContent}>
+            <View style={styles.imageSizeModalHeader}>
+              <Text style={styles.imageSizeModalTitle}>Select Image Size</Text>
+              <TouchableOpacity 
+                onPress={() => setShowImageSizeModal(false)} 
+                style={styles.imageSizeCloseButton}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.imageSizeModalBody}>
+              <Text style={styles.imageSizeModalSubtitle}>
+                Choose the size for your image:
+              </Text>
+              
+              {imageSizes.map((size) => (
+                <TouchableOpacity
+                  key={size.value}
+                  style={styles.imageSizeOption}
+                  onPress={() => handleImageSizeSelection(size.value)}
+                >
+                  <View style={styles.imageSizeOptionContent}>
+                    <Text style={styles.imageSizeOptionLabel}>{size.label}</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#666" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Chat Background Modal */}
       <ChatBackground
         visible={backgroundModalVisible}
@@ -934,6 +1115,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: "rgba(208, 192, 176, 0.3)",
     backgroundColor: "transparent", // Ensure no background color interferes with blur
+    ...(Platform.OS === 'ios' && {
+      // iOS-specific blur enhancements
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      // Additional iOS blur properties
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+    }),
   },
   headerContent: {
     flexDirection: "row",
@@ -1244,8 +1433,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   messageImage: {
-    width: 280,
-    height: 315,
     borderRadius: 5,
     marginBottom: 2,
   },
@@ -1277,5 +1464,62 @@ const styles = StyleSheet.create({
     color: "gray",
     marginRight: -2,
     
+  },
+  // Image Size Modal Styles
+  imageSizeModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageSizeModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  imageSizeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  imageSizeModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  imageSizeCloseButton: {
+    padding: 4,
+  },
+  imageSizeModalBody: {
+    padding: 20,
+  },
+  imageSizeModalSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  imageSizeOption: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  imageSizeOptionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  imageSizeOptionLabel: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
 })

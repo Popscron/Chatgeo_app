@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 const ReceiverEditModal = ({ 
   visible, 
@@ -24,6 +25,52 @@ const ReceiverEditModal = ({
   editTime, 
   setEditTime 
 }) => {
+  const [showImageSizeModal, setShowImageSizeModal] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState(null);
+  
+  // Image size options
+  const imageSizes = [
+    { label: 'Original (Best Quality)', value: 'original' },
+    { label: 'Portrait (Best Quality)', value: 'portrait' },
+  ];
+
+  const getImageDimensions = (size) => {
+    switch (size) {
+      case 'portrait':
+        return { width: 245, height: 340 };
+      default:
+        return null; // Original size
+    }
+  };
+
+  const handleImageSizeSelection = async (size) => {
+    try {
+      let finalImageUri = selectedImageUri;
+      const dimensions = getImageDimensions(size);
+      
+      // Both original and portrait use the image as-is without any processing for maximum quality
+      finalImageUri = selectedImageUri;
+      
+      // Close size selection modal
+      setShowImageSizeModal(false);
+      
+      // Update the message with new image
+      const updatedMessage = {
+        ...message,
+        imageUri: finalImageUri,
+        type: "image",
+        imageSize: size,
+        imageDimensions: dimensions
+      }
+      onSave(updatedMessage)
+      Alert.alert("Success", "Image replaced successfully!")
+    } catch (error) {
+      Alert.alert("Error", "Failed to process image. Please try again.")
+      console.error("Image processing error:", error)
+      setShowImageSizeModal(false)
+    }
+  };
+
   const pickNewImage = async () => {
     try {
       // Request permission to access media library
@@ -34,22 +81,19 @@ const ReceiverEditModal = ({
         return
       }
 
-      // Launch image picker
+      // Launch image picker with maximum quality settings
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        quality: 0.8,
+        quality: 1.0,
+        allowsMultipleSelection: false,
+        exif: true, // Preserve EXIF data for better quality
       })
 
       if (!result.canceled) {
-        // Update the message with new image
-        const updatedMessage = {
-          ...message,
-          imageUri: result.assets[0].uri,
-          type: "image"
-        }
-        onSave(updatedMessage)
-        Alert.alert("Success", "Image replaced successfully!")
+        // Store the selected image and show size selection modal
+        setSelectedImageUri(result.assets[0].uri)
+        setShowImageSizeModal(true)
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image. Please try again.")
@@ -100,6 +144,7 @@ const ReceiverEditModal = ({
                     <Text style={styles.replaceImageText}>Replace Image</Text>
                   </TouchableOpacity>
                 </View>
+                
                 
                 <Text style={styles.inputLabel}>Caption (optional):</Text>
                 <TextInput
@@ -152,6 +197,47 @@ const ReceiverEditModal = ({
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Image Size Selection Modal */}
+      <Modal
+        visible={showImageSizeModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowImageSizeModal(false)}
+      >
+        <View style={styles.imageSizeModalOverlay}>
+          <View style={styles.imageSizeModalContent}>
+            <View style={styles.imageSizeModalHeader}>
+              <Text style={styles.imageSizeModalTitle}>Select Image Size</Text>
+              <TouchableOpacity 
+                onPress={() => setShowImageSizeModal(false)} 
+                style={styles.imageSizeCloseButton}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.imageSizeModalBody}>
+              <Text style={styles.imageSizeModalSubtitle}>
+                Choose the size for your image:
+              </Text>
+              
+              {imageSizes.map((size) => (
+                <TouchableOpacity
+                  key={size.value}
+                  style={styles.imageSizeOption}
+                  onPress={() => handleImageSizeSelection(size.value)}
+                >
+                  <View style={styles.imageSizeOptionContent}>
+                    <Text style={styles.imageSizeOptionLabel}>{size.label}</Text>
+                    <Ionicons name="chevron-forward" size={20} color="#666" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 };
@@ -266,6 +352,98 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownList: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    marginBottom: 16,
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  // Image Size Modal Styles
+  imageSizeModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageSizeModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  imageSizeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  imageSizeModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  imageSizeCloseButton: {
+    padding: 4,
+  },
+  imageSizeModalBody: {
+    padding: 20,
+  },
+  imageSizeModalSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  imageSizeOption: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  imageSizeOptionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  imageSizeOptionLabel: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
 });
 
