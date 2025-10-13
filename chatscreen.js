@@ -17,7 +17,7 @@ import {
 } from "react-native"
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
-import { Ionicons, MaterialIcons } from "@expo/vector-icons"
+import { Ionicons, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons"
 import { BlurView } from "expo-blur"
 import { useState, useEffect, useRef } from "react"
 import SenderEditModal from './SenderEditModal'
@@ -345,6 +345,39 @@ export default function WhatsAppChat() {
       setShowImageSizeModal(false)
     }
   }
+
+  // Handle share image functionality
+  const handleShareImage = (message) => {
+    Alert.alert(
+      "Share Image",
+      "Choose how you'd like to share this image:",
+      [
+        {
+          text: "Copy Image Link",
+          onPress: () => {
+            // In a real app, you might copy the image URI or upload to a service
+            Alert.alert("Copied", "Image link copied to clipboard!");
+          }
+        },
+        {
+          text: "Save to Gallery",
+          onPress: () => {
+            Alert.alert("Saved", "Image saved to gallery!");
+          }
+        },
+        {
+          text: "Share via...",
+          onPress: () => {
+            Alert.alert("Share", "Opening share options...");
+          }
+        },
+        {
+          text: "Cancel",
+          style: "cancel"
+        }
+      ]
+    );
+  };
 
   const handleBackgroundSelect = (backgroundId) => {
     setSelectedBackground(backgroundId)
@@ -777,43 +810,65 @@ export default function WhatsAppChat() {
                 }
               ]}>
                 {message.type === "image" ? (
-                  <View style={styles.imageMessageContainer}>
-                    <Image 
-                      source={{ uri: message.imageUri }} 
-                      style={[
-                        styles.messageImage,
-                        getImageDisplayDimensions(message)
-                      ]}
-                      onError={(error) => console.log('Image load error:', error)}
-                      onLoad={() => console.log('Image loaded successfully:', message.imageUri)}
-                    />
-                    
-                    {/* Caption positioned below the image */}
-                    {message.text && message.text.trim().length > 0 ? (
-                      <View style={styles.imageCaptionContainer}>
-                        <Text style={[
-                          message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
-                          styles.imageCaptionText
-                        ]}>
-                          {message.text}
+                  <View style={styles.imageMessageWithShareContainer}>
+                    <View style={styles.imageMessageContainer}>
+                      <Image 
+                        source={{ uri: message.imageUri }} 
+                        style={[
+                          styles.messageImage,
+                          getImageDisplayDimensions(message)
+                        ]}
+                        onError={(error) => console.log('Image load error:', error)}
+                        onLoad={() => console.log('Image loaded successfully:', message.imageUri)}
+                      />
+                      
+                      {/* Caption positioned below the image */}
+                      {message.text && message.text.trim().length > 0 ? (
+                        <View style={styles.imageCaptionContainer}>
+                          <Text style={[
+                            message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
+                            styles.imageCaptionText
+                          ]}>
+                            {message.text}
+                          </Text>
+                        </View>
+                      ) : null}
+                      
+                      {/* Time and read ticks for images */}
+                      <View style={[
+                        styles.imageTimeContainer,
+                        message.text && message.text.trim().length > 0 
+                          ? styles.imageTimeWithCaption 
+                          : styles.imageTimeWithoutCaption
+                      ]}>
+                        <Text style={styles.imageTime}>
+                          {message.time}
                         </Text>
+                        {!message.isReceived && (
+                          <Image 
+                            source={require('./assets/checkmark.png')} 
+                            style={styles.checkmark} 
+                            resizeMode="contain"
+                          />
+                        )}
                       </View>
-                    ) : null}
-                    
-                    {/* Time and read ticks for images */}
-                    <View style={[
-                      styles.imageTimeContainer,
-                      message.text && message.text.trim().length > 0 
-                        ? styles.imageTimeWithCaption 
-                        : styles.imageTimeWithoutCaption
-                    ]}>
-                      <Text style={styles.imageTime}>
-                        {message.time}
-                      </Text>
-                      {!message.isReceived && (
-                        <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
-                      )}
                     </View>
+                    
+                    {/* Share Icon - Outside the image message container */}
+                    <TouchableOpacity 
+                      style={[
+                        styles.shareIconContainer,
+                        message.isReceived ? styles.receiverShareIcon : styles.senderShareIcon,
+                        message.imageSize === 'portrait' ? styles.portraitShareIcon : styles.originalShareIcon
+                      ]}
+                      onPress={() => handleShareImage(message)}
+                    >
+                      <MaterialCommunityIcons 
+                        name="share" 
+                        size={24} 
+                        color="#fff" 
+                      />
+                    </TouchableOpacity>
                   </View>
                 ) : (
                   <Text style={[
@@ -835,14 +890,13 @@ export default function WhatsAppChat() {
                       {message.time}
                     </Text>
                     {!message.isReceived && (
-                      <Ionicons 
-                        name="checkmark-done" 
-                        size={16} 
-                        color="#53BDEB" 
+                      <Image 
+                        source={require('./assets/checkmark.png')} 
                         style={[
                           styles.checkmark,
                           isShortMessage ? styles.checkmarkShort : {}
                         ]} 
+                        resizeMode="contain"
                       />
                     )}
                   </View>
@@ -1339,9 +1393,11 @@ const styles = StyleSheet.create({
     marginBottom:1
   },
   checkmark: {
-   marginRight: -6,
-   marginLeft:4,
-    marginBottom:2
+    width: 15,
+    height: 15,
+    marginRight: -6,
+    marginLeft: 5,
+    marginBottom: 2
   },
   checkmarkShort: {
     marginRight: -6,
@@ -1415,6 +1471,12 @@ const styles = StyleSheet.create({
     marginHorizontal: -10,
     marginTop: 2,
   },
+  imageMessageWithShareContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    position: 'relative',
+    justifyContent: 'space-between',
+  },
   messageImage: {
     borderRadius: 5,
     marginBottom: 2,
@@ -1441,6 +1503,37 @@ const styles = StyleSheet.create({
   imageTimeWithoutCaption: {
     bottom: 2,
     right: 12,
+  },
+  // Share Icon Styles
+  shareIconContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: 16,
+  //   backgroundColor: '#E5E5E5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 8,
+  },
+  senderShareIcon: {
+    backgroundColor: 'grey',
+    opacity: 0.5,
+    left: -40, // Position outside the message bubble on the left
+  },
+  receiverShareIcon: {
+    backgroundColor: 'grey',
+    opacity: 0.5,
+    right: -40, // Position outside the message bubble on the right
+  },
+  // Portrait image share icon positioning
+  portraitShareIcon: {
+    marginVertical: 150, // Different vertical positioning for portrait
+    marginHorizontal: -15, // Different horizontal positioning for portrait
+  },
+  // Original image share icon positioning
+  originalShareIcon: {
+    marginVertical: 120, // Current positioning for original
+    marginHorizontal: -16, // Current positioning for original
   },
   imageTime: {
     fontSize: 11,
