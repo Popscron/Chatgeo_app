@@ -606,10 +606,13 @@ export default function WhatsAppChat() {
       return {
         fontSize: 11, // Keep original font size
         color: "#667781", // Keep original color for both sent and received
-        paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
+        paddingTop: 4, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
+        marginRight: -3, // Right margin for spacing
+        
+      
         // Add marginBottom for both receiver and sender messages
-        ...(message.isReceived ? { marginBottom: 0 } : { marginBottom: -6 })
+        ...(message.isReceived ? { marginBottom: 0 } : { marginBottom: -4 ,})
       }
     }
     
