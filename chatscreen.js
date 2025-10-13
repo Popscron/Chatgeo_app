@@ -487,8 +487,8 @@ export default function WhatsAppChat() {
         color: "#667781", // Keep original color for both sent and received
         paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
-        // Add marginBottom for receiver messages only
-        ...(message.isReceived ? { marginBottom: 12 } : {})
+        // Add marginBottom for both receiver and sender messages
+        ...(message.isReceived ? { marginBottom: 0 } : { marginBottom: -6 })
       }
     }
     
@@ -645,14 +645,14 @@ export default function WhatsAppChat() {
                 styles.messageBubble, 
                 message.isReceived ? styles.receivedBubble : styles.sentBubble,
                 // Apply different maxWidth for text vs image messages
-                message.type === "image" ? { maxWidth: "80%" } : { maxWidth: "71%" },
+                message.type === "image" ? { maxWidth: "80%" } : { maxWidth: "68%" },
                 isShortMessage ? {
                   flexDirection: "row",
                   alignItems: "flex-end",
                   justifyContent: "space-between",
                   paddingHorizontal: 16,
                   paddingVertical: 6, // Reduced from 8 to 3 (5 steps = 10px)
-                  gap: 12,
+                  gap: 2,
                 } : {},
                 // Add border radius for consecutive messages
                 !isLastInSequence && {
@@ -714,11 +714,19 @@ export default function WhatsAppChat() {
                 {/* Time and read ticks for text messages */}
                 {message.type !== "image" && (
                   <View style={styles.messageFooter}>
-                    <Text style={message.isReceived ? styles.receivedTime : styles.sentTime}>
+                    <Text style={getTimeStyle(message)}>
                       {message.time}
                     </Text>
                     {!message.isReceived && (
-                      <Ionicons name="checkmark-done" size={16} color="#53BDEB" style={styles.checkmark} />
+                      <Ionicons 
+                        name="checkmark-done" 
+                        size={16} 
+                        color="#53BDEB" 
+                        style={[
+                          styles.checkmark,
+                          isShortMessage ? styles.checkmarkShort : {}
+                        ]} 
+                      />
                     )}
                   </View>
                 )}
@@ -1160,6 +1168,11 @@ const styles = StyleSheet.create({
    marginRight: -6,
    marginLeft:4,
     marginBottom:2
+  },
+  checkmarkShort: {
+    marginRight: -6,
+    marginLeft: 4,
+    marginBottom: -6, // Different positioning for short messages
   },
   // Background Styles
   backgroundImage: {
