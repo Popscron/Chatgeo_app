@@ -376,6 +376,8 @@ export default function WhatsAppChat() {
     console.log("Scroll begin triggered")
     setIsScrolling(true)
     setShowDateSeparator(true)
+    // Dismiss keyboard when scrolling starts
+    Keyboard.dismiss()
     // Instant appearance - no animation delay
     dateSeparatorAnimation.setValue(1)
   }
@@ -1067,7 +1069,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   senderTextAfterImageSpacing: {
-    marginTop: 8, // Reduced by 1 step (4px) from 12px = 8px
+    marginTop: 0, // Reduced by another 2 steps (4px) from 4px to 0px for sender image-text gap
   },
   receiverTextAfterImageSpacing: {
     marginTop: 0, // Reduced by another 2 steps (4px) from 4px to 0px for receiver image-text gap
