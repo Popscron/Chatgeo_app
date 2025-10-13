@@ -449,7 +449,7 @@ export default function WhatsAppChat() {
         flexDirection: "row", // Horizontal layout
         alignItems: "flex-end", // Align items to bottom
         justifyContent: "space-between", // Space between message and time
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         paddingVertical: 6, // Reduced from 8 to 3 (5 steps = 10px)
         gap: 12, // 3 steps gap (4px per step = 12px)
       }
@@ -487,8 +487,8 @@ export default function WhatsAppChat() {
         color: "#667781", // Keep original color for both sent and received
         paddingTop: 0, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
-        // Add marginTop for receiver messages only
-        ...(message.isReceived ? { marginTop: 12 } : {})
+        // Add marginBottom for receiver messages only
+        ...(message.isReceived ? { marginBottom: 12 } : {})
       }
     }
     
@@ -1146,19 +1146,20 @@ const styles = StyleSheet.create({
   sentTime: {
     fontSize: 11,
     color: "#667781",
-    marginRight: 2,
-    marginBottom:-10,
+    marginRight: -4,
+    marginBottom:2,
   marginHorizontal:8
   },
   receivedTime: {
     fontSize: 11,
     color: "#667781",
     alignSelf: "flex-end",
-    marginBottom:-1
+    marginBottom:1
   },
   checkmark: {
-  //  marginLeft: 2,
-    marginBottom:-5
+   marginRight: -6,
+   marginLeft:4,
+    marginBottom:2
   },
   // Background Styles
   backgroundImage: {
@@ -1253,12 +1254,13 @@ const styles = StyleSheet.create({
     right: 8,
   },
   imageTimeWithoutCaption: {
-    bottom: 8,
-    right: 8,
+    bottom: 2,
+    right: 12,
   },
   imageTime: {
     fontSize: 11,
     color: "gray",
-    marginRight: 1,
+    marginRight: -2,
+    
   },
 })

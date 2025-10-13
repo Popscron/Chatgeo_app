@@ -2,7 +2,7 @@
   "expo": {
     "name": "Minichat",
     "slug": "minichat",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "owner": "popscorn",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -17,14 +17,7 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-    "android": {
-      "package": "com.minichat.app2024",
-      "permissions": [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
-      ]
-    },
+    
     "web": {
       "favicon": "./assets/favicon.png"
     },
