@@ -1404,8 +1404,8 @@ const styles = StyleSheet.create({
     marginBottom:1
   },
   checkmark: {
-    width: 15,
-    height: 15,
+    width: 14,
+    height: 14,
     marginRight: -6,
     marginLeft: 5,
     marginBottom: 2
