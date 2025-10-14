@@ -613,7 +613,7 @@ export default function WhatsAppChat() {
     if (charCount <= 25) {
       return {
         fontSize: 11, // Keep original font size
-        color: "#667781", // Keep original color for both sent and received
+        color: "#53656f", // Keep original color for both sent and received
         paddingTop: 4, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
         marginRight: -3, // Right margin for spacing
@@ -646,7 +646,7 @@ export default function WhatsAppChat() {
     console.log('Using default dimensions: 280x315');
     return {
       width: 250,
-      height: 260
+      height: 290
     }
   }
 
@@ -944,7 +944,7 @@ export default function WhatsAppChat() {
         >
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-          <Ionicons name="add" size={26} color="#5E5E5E" />
+          <Ionicons name="add" size={30} color="#000" />
         </TouchableOpacity>
             <Animated.View 
               style={[
@@ -957,7 +957,7 @@ export default function WhatsAppChat() {
             >
               <TextInput 
                 style={styles.textInput} 
-                placeholder="Message" 
+              //  placeholder="Message" 
                 placeholderTextColor="#999" 
                 multiline={true}
                 maxHeight={100}
@@ -966,7 +966,7 @@ export default function WhatsAppChat() {
                 editable={isTypingMode}
               />
           <TouchableOpacity style={styles.emojiButton}>
-            <Ionicons name="happy-outline" size={24} color="#5E5E5E" />
+            <Image source={require('./assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: '#000' }} />
           </TouchableOpacity>
             </Animated.View>
             {showSendButton ? (
@@ -976,10 +976,10 @@ export default function WhatsAppChat() {
             ) : (
               <>
                 <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
-                  <Ionicons name="camera-outline" size={24} color="#5E5E5E" />
+                  <Ionicons name="camera-outline" size={26} color="#000" />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
-                  <Ionicons name="mic-outline" size={24} color="#5E5E5E" />
+                  <Image source={require('./assets/micicon.png')} style={{ width: 26, height: 24 }} />
                 </TouchableOpacity>
               </>
             )}
@@ -1016,7 +1016,7 @@ export default function WhatsAppChat() {
             await generateNewApiName()
             console.log("generateNewApiName completed!")
           } : undefined}>
-            <Ionicons name="videocam-outline" size={26} color="#000" />
+            <Ionicons name="videocam-outline" size={28} color="#403f3f" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="call-outline" size={24} color="#000" />
@@ -1392,14 +1392,14 @@ const styles = StyleSheet.create({
   },
   sentTime: {
     fontSize: 11,
-    color: "#667781",
+    color: "#53656f",
     marginRight: -4,
     marginBottom:2,
   marginHorizontal:8
   },
   receivedTime: {
     fontSize: 11,
-    color: "#667781",
+    color: "#53656f",
     alignSelf: "flex-end",
     marginBottom:1
   },
@@ -1448,7 +1448,8 @@ const styles = StyleSheet.create({
     minHeight: 60,
   },
   inputIcon: {
-    padding: 8,
+    padding: 4,
+   // fontWeight:8000
   },
   textInputContainer: {
     flex: 1,
@@ -1456,15 +1457,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
-    paddingHorizontal: 12,
-    marginHorizontal: 4,
+    paddingHorizontal: 4,
+    marginHorizontal: 10,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
     color: "#000",
-    minHeight: 40,
+    minHeight: 30,
     maxHeight: 100,
     textAlignVertical: "top",
   },
@@ -1548,7 +1549,7 @@ const styles = StyleSheet.create({
   },
   imageTime: {
     fontSize: 11,
-    color: "gray",
+    color: "#53656f",
     marginRight: -2,
     
   },
