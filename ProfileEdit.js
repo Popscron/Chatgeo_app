@@ -9,7 +9,9 @@ import {
   Alert,
   Image,
   ScrollView,
-  Dimensions
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -134,7 +136,11 @@ const ProfileEdit = ({
       animationType="slide"
       onRequestClose={cancelEdit}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView 
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit Profile</Text>
@@ -148,12 +154,20 @@ const ProfileEdit = ({
             </View>
           </View>
           
-          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.modalBody} 
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContent}
+          >
             {/* Profile Image Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Profile Picture</Text>
               <TouchableOpacity style={styles.profileImageContainer} onPress={pickProfileImage}>
-                <Image source={{ uri: profileImageUri }} style={styles.profileImagePreview} />
+                <Image 
+                  source={profileImageUri ? { uri: profileImageUri } : require('./assets/Profilepic.png')} 
+                  style={styles.profileImagePreview} 
+                />
                 <View style={styles.editOverlay}>
                   <Ionicons name="camera" size={24} color="#fff" />
                 </View>
@@ -262,7 +276,7 @@ const ProfileEdit = ({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -275,17 +289,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     paddingVertical: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    width: '100%',
+    width: '95%',
     maxWidth: screenWidth > 600 ? 500 : screenWidth * 0.95,
-    maxHeight: screenHeight * 0.9,
-    minHeight: screenHeight * 0.4,
-    flex: screenHeight < 600 ? 1 : 0,
+    maxHeight: screenHeight * 0.95,
+    minHeight: screenHeight * 0.5,
+    alignSelf: 'center',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -316,6 +330,10 @@ const styles = StyleSheet.create({
   modalBody: {
     padding: screenWidth < 400 ? 15 : 20,
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   section: {
     marginBottom: screenHeight < 600 ? 15 : 20,

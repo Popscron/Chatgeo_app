@@ -22,7 +22,9 @@ const ImportExportModal = ({
   messages,
   onImport,
   contactName,
-  onImportContact
+  onImportContact,
+  profileImageUri,
+  onImportProfileImage
 }) => {
   const [activeTab, setActiveTab] = useState('export'); // 'export' or 'import'
   const [importText, setImportText] = useState('');
@@ -42,6 +44,7 @@ const ImportExportModal = ({
       const exportData = {
         messages: messagesToExport,
         contactName: contactName || 'Unknown Contact',
+        profileImageUri: profileImageUri || null,
         exportDate: new Date().toISOString(),
         version: '1.0'
       };
@@ -102,8 +105,9 @@ const ImportExportModal = ({
         return;
       }
 
-      // Extract contact name from import data
+      // Extract contact name and profile image from import data
       const importedContactName = importData.contactName || 'Imported Contact';
+      const importedProfileImageUri = importData.profileImageUri || null;
       const messageCount = validMessages.length;
 
       Alert.alert(
@@ -119,6 +123,9 @@ const ImportExportModal = ({
               }
               if (onImportContact && importedContactName) {
                 onImportContact(importedContactName);
+              }
+              if (onImportProfileImage && importedProfileImageUri) {
+                onImportProfileImage(importedProfileImageUri);
               }
               Alert.alert("Success", `Imported ${messageCount} messages from "${importedContactName}" successfully!`);
               setImportText('');

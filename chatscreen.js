@@ -85,7 +85,7 @@ export default function WhatsAppChat() {
   const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
   const [selectedBackground, setSelectedBackground] = useState("default")
   const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
-  const [profileImageUri, setProfileImageUri] = useState("https://i.pravatar.cc/150?img=12")
+  const [profileImageUri, setProfileImageUri] = useState(null)
   const [contactName, setContactName] = useState("MiniChat")
   const [unreadCount, setUnreadCount] = useState(34)
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
@@ -1062,7 +1062,10 @@ export default function WhatsAppChat() {
           </TouchableOpacity>
           <Text style={styles.unreadCount}>{unreadCount}</Text>
           <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
-            <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
+            <Image 
+              source={profileImageUri ? { uri: profileImageUri } : require('./assets/Profilepic.png')} 
+              style={styles.profileImage} 
+            />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleProfilePress}>
             <Text style={styles.contactName}>{contactName}</Text>
@@ -1212,6 +1215,8 @@ export default function WhatsAppChat() {
         onImport={handleImportMessages}
         contactName={contactName}
         onImportContact={handleImportContact}
+        profileImageUri={profileImageUri}
+        onImportProfileImage={setProfileImageUri}
       />
     </View>
   )
