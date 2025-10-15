@@ -46,16 +46,27 @@ const SenderEditModal = ({
 
   const handleImageSizeSelection = async (size) => {
     try {
+      console.log("=== IMAGE SIZE SELECTION START ===")
+      console.log("Selected size:", size)
+      console.log("Selected image URI:", selectedImageUri)
+      
       let finalImageUri = selectedImageUri;
       const dimensions = getImageDimensions(size);
+      
+      console.log("Image dimensions:", dimensions)
       
       // Both original and portrait use the image as-is without any processing for maximum quality
       finalImageUri = selectedImageUri;
       
+      console.log("Final image URI:", finalImageUri)
+      
       // Close size selection modal
+      console.log("Closing modal...")
       setShowImageSizeModal(false);
+      console.log("Modal closed")
       
       // Update the message with new image
+      console.log("Creating updated message...")
       const updatedMessage = {
         ...message,
         imageUri: finalImageUri,
@@ -64,8 +75,20 @@ const SenderEditModal = ({
         imageDimensions: dimensions
       }
       
-      onSave(updatedMessage)
-      Alert.alert("Success", "Image replaced successfully!")
+      console.log("Updated message:", updatedMessage)
+      
+      console.log("Calling onSave...")
+      
+      // Add a small delay to prevent immediate state update
+      setTimeout(() => {
+        console.log("Executing onSave after timeout...")
+        onSave(updatedMessage)
+        console.log("onSave completed")
+        
+        console.log("Showing success alert...")
+        Alert.alert("Success", "Image replaced successfully!")
+        console.log("=== IMAGE SIZE SELECTION END ===")
+      }, 100) // 100ms delay
     } catch (error) {
       console.error("Image processing error:", error)
       Alert.alert("Error", "Failed to process image. Please try again.")

@@ -25,6 +25,7 @@ import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
 import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
+import ImportExportModal from './importexport'
 
 // Custom BlurView component with iOS compatibility
 const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) => {
@@ -101,6 +102,7 @@ export default function WhatsAppChat() {
   const [readMode, setReadMode] = useState(false)
   const [useApiNames, setUseApiNames] = useState(false)
   const [dateText, setDateText] = useState("Today")
+  const [importExportModalVisible, setImportExportModalVisible] = useState(false)
   
   // Image size selection state
   const [showImageSizeModal, setShowImageSizeModal] = useState(false)
@@ -217,15 +219,61 @@ export default function WhatsAppChat() {
   }
 
   const saveMessageEdit = (updatedMessage) => {
-    const updatedMessages = messages.map(msg => 
-      msg.id === updatedMessage.id ? updatedMessage : msg
-    )
-    setMessages(updatedMessages)
-    setSenderEditModalVisible(false)
-    setReceiverEditModalVisible(false)
-    setEditingMessage(null)
-    setEditText("")
-    setEditTime("")
+    try {
+      console.log("=== SAVE MESSAGE EDIT START ===")
+      console.log("Updated message received:", updatedMessage)
+      
+      console.log("Updating messages array...")
+      const updatedMessages = messages.map(msg => 
+        msg.id === updatedMessage.id ? updatedMessage : msg
+      )
+      console.log("Messages array updated")
+      
+      console.log("Setting messages state...")
+      setMessages(updatedMessages)
+      console.log("Messages state set")
+      
+      // Add delay before closing modals to prevent freeze
+      setTimeout(() => {
+        console.log("Closing modals after delay...")
+        setSenderEditModalVisible(false)
+        setReceiverEditModalVisible(false)
+        console.log("Modals closed")
+        
+        console.log("Resetting edit state...")
+        setEditingMessage(null)
+        setEditText("")
+        setEditTime("")
+        console.log("Edit state reset")
+      }, 50) // 50ms delay
+      
+      console.log("=== SAVE MESSAGE EDIT END ===")
+    } catch (error) {
+      console.error("Error in saveMessageEdit:", error)
+    }
+  }
+
+  // Handle import messages
+  const handleImportMessages = (importedMessages) => {
+    try {
+      console.log("=== IMPORT MESSAGES START ===")
+      console.log("Imported messages:", importedMessages)
+      
+      // Add unique IDs to imported messages if they don't have them
+      const messagesWithIds = importedMessages.map((msg, index) => ({
+        ...msg,
+        id: msg.id || `imported_${Date.now()}_${index}`
+      }))
+      
+      console.log("Setting imported messages...")
+      setMessages(messagesWithIds)
+      console.log("Messages imported successfully")
+      
+      console.log("=== IMPORT MESSAGES END ===")
+    } catch (error) {
+      console.error("Error importing messages:", error)
+      Alert.alert("Error", "Failed to import messages. Please try again.")
+    }
   }
 
   const cancelSenderEdit = () => {
@@ -1013,7 +1061,10 @@ export default function WhatsAppChat() {
           } : undefined}>
             <Ionicons name="videocam-outline" size={28} color="#403f3f" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity 
+            style={styles.iconButton}
+            onPress={() => setImportExportModalVisible(true)}
+          >
             <Ionicons name="call-outline" size={24} color="#000" />
           </TouchableOpacity>
          
@@ -1136,6 +1187,13 @@ export default function WhatsAppChat() {
           setBackgroundModalVisible(false)
           setProfileEditModalVisible(true)
         }}
+      />
+      
+      <ImportExportModal
+        visible={importExportModalVisible}
+        onClose={() => setImportExportModalVisible(false)}
+        messages={messages}
+        onImport={handleImportMessages}
       />
     </View>
   )
