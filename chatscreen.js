@@ -14,6 +14,7 @@ import {
   Platform,
   Keyboard,
   Animated,
+  AppState,
 } from "react-native"
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -26,6 +27,7 @@ import ProfileEdit from './ProfileEdit'
 import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
 import ImportExportModal from './importexport'
+import * as ScreenCapture from 'expo-screen-capture'
 
 // Custom BlurView component with iOS compatibility
 const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) => {
@@ -766,6 +768,33 @@ export default function WhatsAppChat() {
       }
     }
   }, [])
+
+  // Screen capture detection for default contact name warning
+  useEffect(() => {
+    const handleScreenshot = () => {
+      // Check if contact name is still the default "MiniChat"
+      if (contactName === "MiniChat") {
+        Alert.alert(
+          "⚠️ Warning",
+          "Contact name still not changed ",
+          [
+            {
+              text: "OK",
+              style: "default"
+            }
+          ]
+        )
+      }
+    }
+
+    // Add screenshot listener
+    const subscription = ScreenCapture.addScreenshotListener(handleScreenshot)
+
+    // Cleanup listener on unmount
+    return () => {
+      subscription?.remove()
+    }
+  }, [contactName])
   
   const renderMainContent = () => (
     <>
