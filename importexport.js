@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 const ImportExportModal = ({ 
@@ -29,8 +29,11 @@ const ImportExportModal = ({
     try {
       setIsProcessing(true);
       
+      // Safety check for messages
+      const messagesToExport = messages || [];
+      
       const exportData = {
-        messages: messages,
+        messages: messagesToExport,
         exportDate: new Date().toISOString(),
         version: '1.0'
       };
@@ -39,6 +42,7 @@ const ImportExportModal = ({
       const fileName = `chat_export_${new Date().toISOString().split('T')[0]}.json`;
       const fileUri = FileSystem.documentDirectory + fileName;
       
+      // Use the legacy FileSystem API
       await FileSystem.writeAsStringAsync(fileUri, jsonString);
       
       if (await Sharing.isAvailableAsync()) {
@@ -104,6 +108,11 @@ const ImportExportModal = ({
     }
   };
 
+  // Don't render if not visible
+  if (!visible) {
+    return null;
+  }
+
   return (
     <Modal
       visible={visible}
@@ -147,7 +156,7 @@ const ImportExportModal = ({
                   Export your chat messages to a JSON file that you can save or share.
                 </Text>
                 <Text style={styles.messageCount}>
-                  Total Messages: {messages.length}
+                  Total Messages: {messages ? messages.length : 0}
                 </Text>
                 
                 <TouchableOpacity 
