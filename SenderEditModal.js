@@ -27,6 +27,7 @@ const SenderEditModal = ({
 }) => {
   const [showImageSizeModal, setShowImageSizeModal] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState(null);
+
   
   // Image size options
   const imageSizes = [
@@ -62,11 +63,12 @@ const SenderEditModal = ({
         imageSize: size,
         imageDimensions: dimensions
       }
+      
       onSave(updatedMessage)
       Alert.alert("Success", "Image replaced successfully!")
     } catch (error) {
-      Alert.alert("Error", "Failed to process image. Please try again.")
       console.error("Image processing error:", error)
+      Alert.alert("Error", "Failed to process image. Please try again.")
       setShowImageSizeModal(false)
     }
   };
@@ -90,14 +92,14 @@ const SenderEditModal = ({
         exif: true, // Preserve EXIF data for better quality
       })
 
-      if (!result.canceled) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         // Store the selected image and show size selection modal
         setSelectedImageUri(result.assets[0].uri)
         setShowImageSizeModal(true)
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to pick image. Please try again.")
       console.error("Image picker error:", error)
+      Alert.alert("Error", "Failed to pick image. Please try again.")
     }
   }
   const handleSave = () => {
@@ -112,6 +114,13 @@ const SenderEditModal = ({
       text: editText.trim(),
       time: editTime.trim() || message.time
     });
+  };
+
+  const handleClose = () => {
+    // Reset image selection state when closing
+    setSelectedImageUri(null);
+    setShowImageSizeModal(false);
+    onClose();
   };
 
   return (
@@ -129,7 +138,7 @@ const SenderEditModal = ({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Edit Sender Message</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
@@ -188,7 +197,7 @@ const SenderEditModal = ({
           </View>
           
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>

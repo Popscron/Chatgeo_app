@@ -846,12 +846,7 @@ export default function WhatsAppChat() {
                       ) : null}
                       
                       {/* Time and read ticks for images */}
-                      <View style={[
-                        styles.imageTimeContainer,
-                        message.text && message.text.trim().length > 0 
-                          ? styles.imageTimeWithCaption 
-                          : styles.imageTimeWithoutCaption
-                      ]}>
+                      <View style={styles.imageTimeContainer}>
                         <Text style={styles.imageTime}>
                           {message.time}
                         </Text>
@@ -944,7 +939,7 @@ export default function WhatsAppChat() {
         >
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-          <Ionicons name="add" size={30} color="#000" />
+          <Ionicons name="add" size={35} color="#000" />
         </TouchableOpacity>
             <Animated.View 
               style={[
@@ -975,10 +970,10 @@ export default function WhatsAppChat() {
               </TouchableOpacity>
             ) : (
               <>
-                <TouchableOpacity style={styles.inputIcon} onPress={handleCameraPress}>
+                <TouchableOpacity style={[styles.inputIcon, styles.cameraIcon]} onPress={handleCameraPress}>
                   <Ionicons name="camera-outline" size={26} color="#000" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.inputIcon} onPress={addSenderMessage}>
+                <TouchableOpacity style={[styles.inputIcon, styles.micIcon]} onPress={addSenderMessage}>
                   <Image source={require('./assets/micicon.png')} style={{ width: 26, height: 24 }} />
                 </TouchableOpacity>
               </>
@@ -1444,12 +1439,19 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: 8,
     paddingVertical: 8,
-    paddingBottom: 34, // Account for safe area
+    paddingBottom: 36, // Account for safe area
     minHeight: 60,
   },
   inputIcon: {
     padding: 4,
+    marginVertical:-8
    // fontWeight:8000
+  },
+  cameraIcon: {
+    marginVertical: -2, // -8 + 6 = -2 (3 steps added)
+  },
+  micIcon: {
+    marginVertical: -2, // -8 + 6 = -2 (3 steps added)
   },
   textInputContainer: {
     flex: 1,
@@ -1482,6 +1484,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
     marginHorizontal: -10,
     marginTop: 2,
+    maxWidth: '93%', // Fixed maximum width for image messages
   },
   imageMessageWithShareContainer: {
     flexDirection: 'row',
@@ -1494,27 +1497,36 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   imageCaptionContainer: {
-    paddingHorizontal: 13,
-    paddingVertical: -1,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     marginTop: 4,
+    maxWidth: '100%', // Prevent container from exceeding parent width
+    flex: 1, // Allow container to take available space
+    minHeight: 0, // Allow container to shrink if needed
   },
   imageCaptionText: {
     fontSize: 16,
     color: "#000",
     lineHeight: 20,
+    flexWrap: 'wrap', // Allow text to wrap to next line
+    flexShrink: 1, // Allow text to shrink if needed
+    flexGrow: 0, // Don't grow beyond content size
+    width: '120%', // Make text fill the container width
+    textAlign: 'justify', // Align text to left within the container
   },
   imageTimeContainer: {
-    position: "absolute",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: 4, // Add space between caption and time
+    paddingHorizontal: 13, // Match caption padding
+   marginRight: -40, // Move time further to the right
   },
   imageTimeWithCaption: {
-    bottom: -2,
-    right: 8,
+    // No special positioning needed - uses relative positioning
   },
   imageTimeWithoutCaption: {
-    bottom: 2,
-    right: 12,
+    // No special positioning needed - uses relative positioning
   },
   // Share Icon Styles
   shareIconContainer: {
