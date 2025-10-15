@@ -18,7 +18,8 @@ const ImportExportModal = ({
   visible, 
   onClose, 
   messages,
-  onImport
+  onImport,
+  contactName
 }) => {
   const [activeTab, setActiveTab] = useState('export'); // 'export' or 'import'
   const [importText, setImportText] = useState('');
@@ -34,6 +35,7 @@ const ImportExportModal = ({
       
       const exportData = {
         messages: messagesToExport,
+        contactName: contactName || 'Unknown Contact',
         exportDate: new Date().toISOString(),
         version: '1.0'
       };
@@ -153,7 +155,10 @@ const ImportExportModal = ({
               <View style={styles.exportContainer}>
                 <Text style={styles.sectionTitle}>Export Chat</Text>
                 <Text style={styles.description}>
-                  Export your chat messages to a JSON file that you can save or share.
+                  Export your chat messages to a JSON file that you can save or share. Includes contact name and all message data.
+                </Text>
+                <Text style={styles.contactInfo}>
+                  Contact: {contactName || 'Unknown Contact'}
                 </Text>
                 <Text style={styles.messageCount}>
                   Total Messages: {messages ? messages.length : 0}
@@ -279,6 +284,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
+  },
+  contactInfo: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+    marginBottom: 10,
   },
   messageCount: {
     fontSize: 14,

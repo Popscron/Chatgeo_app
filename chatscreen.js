@@ -1194,6 +1194,7 @@ export default function WhatsAppChat() {
         onClose={() => setImportExportModalVisible(false)}
         messages={messages}
         onImport={handleImportMessages}
+        contactName={contactName}
       />
     </View>
   )
