@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Alert,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -143,7 +145,11 @@ const ImportExportModal = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView 
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Import / Export Chat</Text>
@@ -171,7 +177,11 @@ const ImportExportModal = ({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalBody}>
+          <ScrollView 
+            style={styles.modalBody}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             {activeTab === 'export' ? (
               <View style={styles.exportContainer}>
                 <Text style={styles.sectionTitle}>Export Chat</Text>
@@ -225,7 +235,7 @@ const ImportExportModal = ({
             )}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -242,7 +252,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: '90%',
     maxWidth: 500,
-    maxHeight: '80%',
+    maxHeight: Platform.OS === 'ios' ? '85%' : '80%',
+    minHeight: 400,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -286,6 +297,7 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 20,
+    flexGrow: 1,
   },
   exportContainer: {
     alignItems: 'center',
