@@ -15,6 +15,62 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useDarkMode } from './DarkModeContext';
+
+const getDynamicStyles = (isDarkMode) => ({
+  modalOverlay: {
+    backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+  },
+  modalHeader: {
+    borderBottomColor: isDarkMode ? '#333' : '#E0E0E0',
+  },
+  modalTitle: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  sectionTitle: {
+    color: isDarkMode ? '#fff' : '#333',
+  },
+  helperText: {
+    color: isDarkMode ? '#999' : '#666',
+  },
+  contactNameInput: {
+    borderColor: isDarkMode ? '#444' : '#DDD',
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  unreadCountInput: {
+    borderColor: isDarkMode ? '#444' : '#DDD',
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  dateTextInput: {
+    borderColor: isDarkMode ? '#444' : '#DDD',
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  modalFooter: {
+    borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
+  },
+  cancelButton: {
+    borderColor: isDarkMode ? '#444' : '#DDD',
+  },
+  cancelButtonText: {
+    color: isDarkMode ? '#ccc' : '#666',
+  },
+  toggleContainer: {
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#F8F9FA',
+    borderColor: isDarkMode ? '#444' : '#E0E0E0',
+  },
+  toggleLabel: {
+    color: isDarkMode ? '#ccc' : '#666',
+  },
+  toggleLabelActive: {
+    color: '#25D366',
+  },
+});
 
 const ProfileEdit = ({ 
   visible, 
@@ -33,6 +89,7 @@ const ProfileEdit = ({
   dateText,
   onDateTextChange
 }) => {
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [editContactName, setEditContactName] = useState(contactName);
   const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
   const [isReadMode, setIsReadMode] = useState(readMode || false);
@@ -129,6 +186,8 @@ const ProfileEdit = ({
     onClose()
   }
 
+  const dynamicStyles = getDynamicStyles(isDarkMode);
+
   return (
     <Modal
       visible={visible}
@@ -137,13 +196,13 @@ const ProfileEdit = ({
       onRequestClose={cancelEdit}
     >
       <KeyboardAvoidingView 
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, dynamicStyles.modalOverlay]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
+        <View style={[styles.modalContent, dynamicStyles.modalContent]}>
+          <View style={[styles.modalHeader, dynamicStyles.modalHeader]}>
+            <Text style={[styles.modalTitle, dynamicStyles.modalTitle]}>Edit Profile</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity onPress={onSwitchToBackground} style={styles.switchButton}>
                 <Ionicons name="color-palette-outline" size={24} color="#25D366" />
@@ -162,7 +221,7 @@ const ProfileEdit = ({
           >
             {/* Profile Image Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Profile Picture</Text>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Profile Picture</Text>
               <TouchableOpacity style={styles.profileImageContainer} onPress={pickProfileImage}>
                 <Image 
                   source={profileImageUri ? { uri: profileImageUri } : require('./assets/Profilepic.png')} 
@@ -172,22 +231,22 @@ const ProfileEdit = ({
                   <Ionicons name="camera" size={24} color="#fff" />
                 </View>
               </TouchableOpacity>
-              <Text style={styles.helperText}>Tap to change profile picture</Text>
+              <Text style={[styles.helperText, dynamicStyles.helperText]}>Tap to change profile picture</Text>
             </View>
 
             {/* Contact Name Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Contact Name</Text>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Contact Name</Text>
               
               {/* API Names Toggle */}
-              <TouchableOpacity style={styles.toggleContainer} onPress={toggleUseApiNames}>
+              <TouchableOpacity style={[styles.toggleContainer, dynamicStyles.toggleContainer]} onPress={toggleUseApiNames}>
                 <View style={styles.toggleInfo}>
                   <Ionicons 
                     name={useApiNamesToggle ? "globe" : "person"} 
                     size={20} 
                     color={useApiNamesToggle ? "#25D366" : "#666"} 
                   />
-                  <Text style={[styles.toggleLabel, useApiNamesToggle && styles.toggleLabelActive]}>
+                  <Text style={[styles.toggleLabel, dynamicStyles.toggleLabel, useApiNamesToggle && styles.toggleLabelActive]}>
                     {useApiNamesToggle ? "Using Ghanaian Nicknames" : "Manual Name Entry"}
                   </Text>
                 </View>
@@ -196,7 +255,7 @@ const ProfileEdit = ({
                 </View>
               </TouchableOpacity>
               
-              <Text style={styles.helperText}>
+              <Text style={[styles.helperText, dynamicStyles.helperText]}>
                 {useApiNamesToggle 
                   ? "Contact name will be generated from Ghanaian nicknames API (5 sources)" 
                   : "Enter a custom contact name manually"
@@ -206,10 +265,11 @@ const ProfileEdit = ({
               {/* Manual Name Input - Only show when API names is OFF */}
               {!useApiNamesToggle && (
                 <TextInput
-                  style={styles.contactNameInput}
+                  style={[styles.contactNameInput, dynamicStyles.contactNameInput]}
                   value={editContactName}
                   onChangeText={setEditContactName}
                   placeholder="Enter contact name"
+                  placeholderTextColor={isDarkMode ? "#999" : "#999"}
                   maxLength={50}
                 />
               )}
@@ -217,42 +277,44 @@ const ProfileEdit = ({
 
             {/* Unread Count Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Unread Messages</Text>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Unread Messages</Text>
               <TextInput
-                style={styles.unreadCountInput}
+                style={[styles.unreadCountInput, dynamicStyles.unreadCountInput]}
                 value={editUnreadCount}
                 onChangeText={setEditUnreadCount}
                 placeholder="Enter unread count"
+                placeholderTextColor={isDarkMode ? "#999" : "#999"}
                 keyboardType="numeric"
                 maxLength={3}
               />
-              <Text style={styles.helperText}>Number of unread messages to display</Text>
+              <Text style={[styles.helperText, dynamicStyles.helperText]}>Number of unread messages to display</Text>
             </View>
 
             {/* Date Text Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Date Text</Text>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Date Text</Text>
               <TextInput
-                style={styles.dateTextInput}
+                style={[styles.dateTextInput, dynamicStyles.dateTextInput]}
                 value={editDateText}
                 onChangeText={setEditDateText}
                 placeholder="Enter date text (e.g., Monday)"
+                placeholderTextColor={isDarkMode ? "#999" : "#999"}
                 maxLength={20}
               />
-              <Text style={styles.helperText}>Text displayed in the date separator when scrolling</Text>
+              <Text style={[styles.helperText, dynamicStyles.helperText]}>Text displayed in the date separator when scrolling</Text>
             </View>
 
             {/* Read Mode Toggle Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Read Mode</Text>
-              <TouchableOpacity style={styles.toggleContainer} onPress={toggleReadMode}>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Read Mode</Text>
+              <TouchableOpacity style={[styles.toggleContainer, dynamicStyles.toggleContainer]} onPress={toggleReadMode}>
                 <View style={styles.toggleInfo}>
                   <Ionicons 
                     name={isReadMode ? "eye" : "eye-off"} 
                     size={20} 
                     color={isReadMode ? "#25D366" : "#666"} 
                   />
-                  <Text style={[styles.toggleLabel, isReadMode && styles.toggleLabelActive]}>
+                  <Text style={[styles.toggleLabel, dynamicStyles.toggleLabel, isReadMode && styles.toggleLabelActive]}>
                     {isReadMode ? "Read Mode ON" : "Read Mode OFF"}
                   </Text>
                 </View>
@@ -260,16 +322,39 @@ const ProfileEdit = ({
                   <View style={[styles.toggleThumb, isReadMode && styles.toggleThumbActive]} />
                 </View>
               </TouchableOpacity>
-              <Text style={styles.helperText}>
+              <Text style={[styles.helperText, dynamicStyles.helperText]}>
                 When ON, message editing will be disabled
+              </Text>
+            </View>
+
+            {/* Dark Mode Toggle Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Dark Mode</Text>
+              <TouchableOpacity style={[styles.toggleContainer, dynamicStyles.toggleContainer]} onPress={toggleDarkMode}>
+                <View style={styles.toggleInfo}>
+                  <Ionicons 
+                    name={isDarkMode ? "moon" : "sunny"} 
+                    size={20} 
+                    color={isDarkMode ? "#25D366" : "#666"} 
+                  />
+                  <Text style={[styles.toggleLabel, dynamicStyles.toggleLabel, isDarkMode && styles.toggleLabelActive]}>
+                    {isDarkMode ? "Dark Mode ON" : "Dark Mode OFF"}
+                  </Text>
+                </View>
+                <View style={[styles.toggleSwitch, isDarkMode && styles.toggleSwitchActive]}>
+                  <View style={[styles.toggleThumb, isDarkMode && styles.toggleThumbActive]} />
+                </View>
+              </TouchableOpacity>
+              <Text style={[styles.helperText, dynamicStyles.helperText]}>
+                Toggle between light and dark theme
               </Text>
             </View>
 
           </ScrollView>
           
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+          <View style={[styles.modalFooter, dynamicStyles.modalFooter]}>
+            <TouchableOpacity style={[styles.cancelButton, dynamicStyles.cancelButton]} onPress={cancelEdit}>
+              <Text style={[styles.cancelButtonText, dynamicStyles.cancelButtonText]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={saveContactName}>
               <Text style={styles.saveButtonText}>Save</Text>

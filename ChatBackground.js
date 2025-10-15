@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useDarkMode } from './DarkModeContext';
 
 const ChatBackground = ({ 
   visible, 
@@ -21,9 +22,50 @@ const ChatBackground = ({
   onCustomBackgroundChange,
   onSwitchToProfile
 }) => {
+  const { isDarkMode } = useDarkMode();
+  
+  const dynamicStyles = {
+    modalOverlay: {
+      backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(0, 0, 0, 0.5)',
+    },
+    backgroundModalContent: {
+      backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+    },
+    modalHeader: {
+      borderBottomColor: isDarkMode ? '#333' : '#E0E0E0',
+    },
+    modalTitle: {
+      color: isDarkMode ? '#fff' : '#000',
+    },
+    closeButton: {
+      color: isDarkMode ? '#fff' : '#000',
+    },
+    backgroundOption: {
+      borderColor: isDarkMode ? '#444' : '#E0E0E0',
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
+    },
+    selectedBackgroundOption: {
+      borderColor: '#25D366',
+      backgroundColor: isDarkMode ? '#1a3a1a' : '#F0F8F0',
+    },
+    backgroundName: {
+      color: isDarkMode ? '#fff' : '#333',
+    },
+    modalFooter: {
+      borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
+    },
+    cancelButton: {
+      borderColor: isDarkMode ? '#444' : '#DDD',
+    },
+    cancelButtonText: {
+      color: isDarkMode ? '#ccc' : '#666',
+    },
+  };
+  
   const backgroundOptions = [
     { id: "default", name: "Default Chat Cover", uri: require('./assets/defualtbg.jpg') },
     { id: "defualtbg", name: "Default Background", uri: require('./assets/defualtbg.jpg') },
+    { id: "darkdefaultbg", name: "Dark Mode Background", uri: require('./assets/darkdefaultbg.png') },
     { id: "gradient1", name: "Blue Gradient", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
     { id: "gradient2", name: "Purple Gradient", uri: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop" },
     { id: "gradient3", name: "Green Gradient", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
@@ -73,16 +115,16 @@ const ChatBackground = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.backgroundModalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Choose Background</Text>
+      <View style={[styles.modalOverlay, dynamicStyles.modalOverlay]}>
+        <View style={[styles.backgroundModalContent, dynamicStyles.backgroundModalContent]}>
+          <View style={[styles.modalHeader, dynamicStyles.modalHeader]}>
+            <Text style={[styles.modalTitle, dynamicStyles.modalTitle]}>Choose Background</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity onPress={onSwitchToProfile} style={styles.switchButton}>
                 <Ionicons name="person-outline" size={24} color="#25D366" />
               </TouchableOpacity>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#000" />
+                <Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} />
               </TouchableOpacity>
             </View>
           </View>
@@ -93,7 +135,9 @@ const ChatBackground = ({
                 key={background.id}
                 style={[
                   styles.backgroundOption,
-                  selectedBackground === background.id && styles.selectedBackgroundOption
+                  dynamicStyles.backgroundOption,
+                  selectedBackground === background.id && styles.selectedBackgroundOption,
+                  selectedBackground === background.id && dynamicStyles.selectedBackgroundOption
                 ]}
                 onPress={() => {
                   if (background.id === "custom") {
@@ -123,7 +167,7 @@ const ChatBackground = ({
                     <Text style={styles.defaultBackgroundText}>Default</Text>
                   </View>
                 )}
-                <Text style={styles.backgroundName}>{background.name}</Text>
+                <Text style={[styles.backgroundName, dynamicStyles.backgroundName]}>{background.name}</Text>
                 {selectedBackground === background.id && (
                   <View style={styles.selectedIndicator}>
                     <Ionicons name="checkmark" size={20} color="#25D366" />
@@ -133,9 +177,9 @@ const ChatBackground = ({
             ))}
           </ScrollView>
           
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+          <View style={[styles.modalFooter, dynamicStyles.modalFooter]}>
+            <TouchableOpacity style={[styles.cancelButton, dynamicStyles.cancelButton]} onPress={onClose}>
+              <Text style={[styles.cancelButtonText, dynamicStyles.cancelButtonText]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

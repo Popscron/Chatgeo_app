@@ -28,6 +28,44 @@ import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
 import ImportExportModal from './importexport'
 import * as ScreenCapture from 'expo-screen-capture'
+import { useDarkMode } from './DarkModeContext'
+
+const getDynamicStyles = (isDarkMode) => ({
+  container: {
+    backgroundColor: isDarkMode ? '#0a0a0a' : '#fff',
+  },
+  header: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+    borderBottomColor: isDarkMode ? '#333' : '#E0E0E0',
+  },
+  contactName: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  unreadCount: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  messageContainer: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+  },
+  inputContainer: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+    borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
+  },
+  input: {
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
+    color: isDarkMode ? '#fff' : '#000',
+    borderColor: isDarkMode ? '#444' : '#DDD',
+  },
+  sendButton: {
+    backgroundColor: isDarkMode ? '#25D366' : '#25D366',
+  },
+  dateSeparator: {
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+  },
+  dateText: {
+    color: isDarkMode ? '#ccc' : '#666',
+  },
+});
 
 // Custom BlurView component with iOS compatibility
 const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) => {
@@ -76,6 +114,8 @@ const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) =>
 };
 
 export default function WhatsAppChat() {
+  const { isDarkMode } = useDarkMode();
+  const dynamicStyles = getDynamicStyles(isDarkMode);
   const [messages, setMessages] = useState([])
 
   const [senderEditModalVisible, setSenderEditModalVisible] = useState(false)
@@ -614,8 +654,14 @@ export default function WhatsAppChat() {
 
   // Get current background URI based on selection
   const getCurrentBackgroundUri = () => {
+    // If in dark mode and no specific background is selected, use dark default
+    if (isDarkMode && selectedBackground === "default") {
+      return require('./assets/darkdefaultbg.png')
+    }
+    
     if (selectedBackground === "default") return null
     if (selectedBackground === "defualtbg") return require('./assets/defualtbg.jpg')
+    if (selectedBackground === "darkdefaultbg") return require('./assets/darkdefaultbg.png')
     if (selectedBackground === "custom") return customBackgroundUri
     
     // Predefined backgrounds
@@ -1021,17 +1067,18 @@ export default function WhatsAppChat() {
             <Animated.View 
               style={[
                 styles.inputContainer,
+                dynamicStyles.inputContainer,
                 { transform: [{ translateY: inputContainerAnimation }] }
               ]}
             >
         <CustomBlurView 
           intensity={100} 
-          tint="light" 
+          tint={isDarkMode ? "dark" : "light"} 
           style={styles.inputBlurView}
         >
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
-          <Ionicons name="add" size={35} color="#000" />
+          <Ionicons name="add" size={35} color={isDarkMode ? "#fff" : "#000"} />
         </TouchableOpacity>
             <Animated.View 
               style={[
@@ -1043,9 +1090,9 @@ export default function WhatsAppChat() {
               ]}
             >
               <TextInput 
-                style={styles.textInput} 
+                style={[styles.textInput, dynamicStyles.input]} 
               //  placeholder="Message" 
-                placeholderTextColor="#999" 
+                placeholderTextColor={isDarkMode ? "#999" : "#999"} 
                 multiline={true}
                 maxHeight={100}
                 value={inputText}
@@ -1053,7 +1100,7 @@ export default function WhatsAppChat() {
                 editable={isTypingMode}
               />
           <TouchableOpacity style={styles.emojiButton}>
-            <Image source={require('./assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: '#000' }} />
+            <Image source={require('./assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: isDarkMode ? '#fff' : '#000' }} />
           </TouchableOpacity>
             </Animated.View>
             {showSendButton ? (
@@ -1063,7 +1110,7 @@ export default function WhatsAppChat() {
             ) : (
               <>
                 <TouchableOpacity style={[styles.inputIcon, styles.cameraIcon]} onPress={handleCameraPress}>
-                  <Ionicons name="camera-outline" size={26} color="#000" />
+                  <Ionicons name="camera-outline" size={26} color={isDarkMode ? "#fff" : "#000"} />
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.inputIcon, styles.micIcon]} onPress={addSenderMessage}>
                   <Image source={require('./assets/micicon.png')} style={{ width: 26, height: 24 }} />
@@ -1077,19 +1124,19 @@ export default function WhatsAppChat() {
   )
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, dynamicStyles.container]}>
       {/* Header - positioned above everything */}
       <CustomBlurView 
         intensity={100} 
-        tint="light" 
-        style={styles.header}
+        tint={isDarkMode ? "dark" : "light"} 
+        style={[styles.header, dynamicStyles.header]}
       >
         <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#000" />
+            <Ionicons name="chevron-back" size={24} color={isDarkMode ? "#fff" : "#000"} />
           </TouchableOpacity>
-          <Text style={styles.unreadCount}>{unreadCount}</Text>
+          <Text style={[styles.unreadCount, dynamicStyles.unreadCount]}>{unreadCount}</Text>
           <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
             <Image 
               source={profileImageUri ? { uri: profileImageUri } : require('./assets/Profilepic.png')} 
@@ -1097,7 +1144,7 @@ export default function WhatsAppChat() {
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleProfilePress}>
-            <Text style={styles.contactName}>{contactName}</Text>
+            <Text style={[styles.contactName, dynamicStyles.contactName]}>{contactName}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
@@ -1106,13 +1153,13 @@ export default function WhatsAppChat() {
             await generateNewApiName()
             console.log("generateNewApiName completed!")
           } : undefined}>
-            <Ionicons name="videocam-outline" size={28} color="#403f3f" />
+            <Ionicons name="videocam-outline" size={28} color={isDarkMode ? "#ccc" : "#403f3f"} />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.iconButton}
             onPress={() => setImportExportModalVisible(true)}
           >
-            <Ionicons name="call-outline" size={24} color="#000" />
+            <Ionicons name="call-outline" size={24} color={isDarkMode ? "#fff" : "#000"} />
           </TouchableOpacity>
          
         </View>

@@ -1,5 +1,10 @@
 import WhatsAppChat from '../chatscreen';
+import { DarkModeProvider } from '../DarkModeContext';
 
 export default function Home() {
-  return <WhatsAppChat />;
+  return (
+    <DarkModeProvider>
+      <WhatsAppChat />
+    </DarkModeProvider>
+  );
 }
