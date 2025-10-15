@@ -1189,6 +1189,7 @@ export default function WhatsAppChat() {
         }}
       />
       
+      {importExportModalVisible && console.log("Modal Debug - contactName being passed:", contactName)}
       <ImportExportModal
         visible={importExportModalVisible}
         onClose={() => setImportExportModalVisible(false)}

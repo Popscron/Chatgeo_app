@@ -33,12 +33,17 @@ const ImportExportModal = ({
       // Safety check for messages
       const messagesToExport = messages || [];
       
+      console.log("Export Debug - contactName:", contactName);
+      console.log("Export Debug - messages length:", messagesToExport.length);
+      
       const exportData = {
         messages: messagesToExport,
         contactName: contactName || 'Unknown Contact',
         exportDate: new Date().toISOString(),
         version: '1.0'
       };
+      
+      console.log("Export Debug - exportData:", exportData);
       
       const jsonString = JSON.stringify(exportData, null, 2);
       const fileName = `chat_export_${new Date().toISOString().split('T')[0]}.json`;
