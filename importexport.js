@@ -19,7 +19,8 @@ const ImportExportModal = ({
   onClose, 
   messages,
   onImport,
-  contactName
+  contactName,
+  onImportContact
 }) => {
   const [activeTab, setActiveTab] = useState('export'); // 'export' or 'import'
   const [importText, setImportText] = useState('');
@@ -46,11 +47,19 @@ const ImportExportModal = ({
       console.log("Export Debug - exportData:", exportData);
       
       const jsonString = JSON.stringify(exportData, null, 2);
+      console.log("Export Debug - jsonString:", jsonString);
+      
       const fileName = `chat_export_${new Date().toISOString().split('T')[0]}.json`;
       const fileUri = FileSystem.documentDirectory + fileName;
       
+      console.log("Export Debug - Writing to file:", fileUri);
+      
       // Use the legacy FileSystem API
       await FileSystem.writeAsStringAsync(fileUri, jsonString);
+      
+      // Verify what was written
+      const writtenContent = await FileSystem.readAsStringAsync(fileUri);
+      console.log("Export Debug - Written content:", writtenContent);
       
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri);
@@ -91,9 +100,13 @@ const ImportExportModal = ({
         return;
       }
 
+      // Extract contact name from import data
+      const importedContactName = importData.contactName || 'Imported Contact';
+      const messageCount = validMessages.length;
+
       Alert.alert(
         "Import Messages",
-        `Found ${validMessages.length} messages to import. This will replace your current chat. Continue?`,
+        `Found ${messageCount} messages from "${importedContactName}". This will replace your current chat. Continue?`,
         [
           { text: "Cancel", style: "cancel" },
           { 
@@ -102,7 +115,10 @@ const ImportExportModal = ({
               if (onImport) {
                 onImport(validMessages);
               }
-              Alert.alert("Success", `Imported ${validMessages.length} messages successfully!`);
+              if (onImportContact && importedContactName) {
+                onImportContact(importedContactName);
+              }
+              Alert.alert("Success", `Imported ${messageCount} messages from "${importedContactName}" successfully!`);
               setImportText('');
               onClose();
             }

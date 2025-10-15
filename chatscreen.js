@@ -276,6 +276,21 @@ export default function WhatsAppChat() {
     }
   }
 
+  // Handle import contact name
+  const handleImportContact = (importedContactName) => {
+    try {
+      console.log("=== IMPORT CONTACT START ===")
+      console.log("Imported contact name:", importedContactName)
+      
+      setContactName(importedContactName)
+      console.log("Contact name updated successfully")
+      
+      console.log("=== IMPORT CONTACT END ===")
+    } catch (error) {
+      console.error("Error importing contact name:", error)
+    }
+  }
+
   const cancelSenderEdit = () => {
     setSenderEditModalVisible(false)
     setEditingMessage(null)
@@ -1196,6 +1211,7 @@ export default function WhatsAppChat() {
         messages={messages}
         onImport={handleImportMessages}
         contactName={contactName}
+        onImportContact={handleImportContact}
       />
     </View>
   )
