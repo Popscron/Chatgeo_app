@@ -70,26 +70,6 @@ const getDynamicStyles = (isDarkMode) => ({
     borderBottomRightRadius: 20,
     overflow: 'hidden',
   },
-  notificationBanner: {
-    backgroundColor: isDarkMode ? '#1a1a1a' : '#25D366',
-    borderColor: isDarkMode ? '#333' : 'transparent',
-    borderWidth: isDarkMode ? 1 : 0,
-    borderRadius: 20,
-    paddingHorizontal: 4,
-    marginHorizontal: 10,
-    overflow: 'hidden',
-  },
-  notificationModal: {
-    backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
-    borderColor: isDarkMode ? '#333' : 'transparent',
-    borderWidth: isDarkMode ? 1 : 0,
-  },
-  notificationModalTitle: {
-    color: isDarkMode ? '#fff' : '#000',
-  },
-  notificationModalMessage: {
-    color: isDarkMode ? '#ccc' : '#666',
-  },
   sendButton: {
     backgroundColor: isDarkMode ? '#25D366' : '#25D366',
   },
@@ -194,11 +174,6 @@ export default function WhatsAppChat() {
   const [dateText, setDateText] = useState("Today")
   const [importExportModalVisible, setImportExportModalVisible] = useState(false)
   
-  // Notification state
-  const [notifications, setNotifications] = useState([])
-  const [showNotificationModal, setShowNotificationModal] = useState(false)
-  const [currentNotification, setCurrentNotification] = useState(null)
-  const [dismissedNotifications, setDismissedNotifications] = useState(new Set())
   
   // Image size selection state
   const [showImageSizeModal, setShowImageSizeModal] = useState(false)
@@ -869,300 +844,11 @@ export default function WhatsAppChat() {
     }
   }, [])
 
-  // Load notifications
-  const loadNotifications = async () => {
-    try {
-      // Load both viewed and dismissed notifications first
-      await loadViewedNotifications();
-      await loadDismissedNotifications();
-      
-      const notificationData = await mobileSupabaseHelpers.getNotifications();
-      setNotifications(notificationData);
-      
-      // Show the latest notification as a popup if not already dismissed or viewed
-      if (notificationData.length > 0) {
-        const latestNotification = notificationData[0];
-        console.log('Latest notification:', latestNotification.id);
-        console.log('Dismissed notifications:', Array.from(dismissedNotifications));
-        console.log('Viewed notifications:', Array.from(viewedNotifications));
-        console.log('Is notification dismissed?', dismissedNotifications.has(latestNotification.id));
-        console.log('Is notification viewed?', viewedNotifications.has(latestNotification.id));
-        console.log('Is modal showing?', showNotificationModal);
-        
-        // Check if notification has been viewed
-        const isViewed = viewedNotifications.has(latestNotification.id);
-        const isDismissed = dismissedNotifications.has(latestNotification.id);
-        
-        // Check version compatibility
-        const currentVersion = getCurrentAppVersion();
-        const notificationVersion = latestNotification.version || latestNotification.target_version;
-        
-        console.log('Current app version:', currentVersion);
-        console.log('Notification version:', notificationVersion);
-        console.log('Notification type:', latestNotification.type);
-        console.log('Is viewed?', isViewed);
-        console.log('Is dismissed?', isDismissed);
-        console.log('Viewed notifications set:', Array.from(viewedNotifications));
-        console.log('Dismissed notifications set:', Array.from(dismissedNotifications));
-        
-        // Only show notification if not viewed, not dismissed, and version matches criteria
-        if (!isViewed && !isDismissed && !showNotificationModal) {
-          if (notificationVersion && currentVersion !== notificationVersion) {
-            // Version-based notification (updates)
-            console.log('Showing notification modal - version mismatch');
-            setCurrentNotification(latestNotification);
-            setShowNotificationModal(true);
-          } else if (!notificationVersion && (latestNotification.type === 'maintenance' || latestNotification.type === 'urgent')) {
-            // Maintenance/urgent notifications (always show until viewed)
-            console.log('Showing notification modal - maintenance/urgent');
-            setCurrentNotification(latestNotification);
-            setShowNotificationModal(true);
-          } else if (!notificationVersion && latestNotification.type === 'custom') {
-            // Custom notifications (backward compatibility)
-            console.log('Showing notification modal - custom');
-            setCurrentNotification(latestNotification);
-            setShowNotificationModal(true);
-          } else {
-            console.log('Notification conditions not met');
-          }
-        } else {
-          console.log('Notification already viewed, dismissed, or modal showing');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    }
-  };
 
-  // Force mark notification as viewed (emergency function)
-  const forceMarkAsViewed = async (notificationId) => {
-    console.log('=== FORCE MARKING AS VIEWED ===', notificationId);
-    
-    // Update local viewed notifications
-    setViewedNotifications(prev => {
-      const newSet = new Set([...prev, notificationId]);
-      console.log('Force updated viewed notifications:', Array.from(newSet));
-      saveViewedNotifications(newSet);
-      return newSet;
-    });
-    
-    // Update local dismissed notifications
-    setDismissedNotifications(prev => {
-      const newSet = new Set([...prev, notificationId]);
-      console.log('Force updated dismissed notifications:', Array.from(newSet));
-      saveDismissedNotifications(newSet);
-      return newSet;
-    });
-    
-    // Try database update if user is logged in
-    if (user && user.id) {
-      try {
-        await mobileSupabaseHelpers.markNotificationViewed(notificationId, user.id, 'dismissed');
-        console.log('Force marked in database');
-      } catch (error) {
-        console.error('Force database update failed:', error);
-      }
-    }
-  };
 
-  // Save dismissed notifications to storage
-  const saveDismissedNotifications = async (newDismissedSet) => {
-    try {
-      const dismissedArray = Array.from(newDismissedSet);
-      await AsyncStorage.setItem('dismissedNotifications', JSON.stringify(dismissedArray));
-      console.log('Saved dismissed notifications:', dismissedArray);
-    } catch (error) {
-      console.error('Error saving dismissed notifications:', error);
-    }
-  };
 
-  // Save viewed notifications to storage
-  const saveViewedNotifications = async (newViewedSet) => {
-    try {
-      const viewedArray = Array.from(newViewedSet);
-      await AsyncStorage.setItem('viewedNotifications', JSON.stringify(viewedArray));
-      console.log('Saved viewed notifications:', viewedArray);
-    } catch (error) {
-      console.error('Error saving viewed notifications:', error);
-    }
-  };
 
-  // Handle update action
-  const handleUpdateAction = async () => {
-    // Mark notification as viewed in database
-    if (currentNotification && user && user.id) {
-      console.log('Marking notification as viewed:', currentNotification.id);
-      try {
-        await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'accepted');
-      } catch (error) {
-        console.error('Error marking notification as viewed in database:', error);
-      }
-    }
-    
-    // Update local viewed notifications
-    if (currentNotification) {
-      setViewedNotifications(prev => {
-        const newSet = new Set([...prev, currentNotification.id]);
-        console.log('Updated viewed notifications:', Array.from(newSet));
-        saveViewedNotifications(newSet);
-        return newSet;
-      });
-    }
-    
-    // Mark notification as dismissed locally
-    if (currentNotification) {
-      console.log('Dismissing notification:', currentNotification.id);
-      setDismissedNotifications(prev => {
-        const newSet = new Set([...prev, currentNotification.id]);
-        console.log('Updated dismissed notifications:', Array.from(newSet));
-        saveDismissedNotifications(newSet);
-        return newSet;
-      });
-    }
-    
-    // Close the notification modal
-    setShowNotificationModal(false);
-    
-    // Show confirmation alert
-    Alert.alert(
-      "App Update Available",
-      "A new version of MiniChat is available. Would you like to update now?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Update",
-          onPress: () => {
-            // Open TestFlight app
-            const testflightUrl = "https://testflight.apple.com/v1/app/6753818336";
-            Linking.openURL(testflightUrl).catch(err => {
-              console.error('Error opening TestFlight:', err);
-              Alert.alert("Error", "Could not open TestFlight. Please check if the app is installed.");
-            });
-          }
-        }
-      ]
-    );
-  };
 
-  // Handle cancel action
-  const handleCancelAction = async () => {
-    console.log('=== CANCEL ACTION TRIGGERED ===');
-    console.log('Current notification:', currentNotification?.id);
-    console.log('User:', user?.id);
-    
-    // Mark notification as viewed in database
-    if (currentNotification && user && user.id) {
-      console.log('Marking notification as viewed in database:', currentNotification.id);
-      try {
-        const result = await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
-        console.log('Database result:', result);
-      } catch (error) {
-        console.error('Error marking notification as viewed in database:', error);
-      }
-    } else {
-      console.log('Skipping database update - no user or notification');
-    }
-    
-    // Update local viewed notifications
-    if (currentNotification) {
-      console.log('Updating local viewed notifications');
-      setViewedNotifications(prev => {
-        const newSet = new Set([...prev, currentNotification.id]);
-        console.log('Updated viewed notifications:', Array.from(newSet));
-        saveViewedNotifications(newSet);
-        return newSet;
-      });
-    }
-    
-    // Mark notification as dismissed locally
-    if (currentNotification) {
-      console.log('Updating local dismissed notifications');
-      setDismissedNotifications(prev => {
-        const newSet = new Set([...prev, currentNotification.id]);
-        console.log('Updated dismissed notifications:', Array.from(newSet));
-        saveDismissedNotifications(newSet);
-        return newSet;
-      });
-    }
-    
-    console.log('Closing notification modal');
-    setShowNotificationModal(false);
-  };
-
-  // Handle close notification
-  const handleCloseNotification = async () => {
-    console.log('=== CLOSE NOTIFICATION TRIGGERED ===');
-    console.log('Current notification:', currentNotification?.id);
-    console.log('User:', user?.id);
-    
-    if (currentNotification) {
-      // Use the force function to ensure it's marked as viewed
-      await forceMarkAsViewed(currentNotification.id);
-    }
-    
-    console.log('Closing notification modal');
-    setShowNotificationModal(false);
-  };
-
-  // Load dismissed notifications from storage on mount
-  useEffect(() => {
-    loadDismissedNotifications();
-  }, []);
-
-  // Load notifications on component mount and every 30 seconds
-  useEffect(() => {
-    loadNotifications();
-    
-    const interval = setInterval(loadNotifications, 30000); // Check every 30 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  // Load viewed notifications for current user
-  const [viewedNotifications, setViewedNotifications] = useState(new Set());
-  
-  const loadViewedNotifications = async () => {
-    try {
-      // First try to load from local storage as fallback
-      const storedViewed = await AsyncStorage.getItem('viewedNotifications');
-      if (storedViewed) {
-        const viewedIds = new Set(JSON.parse(storedViewed));
-        setViewedNotifications(viewedIds);
-        console.log('Loaded viewed notifications from storage:', Array.from(viewedIds));
-      }
-      
-      // Then try to load from database if user is logged in
-      if (user && user.id) {
-        try {
-          const viewedData = await mobileSupabaseHelpers.getViewedNotifications(user.id);
-          const viewedIds = new Set(viewedData.map(item => item.notification_id));
-          setViewedNotifications(viewedIds);
-          console.log('Loaded viewed notifications from database:', Array.from(viewedIds));
-        } catch (dbError) {
-          console.log('Database not available, using local storage only');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading viewed notifications:', error);
-    }
-  };
-
-  // Load dismissed notifications for current user
-  const loadDismissedNotifications = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('dismissedNotifications');
-      if (stored) {
-        const dismissedIds = new Set(JSON.parse(stored));
-        setDismissedNotifications(dismissedIds);
-        console.log('Loaded dismissed notifications from storage:', Array.from(dismissedIds));
-      }
-    } catch (error) {
-      console.error('Error loading dismissed notifications:', error);
-    }
-  };
 
   // Get current app version
   const getCurrentAppVersion = () => {
@@ -1506,85 +1192,6 @@ export default function WhatsAppChat() {
 
   return (
     <View style={[styles.container, dynamicStyles.container]}>
-      {/* Notification Popup Modal */}
-      <Modal
-        visible={showNotificationModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCloseNotification}
-      >
-        <View style={styles.notificationModalOverlay}>
-          <View style={[styles.notificationModal, dynamicStyles.notificationModal]}>
-            <View style={styles.notificationModalHeader}>
-              <View style={styles.notificationModalIcon}>
-                <Ionicons 
-                  name={currentNotification?.type === 'urgent' ? 'warning' : 
-                        currentNotification?.type === 'update' ? 'download' : 'notifications'} 
-                  size={24} 
-                  color="#fff" 
-                />
-              </View>
-              <TouchableOpacity 
-                style={styles.notificationModalClose}
-                onPress={handleCloseNotification}
-              >
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.notificationModalContent}>
-              <Text style={[styles.notificationModalTitle, dynamicStyles.notificationModalTitle]}>
-                {currentNotification?.title}
-              </Text>
-              <Text style={[styles.notificationModalMessage, dynamicStyles.notificationModalMessage]}>
-                {currentNotification?.message}
-              </Text>
-            </View>
-            
-            {/* Action buttons for update notifications */}
-            {currentNotification?.type === 'update' && (
-              <View style={styles.notificationModalActions}>
-                <TouchableOpacity 
-                  style={styles.notificationModalCancelButton}
-                  onPress={handleCancelAction}
-                >
-                  <Text style={styles.notificationModalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.notificationModalUpdateButton}
-                  onPress={handleUpdateAction}
-                >
-                  <Text style={styles.notificationModalUpdateText}>Update</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            
-            {/* Close button for non-update notifications */}
-            {currentNotification?.type !== 'update' && (
-              <View style={styles.notificationModalActions}>
-                <TouchableOpacity 
-                  style={styles.notificationModalOkButton}
-                  onPress={handleCloseNotification}
-                >
-                  <Text style={styles.notificationModalOkText}>OK</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.notificationModalOkButton, {backgroundColor: '#ff6b6b', marginTop: 10}]}
-                  onPress={() => {
-                    console.log('=== TEST FORCE MARK ===');
-                    if (currentNotification) {
-                      forceMarkAsViewed(currentNotification.id);
-                      setShowNotificationModal(false);
-                    }
-                  }}
-                >
-                  <Text style={styles.notificationModalOkText}>Force Mark Viewed</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
       
       {/* Header - positioned above everything */}
       <CustomBlurView 
@@ -1755,6 +1362,69 @@ export default function WhatsAppChat() {
         profileImageUri={profileImageUri}
         onImportProfileImage={setProfileImageUri}
       />
+
+      {/* Notification Modal */}
+      <Modal
+        visible={showNotificationModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCloseNotification}
+      >
+        <View style={styles.notificationModalOverlay}>
+          <View style={[styles.notificationModal, isDarkMode && { backgroundColor: '#1a1a1a' }]}>
+            <View style={styles.notificationModalHeader}>
+              <View style={styles.notificationModalIcon}>
+                <Ionicons 
+                  name={currentNotification?.type === 'update' ? 'arrow-up-circle' : 'information-circle'} 
+                  size={24} 
+                  color="#fff" 
+                />
+              </View>
+              <TouchableOpacity 
+                style={styles.notificationModalClose}
+                onPress={handleCloseNotification}
+              >
+                <Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.notificationModalContent}>
+              <Text style={[styles.notificationModalTitle, isDarkMode && { color: '#fff' }]}>
+                {currentNotification?.title || 'Notification'}
+              </Text>
+              <Text style={[styles.notificationModalMessage, isDarkMode && { color: '#ccc' }]}>
+                {currentNotification?.message || ''}
+              </Text>
+            </View>
+            
+            {currentNotification?.type === 'update' ? (
+              <View style={styles.notificationModalActions}>
+                <TouchableOpacity 
+                  style={styles.notificationModalCancelButton}
+                  onPress={handleCancelAction}
+                >
+                  <Text style={styles.notificationModalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.notificationModalUpdateButton}
+                  onPress={handleUpdateAction}
+                >
+                  <Text style={styles.notificationModalUpdateText}>Update</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.notificationModalActions}>
+                <TouchableOpacity 
+                  style={styles.notificationModalOkButton}
+                  onPress={handleCloseNotification}
+                >
+                  <Text style={styles.notificationModalOkText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -1766,173 +1436,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "transparent",
-  },
-  notificationBanner: {
-    position: 'absolute',
-    top: 60,
-    left: 10,
-    right: 10,
-    zIndex: 1001,
-    backgroundColor: '#25D366',
-    borderRadius: 8,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  notificationContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  notificationIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  notificationText: {
-    flex: 1,
-  },
-  notificationTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  notificationMessage: {
-    color: '#fff',
-    fontSize: 12,
-    opacity: 0.9,
-  },
-  notificationClose: {
-    padding: 4,
-  },
-  notificationActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 8,
-    gap: 8,
-  },
-  notificationCancelButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  notificationCancelText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  notificationUpdateButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  notificationUpdateText: {
-    color: '#25D366',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  notificationModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  notificationModal: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  notificationModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  notificationModalIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#25D366',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  notificationModalClose: {
-    marginLeft: 'auto',
-    padding: 4,
-  },
-  notificationModalContent: {
-    marginBottom: 20,
-  },
-  notificationModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#000',
-  },
-  notificationModalMessage: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#666',
-  },
-  notificationModalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  notificationModalCancelButton: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  notificationModalCancelText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  notificationModalUpdateButton: {
-    flex: 1,
-    backgroundColor: '#25D366',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  notificationModalUpdateText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  notificationModalOkButton: {
-    backgroundColor: '#25D366',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  notificationModalOkText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   header: {
     position: "absolute",
