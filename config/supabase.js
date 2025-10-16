@@ -213,5 +213,74 @@ export const mobileSupabaseHelpers = {
       console.error('Get viewed notifications error:', error)
       return []
     }
+  },
+
+  // Get user status
+  async getUserStatus(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('status')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error fetching user status:', error)
+        return { success: false, error }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error('Get user status error:', error)
+      return { success: false, error }
+    }
+  },
+
+  // Get user profile data
+  async getUserProfile(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username, email, phone, status, created_at, updated_at, last_active, profile_image, country, timezone')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error fetching user profile:', error)
+        return { success: false, error }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error('Get user profile error:', error)
+      return { success: false, error }
+    }
+  },
+
+  // Get user subscription data
+  async getUserSubscription(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('id, start_date, end_date, days_remaining, status, created_at, updated_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) {
+        // No subscription found is not necessarily an error
+        if (error.code === 'PGRST116') {
+          return { success: true, data: null }
+        }
+        console.error('Error fetching user subscription:', error)
+        return { success: false, error }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error('Get user subscription error:', error)
+      return { success: false, error }
+    }
   }
 }

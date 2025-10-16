@@ -33,6 +33,10 @@ import * as ScreenCapture from 'expo-screen-capture'
 import { mobileSupabaseHelpers } from '../config/supabase'
 import { useDarkMode } from './DarkModeContext'
 import { useAuth } from './AuthContext'
+import DisabledUserScreen from './DisabledUserScreen'
+import SuspendedUserScreen from './SuspendedUserScreen'
+import ExpiredUserScreen from './ExpiredUserScreen'
+import UserDashboard from './UserDashboard'
 
 const getDynamicStyles = (isDarkMode) => ({
   container: {
@@ -76,6 +80,17 @@ const getDynamicStyles = (isDarkMode) => ({
   dateSeparator: {
     backgroundColor: isDarkMode ? '#000000' : '#f0f0f0',
   },
+  updateModal: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+    borderColor: isDarkMode ? '#333' : 'transparent',
+    borderWidth: isDarkMode ? 1 : 0,
+  },
+  updateModalTitle: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  updateModalMessage: {
+    color: isDarkMode ? '#ccc' : '#666',
+  },
   dateText: {
     color: isDarkMode ? '#fff' : '#666',
   },
@@ -91,6 +106,9 @@ const getDynamicStyles = (isDarkMode) => ({
   imageTime: {
     fontSize: 11,
     color: isDarkMode ? '#a7a8a8' : '#53656f',
+  },
+  dashboardModal: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
   },
 });
 
@@ -148,6 +166,7 @@ export default function WhatsAppChat() {
 
   const [senderEditModalVisible, setSenderEditModalVisible] = useState(false)
   const [receiverEditModalVisible, setReceiverEditModalVisible] = useState(false)
+  const [userDashboardVisible, setUserDashboardVisible] = useState(false)
   const [editingMessage, setEditingMessage] = useState(null)
   const [editText, setEditText] = useState("")
   const [editTime, setEditTime] = useState("")
@@ -174,6 +193,14 @@ export default function WhatsAppChat() {
   const [dateText, setDateText] = useState("Today")
   const [importExportModalVisible, setImportExportModalVisible] = useState(false)
   
+  // Notification state (only for update notifications)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [currentUpdateNotification, setCurrentUpdateNotification] = useState(null)
+  const [dismissedUpdates, setDismissedUpdates] = useState(new Set())
+  
+  // User status state
+  const [userStatus, setUserStatus] = useState('active')
+  const [showStatusScreen, setShowStatusScreen] = useState(false)
   
   // Image size selection state
   const [showImageSizeModal, setShowImageSizeModal] = useState(false)
@@ -844,16 +871,168 @@ export default function WhatsAppChat() {
     }
   }, [])
 
-
-
-
-
-
-
   // Get current app version
   const getCurrentAppVersion = () => {
     return "1.1.1"; // This should match the version in app.json
   };
+
+  // Check user status
+  const checkUserStatus = async () => {
+    if (!user || !user.id) return;
+
+    try {
+      const result = await mobileSupabaseHelpers.getUserStatus(user.id);
+      if (result.success && result.data) {
+        const status = result.data.status;
+        setUserStatus(status);
+        
+        // Show appropriate status screen if not active
+        if (status !== 'active') {
+          setShowStatusScreen(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user status:', error);
+    }
+  };
+
+  // Load update notifications
+  const loadUpdateNotifications = async () => {
+    try {
+      const notificationData = await mobileSupabaseHelpers.getNotifications();
+      const updateNotifications = notificationData.filter(notification => 
+        notification.type === 'update' && notification.version
+      );
+      
+      if (updateNotifications.length > 0) {
+        const latestUpdate = updateNotifications[0];
+        const currentVersion = getCurrentAppVersion();
+        const notificationVersion = latestUpdate.version;
+        
+        // Only show if version doesn't match and not already dismissed
+        if (currentVersion !== notificationVersion && !dismissedUpdates.has(latestUpdate.id)) {
+          setCurrentUpdateNotification(latestUpdate);
+          setShowUpdateModal(true);
+          
+          // Mark as viewed when shown (user has seen it)
+          if (user && user.id) {
+            mobileSupabaseHelpers.markNotificationViewed(
+              latestUpdate.id, 
+              user.id, 
+              'viewed'
+            ).catch(error => {
+              console.error('Error marking notification as viewed:', error);
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading update notifications:', error);
+    }
+  };
+
+  // Handle update action
+  const handleUpdateAction = async () => {
+    if (currentUpdateNotification && user && user.id) {
+      // Mark as viewed in database with 'accepted' action
+      try {
+        await mobileSupabaseHelpers.markNotificationViewed(
+          currentUpdateNotification.id, 
+          user.id, 
+          'accepted'
+        );
+        console.log('Marked notification as accepted in database');
+      } catch (error) {
+        console.error('Error marking notification as accepted:', error);
+      }
+      
+      // Mark as dismissed locally
+      setDismissedUpdates(prev => new Set([...prev, currentUpdateNotification.id]));
+      
+      // Close modal
+      setShowUpdateModal(false);
+      
+      // Open TestFlight
+            const testflightUrl = "https://testflight.apple.com/v1/app/6753818336";
+            Linking.openURL(testflightUrl).catch(err => {
+              console.error('Error opening TestFlight:', err);
+        Alert.alert("Error", "Could not open TestFlight. Please try again later.");
+      });
+    }
+  };
+
+  // Handle cancel update
+  const handleCancelUpdate = async () => {
+    if (currentUpdateNotification && user && user.id) {
+      // Mark as viewed in database with 'dismissed' action
+      try {
+        await mobileSupabaseHelpers.markNotificationViewed(
+          currentUpdateNotification.id, 
+          user.id, 
+          'dismissed'
+        );
+        console.log('Marked notification as dismissed in database');
+      } catch (error) {
+        console.error('Error marking notification as dismissed:', error);
+      }
+      
+      // Mark as dismissed locally
+      setDismissedUpdates(prev => new Set([...prev, currentUpdateNotification.id]));
+    }
+    
+    setShowUpdateModal(false);
+  };
+
+  // Load dismissed updates from storage
+  useEffect(() => {
+    const loadDismissedUpdates = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('dismissedUpdates');
+        if (stored) {
+          const dismissedIds = new Set(JSON.parse(stored));
+          setDismissedUpdates(dismissedIds);
+        }
+      } catch (error) {
+        console.error('Error loading dismissed updates:', error);
+      }
+    };
+    
+    loadDismissedUpdates();
+  }, []);
+
+  // Load update notifications on mount and periodically
+  useEffect(() => {
+    loadUpdateNotifications();
+    
+    const interval = setInterval(loadUpdateNotifications, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check user status on mount and periodically
+  useEffect(() => {
+    checkUserStatus();
+    
+    const statusInterval = setInterval(checkUserStatus, 60000); // Check every minute
+    
+    return () => clearInterval(statusInterval);
+  }, [user]);
+
+  // Save dismissed updates to storage
+  useEffect(() => {
+    const saveDismissedUpdates = async () => {
+      try {
+        const dismissedArray = Array.from(dismissedUpdates);
+        await AsyncStorage.setItem('dismissedUpdates', JSON.stringify(dismissedArray));
+    } catch (error) {
+        console.error('Error saving dismissed updates:', error);
+      }
+    };
+    
+    if (dismissedUpdates.size > 0) {
+      saveDismissedUpdates();
+    }
+  }, [dismissedUpdates]);
 
   // Screen capture detection for default contact name warning
   useEffect(() => {
@@ -1158,8 +1337,11 @@ export default function WhatsAppChat() {
                 onChangeText={handleTextChange}
                 editable={isTypingMode}
               />
-          <TouchableOpacity style={styles.emojiButton}>
-            <Image source={require('../assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: isDarkMode ? '#fff' : '#000' }} />
+          <TouchableOpacity 
+            style={[styles.emojiButton, { marginRight: 6 }]}
+            onPress={() => setUserDashboardVisible(true)}
+          >
+            <Image source={require('../assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: isDarkMode ? '#fff' : '#000', }} />
           </TouchableOpacity>
             </Animated.View>
             {showSendButton ? (
@@ -1190,8 +1372,96 @@ export default function WhatsAppChat() {
     </>
   )
 
+  // Render status screen if user is not active
+  if (showStatusScreen && userStatus !== 'active') {
+    switch (userStatus) {
+      case 'disabled':
+        return <DisabledUserScreen />;
+      case 'suspended':
+        return <SuspendedUserScreen />;
+      case 'expired':
+        return <ExpiredUserScreen />;
+      default:
+        return <DisabledUserScreen />;
+    }
+  }
+
   return (
     <View style={[styles.container, dynamicStyles.container]}>
+      
+      {/* Update Notification Modal */}
+      <Modal
+        visible={showUpdateModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelUpdate}
+      >
+        <View style={styles.updateModalOverlay}>
+          <View style={[styles.updateModal, dynamicStyles.updateModal]}>
+            <View style={styles.updateModalHeader}>
+              <View style={styles.updateModalIcon}>
+                <Ionicons 
+                  name="download" 
+                  size={24} 
+                  color="#fff" 
+                />
+              </View>
+              <TouchableOpacity 
+                style={styles.updateModalClose}
+                onPress={handleCancelUpdate}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.updateModalContent}>
+              <Text style={[styles.updateModalTitle, dynamicStyles.updateModalTitle]}>
+                {currentUpdateNotification?.title}
+              </Text>
+              <Text style={[styles.updateModalMessage, dynamicStyles.updateModalMessage]}>
+                {currentUpdateNotification?.message}
+              </Text>
+              {currentUpdateNotification?.version && (
+                <Text style={styles.updateModalVersion}>
+                  Version {currentUpdateNotification.version} Available
+                </Text>
+              )}
+            </View>
+            
+            <View style={styles.updateModalActions}>
+                <TouchableOpacity 
+                style={styles.updateModalCancelButton}
+                onPress={handleCancelUpdate}
+                >
+                <Text style={styles.updateModalCancelText}>Later</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                style={styles.updateModalUpdateButton}
+                  onPress={handleUpdateAction}
+                >
+                <Text style={styles.updateModalUpdateText}>Update Now</Text>
+                </TouchableOpacity>
+              </View>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* User Dashboard Modal */}
+      <Modal
+        visible={userDashboardVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setUserDashboardVisible(false)}
+      >
+        <View style={styles.dashboardModalOverlay}>
+          <View style={[styles.dashboardModal, dynamicStyles.dashboardModal]}>
+            <UserDashboard 
+              onClose={() => setUserDashboardVisible(false)}
+              isDarkMode={isDarkMode}
+            />
+          </View>
+        </View>
+      </Modal>
       
       {/* Header - positioned above everything */}
       <CustomBlurView 
@@ -1221,7 +1491,7 @@ export default function WhatsAppChat() {
             await generateNewApiName()
             console.log("generateNewApiName completed!")
           } : undefined}>
-            <Ionicons name="videocam-outline" size={28} color={isDarkMode ? "#ccc" : "#403f3f"} />
+            <Ionicons name="videocam-outline" size={28} color={isDarkMode ? "#fff" : "#403f3f"} />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.iconButton}
@@ -1362,69 +1632,6 @@ export default function WhatsAppChat() {
         profileImageUri={profileImageUri}
         onImportProfileImage={setProfileImageUri}
       />
-
-      {/* Notification Modal */}
-      <Modal
-        visible={showNotificationModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={handleCloseNotification}
-      >
-        <View style={styles.notificationModalOverlay}>
-          <View style={[styles.notificationModal, isDarkMode && { backgroundColor: '#1a1a1a' }]}>
-            <View style={styles.notificationModalHeader}>
-              <View style={styles.notificationModalIcon}>
-                <Ionicons 
-                  name={currentNotification?.type === 'update' ? 'arrow-up-circle' : 'information-circle'} 
-                  size={24} 
-                  color="#fff" 
-                />
-              </View>
-              <TouchableOpacity 
-                style={styles.notificationModalClose}
-                onPress={handleCloseNotification}
-              >
-                <Ionicons name="close" size={24} color={isDarkMode ? "#fff" : "#000"} />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.notificationModalContent}>
-              <Text style={[styles.notificationModalTitle, isDarkMode && { color: '#fff' }]}>
-                {currentNotification?.title || 'Notification'}
-              </Text>
-              <Text style={[styles.notificationModalMessage, isDarkMode && { color: '#ccc' }]}>
-                {currentNotification?.message || ''}
-              </Text>
-            </View>
-            
-            {currentNotification?.type === 'update' ? (
-              <View style={styles.notificationModalActions}>
-                <TouchableOpacity 
-                  style={styles.notificationModalCancelButton}
-                  onPress={handleCancelAction}
-                >
-                  <Text style={styles.notificationModalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.notificationModalUpdateButton}
-                  onPress={handleUpdateAction}
-                >
-                  <Text style={styles.notificationModalUpdateText}>Update</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.notificationModalActions}>
-                <TouchableOpacity 
-                  style={styles.notificationModalOkButton}
-                  onPress={handleCloseNotification}
-                >
-                  <Text style={styles.notificationModalOkText}>OK</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   )
 }
@@ -1436,6 +1643,99 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "transparent",
+  },
+  updateModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  updateModal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  updateModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  updateModalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3b82f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  updateModalClose: {
+    marginLeft: 'auto',
+    padding: 4,
+  },
+  updateModalContent: {
+    marginBottom: 20,
+  },
+  updateModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#000',
+  },
+  updateModalMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#666',
+    marginBottom: 8,
+  },
+  updateModalVersion: {
+    fontSize: 12,
+    color: '#3b82f6',
+    fontWeight: '600',
+    backgroundColor: '#f0f9ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  updateModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  updateModalCancelButton: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  updateModalCancelText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  updateModalUpdateButton: {
+    flex: 1,
+    backgroundColor: '#3b82f6',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  updateModalUpdateText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   header: {
     position: "absolute",
@@ -1741,8 +2041,8 @@ const styles = StyleSheet.create({
    // fontWeight:8000
   },
   cameraIcon: {
-    marginVertical: -2,
-    marginLeft:8 // -8 + 6 = -2 (3 steps added)
+    marginVertical: -2, // -8 + 6 = -2 (3 steps added)
+    paddingLeft:14
     
   },
   micIcon: {
@@ -1920,5 +2220,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     fontWeight: '500',
+  },
+  dashboardModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  dashboardModal: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  dashboardIcon: {
+    width: 24,
+    height: 24,
   },
 })

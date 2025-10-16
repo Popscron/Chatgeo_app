@@ -133,11 +133,7 @@ const LoginScreen = () => {
               )}
             </TouchableOpacity>
 
-            <View style={styles.credentialsHint}>
-              <Text style={styles.hintText}>Demo Credentials:</Text>
-              <Text style={styles.hintText}>Number: 9088</Text>
-              <Text style={styles.hintText}>Password: 9088</Text>
-            </View>
+            
           </View>
         </View>
       </KeyboardAvoidingView>
