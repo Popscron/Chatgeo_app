@@ -898,6 +898,11 @@ export default function WhatsAppChat() {
         
         console.log('Current app version:', currentVersion);
         console.log('Notification version:', notificationVersion);
+        console.log('Notification type:', latestNotification.type);
+        console.log('Is viewed?', isViewed);
+        console.log('Is dismissed?', isDismissed);
+        console.log('Viewed notifications set:', Array.from(viewedNotifications));
+        console.log('Dismissed notifications set:', Array.from(dismissedNotifications));
         
         // Only show notification if not viewed, not dismissed, and version matches criteria
         if (!isViewed && !isDismissed && !showNotificationModal) {
@@ -1012,18 +1017,26 @@ export default function WhatsAppChat() {
 
   // Handle cancel action
   const handleCancelAction = async () => {
+    console.log('=== CANCEL ACTION TRIGGERED ===');
+    console.log('Current notification:', currentNotification?.id);
+    console.log('User:', user?.id);
+    
     // Mark notification as viewed in database
     if (currentNotification && user && user.id) {
-      console.log('Marking notification as viewed:', currentNotification.id);
+      console.log('Marking notification as viewed in database:', currentNotification.id);
       try {
-        await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
+        const result = await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
+        console.log('Database result:', result);
       } catch (error) {
         console.error('Error marking notification as viewed in database:', error);
       }
+    } else {
+      console.log('Skipping database update - no user or notification');
     }
     
     // Update local viewed notifications
     if (currentNotification) {
+      console.log('Updating local viewed notifications');
       setViewedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated viewed notifications:', Array.from(newSet));
@@ -1034,7 +1047,7 @@ export default function WhatsAppChat() {
     
     // Mark notification as dismissed locally
     if (currentNotification) {
-      console.log('Dismissing notification:', currentNotification.id);
+      console.log('Updating local dismissed notifications');
       setDismissedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated dismissed notifications:', Array.from(newSet));
@@ -1043,6 +1056,7 @@ export default function WhatsAppChat() {
       });
     }
     
+    console.log('Closing notification modal');
     setShowNotificationModal(false);
   };
 
