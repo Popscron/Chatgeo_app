@@ -29,6 +29,8 @@ import ChatBackground from './ChatBackground'
 import ImportExportModal from './importexport'
 import * as ScreenCapture from 'expo-screen-capture'
 import { useDarkMode } from './DarkModeContext'
+import { mobileSupabaseHelpers } from '../config/supabase'
+import { useAuth } from './AuthContext'
 
 const getDynamicStyles = (isDarkMode) => ({
   container: {
@@ -115,6 +117,7 @@ const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) =>
 
 export default function WhatsAppChat() {
   const { isDarkMode } = useDarkMode();
+  const { user } = useAuth();
   const dynamicStyles = getDynamicStyles(isDarkMode);
   const [messages, setMessages] = useState([])
 
@@ -817,7 +820,16 @@ export default function WhatsAppChat() {
 
   // Screen capture detection for default contact name warning
   useEffect(() => {
-    const handleScreenshot = () => {
+    const handleScreenshot = async () => {
+      // Log screenshot activity
+      if (user && user.id !== 'demo-user') {
+        await mobileSupabaseHelpers.logActivity(user.id, 'screenshot', {
+          contact_name: contactName,
+          timestamp: new Date().toISOString()
+        });
+        await mobileSupabaseHelpers.updateAnalytics(user.id, 'screenshot');
+      }
+
       // Check if contact name is still the default "MiniChat"
       if (contactName === "MiniChat") {
         Alert.alert(

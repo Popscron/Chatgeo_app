@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useDarkMode } from './DarkModeContext';
+import { useAuth } from './AuthContext';
 
 const getDynamicStyles = (isDarkMode) => ({
   modalOverlay: {
@@ -54,6 +55,9 @@ const getDynamicStyles = (isDarkMode) => ({
   modalFooter: {
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
   },
+  logoutButton: {
+    backgroundColor: isDarkMode ? '#dc3545' : '#dc3545',
+  },
   cancelButton: {
     borderColor: isDarkMode ? '#444' : '#DDD',
   },
@@ -90,6 +94,7 @@ const ProfileEdit = ({
   onDateTextChange
 }) => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { logout } = useAuth();
   const [editContactName, setEditContactName] = useState(contactName);
   const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
   const [isReadMode, setIsReadMode] = useState(readMode || false);
@@ -353,6 +358,22 @@ const ProfileEdit = ({
           </ScrollView>
           
           <View style={[styles.modalFooter, dynamicStyles.modalFooter]}>
+            <TouchableOpacity 
+              style={[styles.logoutButton, dynamicStyles.logoutButton]} 
+              onPress={() => {
+                Alert.alert(
+                  "Logout",
+                  "Are you sure you want to logout?",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Logout", style: "destructive", onPress: logout }
+                  ]
+                );
+              }}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={[styles.cancelButton, dynamicStyles.cancelButton]} onPress={cancelEdit}>
               <Text style={[styles.cancelButtonText, dynamicStyles.cancelButtonText]}>Cancel</Text>
             </TouchableOpacity>
@@ -483,7 +504,8 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
@@ -508,6 +530,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#25D366',
   },
   saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#dc3545',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  logoutIcon: {
+    marginRight: 4,
+  },
+  logoutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
