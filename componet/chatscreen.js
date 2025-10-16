@@ -892,7 +892,7 @@ export default function WhatsAppChat() {
           text: "Update",
           onPress: () => {
             // Open TestFlight app
-            const testflightUrl = "https://testflight.apple.com/join/your-testflight-code"; // TODO: Replace with your actual TestFlight URL
+            const testflightUrl = "https://testflight.apple.com/v1/app/6753818336";
             Linking.openURL(testflightUrl).catch(err => {
               console.error('Error opening TestFlight:', err);
               Alert.alert("Error", "Could not open TestFlight. Please check if the app is installed.");
