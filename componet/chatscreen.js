@@ -872,16 +872,25 @@ export default function WhatsAppChat() {
   // Load notifications
   const loadNotifications = async () => {
     try {
+      // Load viewed notifications first
+      await loadViewedNotifications();
+      
       const notificationData = await mobileSupabaseHelpers.getNotifications();
       setNotifications(notificationData);
       
-      // Show the latest notification as a popup if not already dismissed
+      // Show the latest notification as a popup if not already dismissed or viewed
       if (notificationData.length > 0) {
         const latestNotification = notificationData[0];
         console.log('Latest notification:', latestNotification.id);
         console.log('Dismissed notifications:', Array.from(dismissedNotifications));
+        console.log('Viewed notifications:', Array.from(viewedNotifications));
         console.log('Is notification dismissed?', dismissedNotifications.has(latestNotification.id));
+        console.log('Is notification viewed?', viewedNotifications.has(latestNotification.id));
         console.log('Is modal showing?', showNotificationModal);
+        
+        // Check if notification has been viewed
+        const isViewed = viewedNotifications.has(latestNotification.id);
+        const isDismissed = dismissedNotifications.has(latestNotification.id);
         
         // Check version compatibility
         const currentVersion = getCurrentAppVersion();
@@ -890,21 +899,28 @@ export default function WhatsAppChat() {
         console.log('Current app version:', currentVersion);
         console.log('Notification version:', notificationVersion);
         
-        // Only show notification if versions don't match and not already dismissed
-        if (notificationVersion && currentVersion !== notificationVersion && 
-            !dismissedNotifications.has(latestNotification.id) && !showNotificationModal) {
-          console.log('Showing notification modal - version mismatch');
-          setCurrentNotification(latestNotification);
-          setShowNotificationModal(true);
-        } else if (!notificationVersion) {
-          // If no version specified, show notification (backward compatibility)
-          if (!dismissedNotifications.has(latestNotification.id) && !showNotificationModal) {
-            console.log('Showing notification modal - no version specified');
+        // Only show notification if not viewed, not dismissed, and version matches criteria
+        if (!isViewed && !isDismissed && !showNotificationModal) {
+          if (notificationVersion && currentVersion !== notificationVersion) {
+            // Version-based notification (updates)
+            console.log('Showing notification modal - version mismatch');
             setCurrentNotification(latestNotification);
             setShowNotificationModal(true);
+          } else if (!notificationVersion && (latestNotification.type === 'maintenance' || latestNotification.type === 'urgent')) {
+            // Maintenance/urgent notifications (always show until viewed)
+            console.log('Showing notification modal - maintenance/urgent');
+            setCurrentNotification(latestNotification);
+            setShowNotificationModal(true);
+          } else if (!notificationVersion && latestNotification.type === 'custom') {
+            // Custom notifications (backward compatibility)
+            console.log('Showing notification modal - custom');
+            setCurrentNotification(latestNotification);
+            setShowNotificationModal(true);
+          } else {
+            console.log('Notification conditions not met');
           }
         } else {
-          console.log('Notification already dismissed, modal showing, or versions match');
+          console.log('Notification already viewed, dismissed, or modal showing');
         }
       }
     } catch (error) {
@@ -924,8 +940,21 @@ export default function WhatsAppChat() {
   };
 
   // Handle update action
-  const handleUpdateAction = () => {
-    // Mark notification as dismissed
+  const handleUpdateAction = async () => {
+    // Mark notification as viewed in database
+    if (currentNotification && user && user.id) {
+      console.log('Marking notification as viewed:', currentNotification.id);
+      await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'accepted');
+      
+      // Update local viewed notifications
+      setViewedNotifications(prev => {
+        const newSet = new Set([...prev, currentNotification.id]);
+        console.log('Updated viewed notifications:', Array.from(newSet));
+        return newSet;
+      });
+    }
+    
+    // Mark notification as dismissed locally
     if (currentNotification) {
       console.log('Dismissing notification:', currentNotification.id);
       setDismissedNotifications(prev => {
@@ -964,8 +993,21 @@ export default function WhatsAppChat() {
   };
 
   // Handle cancel action
-  const handleCancelAction = () => {
-    // Mark notification as dismissed
+  const handleCancelAction = async () => {
+    // Mark notification as viewed in database
+    if (currentNotification && user && user.id) {
+      console.log('Marking notification as viewed:', currentNotification.id);
+      await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
+      
+      // Update local viewed notifications
+      setViewedNotifications(prev => {
+        const newSet = new Set([...prev, currentNotification.id]);
+        console.log('Updated viewed notifications:', Array.from(newSet));
+        return newSet;
+      });
+    }
+    
+    // Mark notification as dismissed locally
     if (currentNotification) {
       console.log('Dismissing notification:', currentNotification.id);
       setDismissedNotifications(prev => {
@@ -980,8 +1022,21 @@ export default function WhatsAppChat() {
   };
 
   // Handle close notification
-  const handleCloseNotification = () => {
-    // Mark notification as dismissed
+  const handleCloseNotification = async () => {
+    // Mark notification as viewed in database
+    if (currentNotification && user && user.id) {
+      console.log('Marking notification as viewed:', currentNotification.id);
+      await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
+      
+      // Update local viewed notifications
+      setViewedNotifications(prev => {
+        const newSet = new Set([...prev, currentNotification.id]);
+        console.log('Updated viewed notifications:', Array.from(newSet));
+        return newSet;
+      });
+    }
+    
+    // Mark notification as dismissed locally
     if (currentNotification) {
       console.log('Dismissing notification:', currentNotification.id);
       setDismissedNotifications(prev => {
@@ -1020,6 +1075,22 @@ export default function WhatsAppChat() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Load viewed notifications for current user
+  const [viewedNotifications, setViewedNotifications] = useState(new Set());
+  
+  const loadViewedNotifications = async () => {
+    try {
+      if (user && user.id) {
+        const viewedData = await mobileSupabaseHelpers.getViewedNotifications(user.id);
+        const viewedIds = new Set(viewedData.map(item => item.notification_id));
+        setViewedNotifications(viewedIds);
+        console.log('Loaded viewed notifications:', Array.from(viewedIds));
+      }
+    } catch (error) {
+      console.error('Error loading viewed notifications:', error);
+    }
+  };
 
   // Get current app version
   const getCurrentAppVersion = () => {

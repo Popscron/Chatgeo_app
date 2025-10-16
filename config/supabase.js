@@ -166,5 +166,52 @@ export const mobileSupabaseHelpers = {
       console.error('Notifications fetch error:', error)
       return []
     }
+  },
+
+  // Mark notification as viewed by user
+  async markNotificationViewed(notificationId, userId, action = 'viewed') {
+    try {
+      const { data, error } = await supabase
+        .from('notification_views')
+        .upsert({
+          notification_id: notificationId,
+          user_id: userId,
+          action: action,
+          viewed_at: new Date().toISOString()
+        }, {
+          onConflict: 'notification_id,user_id'
+        })
+        .select()
+
+      if (error) {
+        console.error('Error marking notification as viewed:', error)
+        return { success: false, error }
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error('Mark notification viewed error:', error)
+      return { success: false, error }
+    }
+  },
+
+  // Get viewed notifications for user
+  async getViewedNotifications(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('notification_views')
+        .select('notification_id, action, viewed_at')
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('Error fetching viewed notifications:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Get viewed notifications error:', error)
+      return []
+    }
   }
 }
