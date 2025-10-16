@@ -78,12 +78,15 @@ const getDynamicStyles = (isDarkMode) => ({
   },
   // New dark mode colors
   sentTime: {
+    fontSize: 11,
     color: isDarkMode ? '#a7a8a8' : '#53656f',
   },
   receivedTime: {
+    fontSize: 11,
     color: isDarkMode ? '#a7a8a8' : '#53656f',
   },
   imageTime: {
+    fontSize: 11,
     color: isDarkMode ? '#a7a8a8' : '#53656f',
   },
 });
@@ -1606,11 +1609,11 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     marginRight: -6,
-    marginLeft: 5,
+    marginLeft: 1,
     marginBottom: 2
   },
   checkmarkShort: {
-    marginRight: -6,
+    marginRight: -10,
     marginLeft: 4,
     marginBottom: -6, // Different positioning for short messages
   },
