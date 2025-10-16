@@ -63,9 +63,9 @@ const ChatBackground = ({
   };
   
   const backgroundOptions = [
-    { id: "default", name: "Default Chat Cover", uri: require('./assets/defualtbg.jpg') },
-    { id: "defualtbg", name: "Default Background", uri: require('./assets/defualtbg.jpg') },
-    { id: "darkdefaultbg", name: "Dark Mode Background", uri: require('./assets/darkdefaultbg.png') },
+    { id: "default", name: "Default Chat Cover", uri: require('../assets/defualtbg.jpg') },
+    { id: "defualtbg", name: "Default Background", uri: require('../assets/defualtbg.jpg') },
+    { id: "darkdefaultbg", name: "Dark Mode Background", uri: require('../assets/darkdefaultbg.png') },
     { id: "gradient1", name: "Blue Gradient", uri: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=800&fit=crop" },
     { id: "gradient2", name: "Purple Gradient", uri: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=400&h=800&fit=crop" },
     { id: "gradient3", name: "Green Gradient", uri: "https://images.unsplash.com/photo-1557683304-673a23048d34?w=400&h=800&fit=crop" },
@@ -154,7 +154,7 @@ const ChatBackground = ({
                   </View>
                 ) : background.id === "default" ? (
                   <Image 
-                    source={require('./assets/defualtbg.jpg')} 
+                    source={require('../assets/defualtbg.jpg')} 
                     style={styles.backgroundPreview} 
                   />
                 ) : background.uri ? (

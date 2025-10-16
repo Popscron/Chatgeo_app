@@ -229,7 +229,7 @@ const ProfileEdit = ({
               <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Profile Picture</Text>
               <TouchableOpacity style={styles.profileImageContainer} onPress={pickProfileImage}>
                 <Image 
-                  source={profileImageUri ? { uri: profileImageUri } : require('./assets/Profilepic.png')} 
+                  source={profileImageUri ? { uri: profileImageUri } : require('../assets/Profilepic.png')} 
                   style={styles.profileImagePreview} 
                 />
                 <View style={styles.editOverlay}>

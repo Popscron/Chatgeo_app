@@ -66,7 +66,7 @@ const LoginScreen = () => {
 
   return (
     <ImageBackground
-      source={require('./assets/defualtbg.jpg')}
+      source={require('../assets/defualtbg.jpg')}
       style={styles.container}
       resizeMode="cover"
     >

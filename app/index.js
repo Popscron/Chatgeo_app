@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import WhatsAppChat from '../chatscreen';
-import LoginScreen from '../LoginScreen';
-import { DarkModeProvider } from '../DarkModeContext';
-import { AuthProvider, useAuth } from '../AuthContext';
+import WhatsAppChat from '../componet/chatscreen';
+import LoginScreen from '../componet/LoginScreen';
+import { DarkModeProvider } from '../componet/DarkModeContext';
+import { AuthProvider, useAuth } from '../componet/AuthContext';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();

@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Minichat",
+    "slug": "minichat",
+    "version": "1.1.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#008069"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.minichat.app2024",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.minichat.app2024",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#008069"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "minichat",
+    "plugins": [
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them.",
+          "cameraPermission": "The app accesses your camera to let you take photos."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b8bbc7d6-9aeb-46ef-8795-68332e8d9724"
+      }
+    }
+  }
+}

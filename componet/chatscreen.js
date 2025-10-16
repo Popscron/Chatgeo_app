@@ -62,10 +62,20 @@ const getDynamicStyles = (isDarkMode) => ({
     backgroundColor: isDarkMode ? '#25D366' : '#25D366',
   },
   dateSeparator: {
-    backgroundColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+    backgroundColor: isDarkMode ? '#000000' : '#f0f0f0',
   },
   dateText: {
-    color: isDarkMode ? '#ccc' : '#666',
+    color: isDarkMode ? '#fff' : '#666',
+  },
+  // New dark mode colors
+  sentTime: {
+    color: isDarkMode ? '#a7a8a8' : '#53656f',
+  },
+  receivedTime: {
+    color: isDarkMode ? '#a7a8a8' : '#53656f',
+  },
+  imageTime: {
+    color: isDarkMode ? '#a7a8a8' : '#53656f',
   },
 });
 
@@ -659,12 +669,12 @@ export default function WhatsAppChat() {
   const getCurrentBackgroundUri = () => {
     // If in dark mode and no specific background is selected, use dark default
     if (isDarkMode && selectedBackground === "default") {
-      return require('./assets/darkdefaultbg.png')
+      return require('../assets/darkdefaultbg.png')
     }
     
     if (selectedBackground === "default") return null
-    if (selectedBackground === "defualtbg") return require('./assets/defualtbg.jpg')
-    if (selectedBackground === "darkdefaultbg") return require('./assets/darkdefaultbg.png')
+    if (selectedBackground === "defualtbg") return require('../assets/defualtbg.jpg')
+    if (selectedBackground === "darkdefaultbg") return require('../assets/darkdefaultbg.png')
     if (selectedBackground === "custom") return customBackgroundUri
     
     // Predefined backgrounds
@@ -727,7 +737,7 @@ export default function WhatsAppChat() {
     if (charCount <= 25) {
       return {
         fontSize: 11, // Keep original font size
-        color: "#53656f", // Keep original color for both sent and received
+        color: isDarkMode ? "#a7a8a8" : "#53656f", // Use dark mode color
         paddingTop: 4, // Reduced from 4 to 0 (5 steps = 10px)
         marginLeft: 8, // Small gap from text
         marginRight: -3, // Right margin for spacing
@@ -739,7 +749,7 @@ export default function WhatsAppChat() {
     }
     
     // Default time styling for long messages
-    return message.isReceived ? styles.receivedTime : styles.sentTime
+    return message.isReceived ? dynamicStyles.receivedTime : dynamicStyles.sentTime
   }
 
   // Function to get image dimensions based on message image size
@@ -866,10 +876,10 @@ export default function WhatsAppChat() {
         >
           <CustomBlurView 
             intensity={100} 
-            tint="light" 
-            style={styles.dateBadge}
+            tint={isDarkMode ? "dark" : "light"} 
+            style={[styles.dateBadge, dynamicStyles.dateSeparator]}
           >
-            <Text style={styles.dateText}>{dateText}</Text>
+            <Text style={[styles.dateText, dynamicStyles.dateText]}>{dateText}</Text>
           </CustomBlurView>
         </Animated.View>
       )}
@@ -952,6 +962,12 @@ export default function WhatsAppChat() {
               <View style={[
                 styles.messageBubble, 
                 message.isReceived ? styles.receivedBubble : styles.sentBubble,
+                // Apply dark mode bubble colors
+                {
+                  backgroundColor: message.isReceived 
+                    ? (isDarkMode ? '#242626' : '#FFFFFF')
+                    : (isDarkMode ? '#144d37' : '#D9FDD3')
+                },
                 // Apply different maxWidth for text vs image messages
                 message.type === "image" ? { maxWidth: "80%" } : { maxWidth: "68%" },
                 isShortMessage ? {
@@ -988,7 +1004,9 @@ export default function WhatsAppChat() {
                         <View style={styles.imageCaptionContainer}>
                           <Text style={[
                             message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
-                            styles.imageCaptionText
+                            {
+                              color: isDarkMode ? '#fff' : '#000'
+                            }
                           ]}>
                             {message.text}
                           </Text>
@@ -997,12 +1015,12 @@ export default function WhatsAppChat() {
                       
                       {/* Time and read ticks for images */}
                       <View style={styles.imageTimeContainer}>
-                        <Text style={styles.imageTime}>
+                        <Text style={dynamicStyles.imageTime}>
                           {message.time}
                         </Text>
                         {!message.isReceived && (
                           <Image 
-                            source={require('./assets/checkmark.png')} 
+                            source={isDarkMode ? require('../assets/checkmark.png') : require('../assets/checkmark.png')} 
                             style={styles.checkmark} 
                             resizeMode="contain"
                           />
@@ -1029,10 +1047,12 @@ export default function WhatsAppChat() {
                 ) : (
                   <Text style={[
                     message.isReceived ? styles.receivedMessageText : styles.sentMessageText,
+                    {
+                      color: isDarkMode ? '#fff' : '#000'
+                    },
                     isShortMessage ? {
                       marginBottom: 0,
                       fontSize: 16,
-                      color: "#000",
                     } : {}
                   ]}>
                     {message.text || "Empty message"}
@@ -1047,7 +1067,7 @@ export default function WhatsAppChat() {
                     </Text>
                     {!message.isReceived && (
                       <Image 
-                        source={require('./assets/checkmark.png')} 
+                        source={isDarkMode ? require('../assets/checkmark.png') : require('../assets/checkmark.png')} 
                         style={[
                           styles.checkmark,
                           isShortMessage ? styles.checkmarkShort : {}
@@ -1064,7 +1084,7 @@ export default function WhatsAppChat() {
                     <MaterialIcons 
                       name="brightness-3" 
                       size={16} 
-                      color={message.isReceived ? "#FFFFFF" : "#D9FDD3"}
+                      color={message.isReceived ? (isDarkMode ? "#242626" : "#FFFFFF") : (isDarkMode ? "#144d37" : "#D9FDD3")}
                       style={{ transform: [{ rotate: message.isReceived ? '25deg' : '140deg' }] }}
                     />
                   </View>
@@ -1095,6 +1115,7 @@ export default function WhatsAppChat() {
             <Animated.View 
               style={[
                 styles.textInputContainer, 
+                dynamicStyles.input,
                 { 
                   transform: [{ scaleX: inputWidthAnimation }],
                   transformOrigin: 'left'
@@ -1112,7 +1133,7 @@ export default function WhatsAppChat() {
                 editable={isTypingMode}
               />
           <TouchableOpacity style={styles.emojiButton}>
-            <Image source={require('./assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: isDarkMode ? '#fff' : '#000' }} />
+            <Image source={require('../assets/checkbook.png')} style={{ width: 22, height: 22, tintColor: isDarkMode ? '#fff' : '#000' }} />
           </TouchableOpacity>
             </Animated.View>
             {showSendButton ? (
@@ -1125,7 +1146,13 @@ export default function WhatsAppChat() {
                   <Ionicons name="camera-outline" size={26} color={isDarkMode ? "#fff" : "#000"} />
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.inputIcon, styles.micIcon]} onPress={addSenderMessage}>
-                  <Image source={require('./assets/micicon.png')} style={{ width: 26, height: 24 }} />
+                  <Image 
+                    source={isDarkMode ? require('../assets/Darkmicicon.png') : require('../assets/micicon.png')} 
+                    style={{ 
+                      width: isDarkMode ? 32 : 26, 
+                      height: isDarkMode ? 30 : 24 
+                    }} 
+                  />
                 </TouchableOpacity>
               </>
             )}
@@ -1151,7 +1178,7 @@ export default function WhatsAppChat() {
           <Text style={[styles.unreadCount, dynamicStyles.unreadCount]}>{unreadCount}</Text>
           <TouchableOpacity style={styles.profileContainer} onPress={handleProfilePress}>
             <Image 
-              source={profileImageUri ? { uri: profileImageUri } : require('./assets/Profilepic.png')} 
+              source={profileImageUri ? { uri: profileImageUri } : require('../assets/Profilepic.png')} 
               style={styles.profileImage} 
             />
           </TouchableOpacity>
@@ -1425,8 +1452,8 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 13,
-    color: "#000000",
     fontWeight: "600",
+    color: "#000000",
   },
   systemMessage: {
     backgroundColor: "#F0E0C2",
@@ -1626,7 +1653,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     paddingHorizontal: 4,
     marginHorizontal: 10,
