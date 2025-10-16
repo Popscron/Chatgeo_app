@@ -73,6 +73,17 @@ const getDynamicStyles = (isDarkMode) => ({
     marginHorizontal: 10,
     overflow: 'hidden',
   },
+  notificationModal: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+    borderColor: isDarkMode ? '#333' : 'transparent',
+    borderWidth: isDarkMode ? 1 : 0,
+  },
+  notificationModalTitle: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  notificationModalMessage: {
+    color: isDarkMode ? '#ccc' : '#666',
+  },
   sendButton: {
     backgroundColor: isDarkMode ? '#25D366' : '#25D366',
   },
@@ -179,8 +190,9 @@ export default function WhatsAppChat() {
   
   // Notification state
   const [notifications, setNotifications] = useState([])
-  const [showNotificationBanner, setShowNotificationBanner] = useState(false)
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [currentNotification, setCurrentNotification] = useState(null)
+  const [dismissedNotifications, setDismissedNotifications] = useState(new Set())
   
   // Image size selection state
   const [showImageSizeModal, setShowImageSizeModal] = useState(false)
@@ -857,17 +869,15 @@ export default function WhatsAppChat() {
       const notificationData = await mobileSupabaseHelpers.getNotifications();
       setNotifications(notificationData);
       
-      // Show the latest notification as a banner
+      // Show the latest notification as a popup if not already dismissed
       if (notificationData.length > 0) {
         const latestNotification = notificationData[0];
-        setCurrentNotification(latestNotification);
-        setShowNotificationBanner(true);
         
-        // Auto-hide after 10 seconds for update notifications, 5 seconds for others
-        const hideDelay = latestNotification.type === 'update' ? 10000 : 5000;
-        setTimeout(() => {
-          setShowNotificationBanner(false);
-        }, hideDelay);
+        // Check if this notification has been dismissed
+        if (!dismissedNotifications.has(latestNotification.id)) {
+          setCurrentNotification(latestNotification);
+          setShowNotificationModal(true);
+        }
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -876,8 +886,13 @@ export default function WhatsAppChat() {
 
   // Handle update action
   const handleUpdateAction = () => {
-    // Close the notification banner
-    setShowNotificationBanner(false);
+    // Mark notification as dismissed
+    if (currentNotification) {
+      setDismissedNotifications(prev => new Set([...prev, currentNotification.id]));
+    }
+    
+    // Close the notification modal
+    setShowNotificationModal(false);
     
     // Show confirmation alert
     Alert.alert(
@@ -905,7 +920,22 @@ export default function WhatsAppChat() {
 
   // Handle cancel action
   const handleCancelAction = () => {
-    setShowNotificationBanner(false);
+    // Mark notification as dismissed
+    if (currentNotification) {
+      setDismissedNotifications(prev => new Set([...prev, currentNotification.id]));
+    }
+    
+    setShowNotificationModal(false);
+  };
+
+  // Handle close notification
+  const handleCloseNotification = () => {
+    // Mark notification as dismissed
+    if (currentNotification) {
+      setDismissedNotifications(prev => new Set([...prev, currentNotification.id]));
+    }
+    
+    setShowNotificationModal(false);
   };
 
   // Load notifications on component mount and every 30 seconds
@@ -1253,51 +1283,71 @@ export default function WhatsAppChat() {
 
   return (
     <View style={[styles.container, dynamicStyles.container]}>
-      {/* Notification Banner */}
-      {showNotificationBanner && currentNotification && (
-        <View style={[styles.notificationBanner, dynamicStyles.notificationBanner]}>
-          <View style={styles.notificationContent}>
-            <View style={styles.notificationIcon}>
-              <Ionicons 
-                name={currentNotification.type === 'urgent' ? 'warning' : 
-                      currentNotification.type === 'update' ? 'download' : 'notifications'} 
-                size={20} 
-                color="#fff" 
-              />
+      {/* Notification Popup Modal */}
+      <Modal
+        visible={showNotificationModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseNotification}
+      >
+        <View style={styles.notificationModalOverlay}>
+          <View style={[styles.notificationModal, dynamicStyles.notificationModal]}>
+            <View style={styles.notificationModalHeader}>
+              <View style={styles.notificationModalIcon}>
+                <Ionicons 
+                  name={currentNotification?.type === 'urgent' ? 'warning' : 
+                        currentNotification?.type === 'update' ? 'download' : 'notifications'} 
+                  size={24} 
+                  color="#fff" 
+                />
+              </View>
+              <TouchableOpacity 
+                style={styles.notificationModalClose}
+                onPress={handleCloseNotification}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.notificationText}>
-              <Text style={styles.notificationTitle}>{currentNotification.title}</Text>
-              <Text style={styles.notificationMessage} numberOfLines={2}>
-                {currentNotification.message}
+            
+            <View style={styles.notificationModalContent}>
+              <Text style={[styles.notificationModalTitle, dynamicStyles.notificationModalTitle]}>
+                {currentNotification?.title}
+              </Text>
+              <Text style={[styles.notificationModalMessage, dynamicStyles.notificationModalMessage]}>
+                {currentNotification?.message}
               </Text>
             </View>
-            <TouchableOpacity 
-              style={styles.notificationClose}
-              onPress={() => setShowNotificationBanner(false)}
-            >
-              <Ionicons name="close" size={20} color="#fff" />
-            </TouchableOpacity>
+            
+            {/* Action buttons for update notifications */}
+            {currentNotification?.type === 'update' && (
+              <View style={styles.notificationModalActions}>
+                <TouchableOpacity 
+                  style={styles.notificationModalCancelButton}
+                  onPress={handleCancelAction}
+                >
+                  <Text style={styles.notificationModalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.notificationModalUpdateButton}
+                  onPress={handleUpdateAction}
+                >
+                  <Text style={styles.notificationModalUpdateText}>Update</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {/* Close button for non-update notifications */}
+            {currentNotification?.type !== 'update' && (
+              <TouchableOpacity 
+                style={styles.notificationModalOkButton}
+                onPress={handleCloseNotification}
+              >
+                <Text style={styles.notificationModalOkText}>OK</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          
-          {/* Action buttons for update notifications */}
-          {currentNotification.type === 'update' && (
-            <View style={styles.notificationActions}>
-              <TouchableOpacity 
-                style={styles.notificationCancelButton}
-                onPress={handleCancelAction}
-              >
-                <Text style={styles.notificationCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.notificationUpdateButton}
-                onPress={handleUpdateAction}
-              >
-                <Text style={styles.notificationUpdateText}>Update</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
-      )}
+      </Modal>
       
       {/* Header - positioned above everything */}
       <CustomBlurView 
@@ -1551,6 +1601,100 @@ const styles = StyleSheet.create({
   notificationUpdateText: {
     color: '#25D366',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  notificationModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  notificationModal: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  notificationModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  notificationModalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#25D366',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  notificationModalClose: {
+    marginLeft: 'auto',
+    padding: 4,
+  },
+  notificationModalContent: {
+    marginBottom: 20,
+  },
+  notificationModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#000',
+  },
+  notificationModalMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#666',
+  },
+  notificationModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  notificationModalCancelButton: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  notificationModalCancelText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  notificationModalUpdateButton: {
+    flex: 1,
+    backgroundColor: '#25D366',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  notificationModalUpdateText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  notificationModalOkButton: {
+    backgroundColor: '#25D366',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  notificationModalOkText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   header: {
