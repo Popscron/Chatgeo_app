@@ -197,6 +197,7 @@ export default function WhatsAppChat() {
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [currentUpdateNotification, setCurrentUpdateNotification] = useState(null)
   const [dismissedUpdates, setDismissedUpdates] = useState(new Set())
+  const [lastNotificationShown, setLastNotificationShown] = useState(null)
   
   // User status state
   const [userStatus, setUserStatus] = useState('active')
@@ -876,6 +877,27 @@ export default function WhatsAppChat() {
     return "1.1.1"; // This should match the version in app.json
   };
 
+  // Check if 24 hours have passed since last notification
+  const has24HoursPassed = (lastTime) => {
+    if (!lastTime) {
+      console.log('No last notification time found, this is first time - allowing notification');
+      return true;
+    }
+    const now = new Date().getTime();
+    const lastNotificationTime = new Date(lastTime).getTime();
+    const hoursPassed = (now - lastNotificationTime) / (1000 * 60 * 60);
+    console.log(`Hours passed since last notification: ${hoursPassed.toFixed(2)}`);
+    return hoursPassed >= 24;
+  };
+
+  // Debug function to test 24-hour cooldown (for testing only)
+  const test24HourCooldown = async () => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    setLastNotificationShown(oneHourAgo);
+    await AsyncStorage.setItem('lastNotificationShown', oneHourAgo);
+    console.log('Set last notification time to 1 hour ago for testing');
+  };
+
   // Check user status
   const checkUserStatus = async () => {
     if (!user || !user.id) return;
@@ -899,6 +921,34 @@ export default function WhatsAppChat() {
   // Load update notifications
   const loadUpdateNotifications = async () => {
     try {
+      // Check if notifications are enabled
+      let notificationsEnabled = true;
+      try {
+        const stored = await AsyncStorage.getItem('notificationsEnabled');
+        if (stored !== null) {
+          notificationsEnabled = JSON.parse(stored);
+        }
+      } catch (error) {
+        console.error('Error loading notification preference:', error);
+      }
+
+      // If notifications are disabled, don't show any
+      if (!notificationsEnabled) {
+        console.log('Notifications disabled by user preference');
+        return;
+      }
+
+      // Get the latest notification time from AsyncStorage to ensure we have the most recent value
+      let currentLastNotificationTime = lastNotificationShown;
+      try {
+        const storedTime = await AsyncStorage.getItem('lastNotificationShown');
+        if (storedTime) {
+          currentLastNotificationTime = storedTime;
+        }
+      } catch (error) {
+        console.error('Error loading last notification time:', error);
+      }
+
       const notificationData = await mobileSupabaseHelpers.getNotifications();
       const updateNotifications = notificationData.filter(notification => 
         notification.type === 'update' && notification.version
@@ -909,8 +959,23 @@ export default function WhatsAppChat() {
         const currentVersion = getCurrentAppVersion();
         const notificationVersion = latestUpdate.version;
         
-        // Only show if version doesn't match and not already dismissed
-        if (currentVersion !== notificationVersion && !dismissedUpdates.has(latestUpdate.id)) {
+        console.log('Notification check:', {
+          currentVersion,
+          notificationVersion,
+          versionMatch: currentVersion === notificationVersion,
+          isDismissed: dismissedUpdates.has(latestUpdate.id),
+          lastNotificationShown: currentLastNotificationTime,
+          hoursPassed: currentLastNotificationTime ? ((new Date().getTime() - new Date(currentLastNotificationTime).getTime()) / (1000 * 60 * 60)).toFixed(2) : 'N/A'
+        });
+
+        // Only show if version doesn't match, not already dismissed, and 24 hours have passed
+        // Note: 24-hour cooldown applies regardless of notification ID
+        if (currentVersion !== notificationVersion && 
+            !dismissedUpdates.has(latestUpdate.id) && 
+            has24HoursPassed(currentLastNotificationTime) &&
+            !showUpdateModal) {
+          
+          console.log('Showing update notification - 24 hours have passed');
           setCurrentUpdateNotification(latestUpdate);
           setShowUpdateModal(true);
           
@@ -924,6 +989,10 @@ export default function WhatsAppChat() {
               console.error('Error marking notification as viewed:', error);
             });
           }
+        } else if (currentVersion !== notificationVersion && 
+                   !dismissedUpdates.has(latestUpdate.id) && 
+                   !has24HoursPassed(currentLastNotificationTime)) {
+          console.log('Update notification skipped - 24 hour cooldown active');
         }
       }
     } catch (error) {
@@ -948,6 +1017,16 @@ export default function WhatsAppChat() {
       
       // Mark as dismissed locally
       setDismissedUpdates(prev => new Set([...prev, currentUpdateNotification.id]));
+      
+      // Save notification time when dismissed
+      const now = new Date().toISOString();
+      setLastNotificationShown(now);
+      try {
+        await AsyncStorage.setItem('lastNotificationShown', now);
+        console.log('Saved last notification time on accept');
+      } catch (error) {
+        console.error('Error saving last notification time:', error);
+      }
       
       // Close modal
       setShowUpdateModal(false);
@@ -978,6 +1057,16 @@ export default function WhatsAppChat() {
       
       // Mark as dismissed locally
       setDismissedUpdates(prev => new Set([...prev, currentUpdateNotification.id]));
+      
+      // Save notification time when dismissed
+      const now = new Date().toISOString();
+      setLastNotificationShown(now);
+      try {
+        await AsyncStorage.setItem('lastNotificationShown', now);
+        console.log('Saved last notification time on dismiss');
+      } catch (error) {
+        console.error('Error saving last notification time:', error);
+      }
     }
     
     setShowUpdateModal(false);
@@ -998,6 +1087,22 @@ export default function WhatsAppChat() {
     };
     
     loadDismissedUpdates();
+  }, []);
+
+  // Load last notification time from storage
+  useEffect(() => {
+    const loadLastNotificationTime = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('lastNotificationShown');
+        if (stored) {
+          setLastNotificationShown(stored);
+        }
+      } catch (error) {
+        console.error('Error loading last notification time:', error);
+      }
+    };
+    
+    loadLastNotificationTime();
   }, []);
 
   // Load update notifications on mount and periodically

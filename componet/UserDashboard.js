@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Alert
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useDarkMode } from './DarkModeContext';
 import { useAuth } from './AuthContext';
@@ -22,12 +23,14 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
   const isDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : contextIsDarkMode;
   const [userData, setUserData] = useState(null);
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const dynamicStyles = getDynamicStyles(isDarkMode);
 
   useEffect(() => {
     loadUserData();
+    loadNotificationPreference();
   }, [user]);
 
   const loadUserData = async () => {
@@ -62,9 +65,33 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
   };
 
 
+  const loadNotificationPreference = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('notificationsEnabled');
+      if (stored !== null) {
+        setNotificationsEnabled(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading notification preference:', error);
+    }
+  };
+
+  const toggleNotifications = async () => {
+    const newValue = !notificationsEnabled;
+    setNotificationsEnabled(newValue);
+    
+    try {
+      await AsyncStorage.setItem('notificationsEnabled', JSON.stringify(newValue));
+      console.log('Notification preference saved:', newValue);
+    } catch (error) {
+      console.error('Error saving notification preference:', error);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadUserData();
+    await loadNotificationPreference();
     setRefreshing(false);
   };
 
@@ -319,12 +346,6 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
             '#f59e0b'
           )}
           
-          {renderInfoCard(
-            'Country',
-            userData?.country || 'Not set',
-            'globe',
-            '#8b5cf6'
-          )}
           
           {renderInfoCard(
             'Timezone',
@@ -339,6 +360,48 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
             'key',
             '#6b7280'
           )}
+        </View>
+
+        {/* Notification Settings Section */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
+            Notification Settings
+          </Text>
+          
+          <View style={[styles.toggleCard, dynamicStyles.toggleCard]}>
+            <View style={styles.toggleContent}>
+              <View style={styles.toggleIcon}>
+                <Ionicons 
+                  name={notificationsEnabled ? "notifications" : "notifications-off"} 
+                  size={24} 
+                  color={notificationsEnabled ? "#25D366" : "#ef4444"} 
+                />
+              </View>
+              <View style={styles.toggleText}>
+                <Text style={[styles.toggleTitle, dynamicStyles.toggleTitle]}>
+                  App Notifications
+                </Text>
+                <Text style={[styles.toggleSubtitle, dynamicStyles.toggleSubtitle]}>
+                  {notificationsEnabled 
+                    ? "Receive update notifications and alerts" 
+                    : "All notifications are disabled"
+                  }
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.toggleSwitch,
+                  { backgroundColor: notificationsEnabled ? "#25D366" : "#ccc" }
+                ]}
+                onPress={toggleNotifications}
+              >
+                <View style={[
+                  styles.toggleThumb,
+                  { transform: [{ translateX: notificationsEnabled ? 20 : 2 }] }
+                ]} />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Support Section */}
@@ -432,6 +495,16 @@ const getDynamicStyles = (isDarkMode) => StyleSheet.create({
   },
   subscriptionTitle: {
     color: isDarkMode ? '#fff' : '#000',
+  },
+  toggleCard: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+    borderColor: isDarkMode ? '#333' : '#e0e0e0',
+  },
+  toggleTitle: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  toggleSubtitle: {
+    color: isDarkMode ? '#ccc' : '#666',
   },
 });
 
@@ -595,6 +668,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
+  },
+  toggleCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  toggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleIcon: {
+    marginRight: 16,
+  },
+  toggleText: {
+    flex: 1,
+  },
+  toggleTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  toggleSubtitle: {
+    fontSize: 14,
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   bottomSpacing: {
     height: 32,
