@@ -883,13 +883,28 @@ export default function WhatsAppChat() {
         console.log('Is notification dismissed?', dismissedNotifications.has(latestNotification.id));
         console.log('Is modal showing?', showNotificationModal);
         
-        // Check if this notification has been dismissed
-        if (!dismissedNotifications.has(latestNotification.id) && !showNotificationModal) {
-          console.log('Showing notification modal');
+        // Check version compatibility
+        const currentVersion = getCurrentAppVersion();
+        const notificationVersion = latestNotification.version || latestNotification.target_version;
+        
+        console.log('Current app version:', currentVersion);
+        console.log('Notification version:', notificationVersion);
+        
+        // Only show notification if versions don't match and not already dismissed
+        if (notificationVersion && currentVersion !== notificationVersion && 
+            !dismissedNotifications.has(latestNotification.id) && !showNotificationModal) {
+          console.log('Showing notification modal - version mismatch');
           setCurrentNotification(latestNotification);
           setShowNotificationModal(true);
+        } else if (!notificationVersion) {
+          // If no version specified, show notification (backward compatibility)
+          if (!dismissedNotifications.has(latestNotification.id) && !showNotificationModal) {
+            console.log('Showing notification modal - no version specified');
+            setCurrentNotification(latestNotification);
+            setShowNotificationModal(true);
+          }
         } else {
-          console.log('Notification already dismissed or modal already showing');
+          console.log('Notification already dismissed, modal showing, or versions match');
         }
       }
     } catch (error) {
@@ -1005,6 +1020,11 @@ export default function WhatsAppChat() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Get current app version
+  const getCurrentAppVersion = () => {
+    return "1.1.1"; // This should match the version in app.json
+  };
 
   // Screen capture detection for default contact name warning
   useEffect(() => {
