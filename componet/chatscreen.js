@@ -1161,7 +1161,8 @@ export default function WhatsAppChat() {
                     source={isDarkMode ? require('../assets/Darkmicicon.png') : require('../assets/micicon.png')} 
                     style={{ 
                       width: isDarkMode ? 32 : 26, 
-                      height: isDarkMode ? 30 : 24 
+                      height: isDarkMode ? 38 : 24,
+                      marginBottom: isDarkMode ? -8: 0
                     }} 
                   />
                 </TouchableOpacity>
@@ -1515,8 +1516,10 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     borderRadius: 12,
-    padding: 1,
+   // padding: 1,
+    paddingTop:5,
     paddingHorizontal: 13, // Reduced from 16 to 13 (3 steps = 6px)
+    //minHeight: 90, // Added 4 steps (8px) height for text messages
   },
   sentBubble: {
     backgroundColor: "#D9FDD3",
@@ -1580,17 +1583,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     marginBottom: 0, // Reduced from 2 to 0 (3 steps = 6px)
+    //paddingBottom:-8
   },
   receivedMessageText: {
     fontSize: 16,
     color: "#000",
-    marginBottom: 0, // Reduced from 2 to 0 (3 steps = 6px)
+    marginBottom: 0,
+     // Reduced from 2 to 0 (3 steps = 6px)
   },
   messageFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     marginTop: 0, // Reduced from 1 to 0 (3 steps = 6px)
+   
   },
   sentTime: {
     fontSize: 11,
