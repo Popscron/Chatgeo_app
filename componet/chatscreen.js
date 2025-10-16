@@ -15,6 +15,7 @@ import {
   Keyboard,
   Animated,
   AppState,
+  Linking,
 } from "react-native"
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
@@ -862,14 +863,49 @@ export default function WhatsAppChat() {
         setCurrentNotification(latestNotification);
         setShowNotificationBanner(true);
         
-        // Auto-hide after 5 seconds
+        // Auto-hide after 10 seconds for update notifications, 5 seconds for others
+        const hideDelay = latestNotification.type === 'update' ? 10000 : 5000;
         setTimeout(() => {
           setShowNotificationBanner(false);
-        }, 5000);
+        }, hideDelay);
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
+  };
+
+  // Handle update action
+  const handleUpdateAction = () => {
+    // Close the notification banner
+    setShowNotificationBanner(false);
+    
+    // Show confirmation alert
+    Alert.alert(
+      "App Update Available",
+      "A new version of MiniChat is available. Would you like to update now?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Update",
+          onPress: () => {
+            // Open TestFlight app
+            const testflightUrl = "https://testflight.apple.com/join/your-testflight-code"; // TODO: Replace with your actual TestFlight URL
+            Linking.openURL(testflightUrl).catch(err => {
+              console.error('Error opening TestFlight:', err);
+              Alert.alert("Error", "Could not open TestFlight. Please check if the app is installed.");
+            });
+          }
+        }
+      ]
+    );
+  };
+
+  // Handle cancel action
+  const handleCancelAction = () => {
+    setShowNotificationBanner(false);
   };
 
   // Load notifications on component mount and every 30 seconds
@@ -1223,7 +1259,8 @@ export default function WhatsAppChat() {
           <View style={styles.notificationContent}>
             <View style={styles.notificationIcon}>
               <Ionicons 
-                name={currentNotification.type === 'urgent' ? 'warning' : 'notifications'} 
+                name={currentNotification.type === 'urgent' ? 'warning' : 
+                      currentNotification.type === 'update' ? 'download' : 'notifications'} 
                 size={20} 
                 color="#fff" 
               />
@@ -1241,6 +1278,24 @@ export default function WhatsAppChat() {
               <Ionicons name="close" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
+          
+          {/* Action buttons for update notifications */}
+          {currentNotification.type === 'update' && (
+            <View style={styles.notificationActions}>
+              <TouchableOpacity 
+                style={styles.notificationCancelButton}
+                onPress={handleCancelAction}
+              >
+                <Text style={styles.notificationCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.notificationUpdateButton}
+                onPress={handleUpdateAction}
+              >
+                <Text style={styles.notificationUpdateText}>Update</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
       
@@ -1469,6 +1524,34 @@ const styles = StyleSheet.create({
   },
   notificationClose: {
     padding: 4,
+  },
+  notificationActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+    gap: 8,
+  },
+  notificationCancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  notificationCancelText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  notificationUpdateButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  notificationUpdateText: {
+    color: '#25D366',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   header: {
     position: "absolute",
