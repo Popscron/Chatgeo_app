@@ -872,8 +872,9 @@ export default function WhatsAppChat() {
   // Load notifications
   const loadNotifications = async () => {
     try {
-      // Load viewed notifications first
+      // Load both viewed and dismissed notifications first
       await loadViewedNotifications();
+      await loadDismissedNotifications();
       
       const notificationData = await mobileSupabaseHelpers.getNotifications();
       setNotifications(notificationData);
@@ -1108,18 +1109,6 @@ export default function WhatsAppChat() {
 
   // Load dismissed notifications from storage on mount
   useEffect(() => {
-    const loadDismissedNotifications = async () => {
-      try {
-        const stored = await AsyncStorage.getItem('dismissedNotifications');
-        if (stored) {
-          const dismissedIds = JSON.parse(stored);
-          setDismissedNotifications(new Set(dismissedIds));
-        }
-      } catch (error) {
-        console.error('Error loading dismissed notifications:', error);
-      }
-    };
-    
     loadDismissedNotifications();
   }, []);
 
@@ -1158,6 +1147,20 @@ export default function WhatsAppChat() {
       }
     } catch (error) {
       console.error('Error loading viewed notifications:', error);
+    }
+  };
+
+  // Load dismissed notifications for current user
+  const loadDismissedNotifications = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('dismissedNotifications');
+      if (stored) {
+        const dismissedIds = new Set(JSON.parse(stored));
+        setDismissedNotifications(dismissedIds);
+        console.log('Loaded dismissed notifications from storage:', Array.from(dismissedIds));
+      }
+    } catch (error) {
+      console.error('Error loading dismissed notifications:', error);
     }
   };
 
