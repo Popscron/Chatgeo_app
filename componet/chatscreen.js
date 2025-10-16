@@ -53,11 +53,6 @@ const getDynamicStyles = (isDarkMode) => ({
   },
   inputContainer: {
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
   },
   input: {
     backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
@@ -1334,6 +1329,7 @@ export default function WhatsAppChat() {
                       width: isDarkMode ? 32 : 26, 
                       height: isDarkMode ? 38 : 24,
                       marginBottom: isDarkMode ? -8: 0
+                    
                     }} 
                   />
                 </TouchableOpacity>
@@ -2046,17 +2042,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    borderRadius: 20,
-    overflow: 'hidden',
   },
   inputBlurView: {
     borderTopWidth: 0.5,
     borderTopColor: "rgba(208, 192, 176, 0.3)",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
   },
   inputContent: {
     flexDirection: "row",
@@ -2065,11 +2054,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingBottom: 36, // Account for safe area
     minHeight: 60,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
   },
   inputIcon: {
     padding: 4,
@@ -2078,6 +2062,7 @@ const styles = StyleSheet.create({
   },
   cameraIcon: {
     marginVertical: -2, // -8 + 6 = -2 (3 steps added)
+    
   },
   micIcon: {
     marginVertical: -2, // -8 + 6 = -2 (3 steps added)
