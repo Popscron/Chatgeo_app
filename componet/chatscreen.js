@@ -50,13 +50,22 @@ const getDynamicStyles = (isDarkMode) => ({
     backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
   },
   inputContainer: {
-    backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
   },
   input: {
     backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
     color: isDarkMode ? '#fff' : '#000',
     borderColor: isDarkMode ? '#444' : '#DDD',
+  },
+  inputContainerBackground: {
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 20,
+    paddingHorizontal: 4,
+    marginHorizontal: 10,
+    overflow: 'hidden',
   },
   sendButton: {
     backgroundColor: isDarkMode ? '#25D366' : '#25D366',
@@ -1114,8 +1123,7 @@ export default function WhatsAppChat() {
         </TouchableOpacity>
             <Animated.View 
               style={[
-                styles.textInputContainer, 
-                dynamicStyles.input,
+                dynamicStyles.inputContainerBackground,
                 { 
                   transform: [{ scaleX: inputWidthAnimation }],
                   transformOrigin: 'left'
@@ -1653,7 +1661,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 20,
+   // borderRadius: 20,
     paddingHorizontal: 4,
     marginHorizontal: 10,
   },
@@ -1665,6 +1673,7 @@ const styles = StyleSheet.create({
     minHeight: 30,
     maxHeight: 100,
     textAlignVertical: "top",
+    backgroundColor: 'transparent',
   },
   emojiButton: {
     padding: 4,
