@@ -933,6 +933,37 @@ export default function WhatsAppChat() {
     }
   };
 
+  // Force mark notification as viewed (emergency function)
+  const forceMarkAsViewed = async (notificationId) => {
+    console.log('=== FORCE MARKING AS VIEWED ===', notificationId);
+    
+    // Update local viewed notifications
+    setViewedNotifications(prev => {
+      const newSet = new Set([...prev, notificationId]);
+      console.log('Force updated viewed notifications:', Array.from(newSet));
+      saveViewedNotifications(newSet);
+      return newSet;
+    });
+    
+    // Update local dismissed notifications
+    setDismissedNotifications(prev => {
+      const newSet = new Set([...prev, notificationId]);
+      console.log('Force updated dismissed notifications:', Array.from(newSet));
+      saveDismissedNotifications(newSet);
+      return newSet;
+    });
+    
+    // Try database update if user is logged in
+    if (user && user.id) {
+      try {
+        await mobileSupabaseHelpers.markNotificationViewed(notificationId, user.id, 'dismissed');
+        console.log('Force marked in database');
+      } catch (error) {
+        console.error('Force database update failed:', error);
+      }
+    }
+  };
+
   // Save dismissed notifications to storage
   const saveDismissedNotifications = async (newDismissedSet) => {
     try {
@@ -1066,39 +1097,9 @@ export default function WhatsAppChat() {
     console.log('Current notification:', currentNotification?.id);
     console.log('User:', user?.id);
     
-    // Mark notification as viewed in database
-    if (currentNotification && user && user.id) {
-      console.log('Marking notification as viewed in database:', currentNotification.id);
-      try {
-        const result = await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
-        console.log('Database result:', result);
-      } catch (error) {
-        console.error('Error marking notification as viewed in database:', error);
-      }
-    } else {
-      console.log('Skipping database update - no user or notification');
-    }
-    
-    // Update local viewed notifications
     if (currentNotification) {
-      console.log('Updating local viewed notifications');
-      setViewedNotifications(prev => {
-        const newSet = new Set([...prev, currentNotification.id]);
-        console.log('Updated viewed notifications:', Array.from(newSet));
-        saveViewedNotifications(newSet);
-        return newSet;
-      });
-    }
-    
-    // Mark notification as dismissed locally
-    if (currentNotification) {
-      console.log('Updating local dismissed notifications');
-      setDismissedNotifications(prev => {
-        const newSet = new Set([...prev, currentNotification.id]);
-        console.log('Updated dismissed notifications:', Array.from(newSet));
-        saveDismissedNotifications(newSet);
-        return newSet;
-      });
+      // Use the force function to ensure it's marked as viewed
+      await forceMarkAsViewed(currentNotification.id);
     }
     
     console.log('Closing notification modal');
@@ -1557,12 +1558,26 @@ export default function WhatsAppChat() {
             
             {/* Close button for non-update notifications */}
             {currentNotification?.type !== 'update' && (
-              <TouchableOpacity 
-                style={styles.notificationModalOkButton}
-                onPress={handleCloseNotification}
-              >
-                <Text style={styles.notificationModalOkText}>OK</Text>
-              </TouchableOpacity>
+              <View style={styles.notificationModalActions}>
+                <TouchableOpacity 
+                  style={styles.notificationModalOkButton}
+                  onPress={handleCloseNotification}
+                >
+                  <Text style={styles.notificationModalOkText}>OK</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.notificationModalOkButton, {backgroundColor: '#ff6b6b', marginTop: 10}]}
+                  onPress={() => {
+                    console.log('=== TEST FORCE MARK ===');
+                    if (currentNotification) {
+                      forceMarkAsViewed(currentNotification.id);
+                      setShowNotificationModal(false);
+                    }
+                  }}
+                >
+                  <Text style={styles.notificationModalOkText}>Force Mark Viewed</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
