@@ -872,11 +872,18 @@ export default function WhatsAppChat() {
       // Show the latest notification as a popup if not already dismissed
       if (notificationData.length > 0) {
         const latestNotification = notificationData[0];
+        console.log('Latest notification:', latestNotification.id);
+        console.log('Dismissed notifications:', Array.from(dismissedNotifications));
+        console.log('Is notification dismissed?', dismissedNotifications.has(latestNotification.id));
+        console.log('Is modal showing?', showNotificationModal);
         
         // Check if this notification has been dismissed
-        if (!dismissedNotifications.has(latestNotification.id)) {
+        if (!dismissedNotifications.has(latestNotification.id) && !showNotificationModal) {
+          console.log('Showing notification modal');
           setCurrentNotification(latestNotification);
           setShowNotificationModal(true);
+        } else {
+          console.log('Notification already dismissed or modal already showing');
         }
       }
     } catch (error) {
@@ -888,7 +895,12 @@ export default function WhatsAppChat() {
   const handleUpdateAction = () => {
     // Mark notification as dismissed
     if (currentNotification) {
-      setDismissedNotifications(prev => new Set([...prev, currentNotification.id]));
+      console.log('Dismissing notification:', currentNotification.id);
+      setDismissedNotifications(prev => {
+        const newSet = new Set([...prev, currentNotification.id]);
+        console.log('Updated dismissed notifications:', Array.from(newSet));
+        return newSet;
+      });
     }
     
     // Close the notification modal
@@ -922,7 +934,12 @@ export default function WhatsAppChat() {
   const handleCancelAction = () => {
     // Mark notification as dismissed
     if (currentNotification) {
-      setDismissedNotifications(prev => new Set([...prev, currentNotification.id]));
+      console.log('Dismissing notification:', currentNotification.id);
+      setDismissedNotifications(prev => {
+        const newSet = new Set([...prev, currentNotification.id]);
+        console.log('Updated dismissed notifications:', Array.from(newSet));
+        return newSet;
+      });
     }
     
     setShowNotificationModal(false);
@@ -932,7 +949,12 @@ export default function WhatsAppChat() {
   const handleCloseNotification = () => {
     // Mark notification as dismissed
     if (currentNotification) {
-      setDismissedNotifications(prev => new Set([...prev, currentNotification.id]));
+      console.log('Dismissing notification:', currentNotification.id);
+      setDismissedNotifications(prev => {
+        const newSet = new Set([...prev, currentNotification.id]);
+        console.log('Updated dismissed notifications:', Array.from(newSet));
+        return newSet;
+      });
     }
     
     setShowNotificationModal(false);
