@@ -5,6 +5,7 @@
     "version": "1.1.1",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/whatsappicon.jpg",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#008069"
@@ -19,12 +20,12 @@
     "android": {
       "package": "com.minichat.app2024",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/whatsappicon.jpg",
         "backgroundColor": "#008069"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/whatsappicon.jpg"
     },
     "scheme": "minichat",
     "plugins": [
