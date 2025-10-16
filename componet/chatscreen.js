@@ -27,8 +27,6 @@ import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
 import { generateGhanaianNickname } from './namesapi'
-import ChatBackground from './ChatBackground'
-import ImportExportModal from './importexport'
 import * as ScreenCapture from 'expo-screen-capture'
 import { mobileSupabaseHelpers } from '../config/supabase'
 import { useDarkMode } from './DarkModeContext'
@@ -92,7 +90,7 @@ const getDynamicStyles = (isDarkMode) => ({
     color: isDarkMode ? '#ccc' : '#666',
   },
   dateText: {
-    color: isDarkMode ? '#fff' : '#666',
+    color: isDarkMode ? '#fff' : '#000',
   },
   // New dark mode colors
   sentTime: {
@@ -171,7 +169,6 @@ export default function WhatsAppChat() {
   const [editText, setEditText] = useState("")
   const [editTime, setEditTime] = useState("")
   
-  const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
   const [selectedBackground, setSelectedBackground] = useState(isDarkMode ? "darkdefaultbg" : "defualtbg")
   const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
   const [profileImageUri, setProfileImageUri] = useState(null)
@@ -191,7 +188,6 @@ export default function WhatsAppChat() {
   const [readMode, setReadMode] = useState(false)
   const [useApiNames, setUseApiNames] = useState(false)
   const [dateText, setDateText] = useState("Today")
-  const [importExportModalVisible, setImportExportModalVisible] = useState(false)
   
   // Notification state (only for update notifications)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
@@ -389,6 +385,20 @@ export default function WhatsAppChat() {
       console.error("Error importing contact name:", error)
     }
   }
+
+  // Handle import profile image
+  const handleImportProfileImage = (importedProfileImageUri) => {
+    try {
+      console.log("=== IMPORT PROFILE IMAGE START ===")
+      console.log("Imported profile image URI:", importedProfileImageUri)
+      setProfileImageUri(importedProfileImageUri)
+      console.log("Profile image updated successfully")
+      console.log("=== IMPORT PROFILE IMAGE END ===")
+    } catch (error) {
+      console.error("Error importing profile image:", error)
+    }
+  }
+
 
   const cancelSenderEdit = () => {
     setSenderEditModalVisible(false)
@@ -1164,6 +1174,9 @@ export default function WhatsAppChat() {
         await mobileSupabaseHelpers.updateAnalytics(user.id, 'screenshot');
       }
 
+      // Increment screenshot count
+      await incrementScreenshotCount();
+
       // Check if contact name is still the default "MiniChat"
       if (contactName === "MiniChat") {
         Alert.alert(
@@ -1178,6 +1191,18 @@ export default function WhatsAppChat() {
         )
       }
     }
+
+    const incrementScreenshotCount = async () => {
+      try {
+        const currentCount = await AsyncStorage.getItem('screenshotCount');
+        const newCount = (parseInt(currentCount) || 0) + 1;
+        await AsyncStorage.setItem('screenshotCount', newCount.toString());
+        console.log('Screenshot count updated:', newCount);
+      } catch (error) {
+        console.error('Error updating screenshot count:', error);
+      }
+    };
+
 
     // Add screenshot listener
     const subscription = ScreenCapture.addScreenshotListener(handleScreenshot)
@@ -1573,10 +1598,19 @@ export default function WhatsAppChat() {
       >
         <View style={styles.dashboardModalOverlay}>
           <View style={[styles.dashboardModal, dynamicStyles.dashboardModal]}>
-            <UserDashboard 
-              onClose={() => setUserDashboardVisible(false)}
-              isDarkMode={isDarkMode}
-            />
+                  <UserDashboard 
+                    onClose={() => setUserDashboardVisible(false)}
+                    messages={messages}
+                    contactName={contactName}
+                    profileImageUri={profileImageUri}
+                    onImport={handleImportMessages}
+                    onImportContact={handleImportContact}
+                    onImportProfileImage={handleImportProfileImage}
+                    selectedBackground={selectedBackground}
+                    onBackgroundSelect={handleBackgroundSelect}
+                    customBackgroundUri={customBackgroundUri}
+                    onCustomBackgroundChange={setCustomBackgroundUri}
+                  />
           </View>
         </View>
       </Modal>
@@ -1611,9 +1645,12 @@ export default function WhatsAppChat() {
           } : undefined}>
             <Ionicons name="videocam-outline" size={28} color={isDarkMode ? "#fff" : "#403f3f"} />
           </TouchableOpacity>
+          
           <TouchableOpacity 
             style={styles.iconButton}
-            onPress={() => setImportExportModalVisible(true)}
+            onPress={() => {
+              Alert.alert('Call', 'Call feature coming soon!');
+            }}
           >
             <Ionicons name="call-outline" size={24} color={isDarkMode ? "#fff" : "#000"} />
           </TouchableOpacity>
@@ -1678,10 +1715,6 @@ export default function WhatsAppChat() {
               onUseApiNamesChange={handleUseApiNamesChange}
               dateText={dateText}
               onDateTextChange={setDateText}
-              onSwitchToBackground={() => {
-                setProfileEditModalVisible(false)
-                setBackgroundModalVisible(true)
-              }}
             />
 
       {/* Image Size Selection Modal */}
@@ -1725,31 +1758,6 @@ export default function WhatsAppChat() {
         </View>
       </Modal>
 
-      {/* Chat Background Modal */}
-      <ChatBackground
-        visible={backgroundModalVisible}
-        onClose={() => setBackgroundModalVisible(false)}
-        selectedBackground={selectedBackground}
-        onBackgroundSelect={handleBackgroundSelect}
-        customBackgroundUri={customBackgroundUri}
-        onCustomBackgroundChange={setCustomBackgroundUri}
-        onSwitchToProfile={() => {
-          setBackgroundModalVisible(false)
-          setProfileEditModalVisible(true)
-        }}
-      />
-      
-      {importExportModalVisible && console.log("Modal Debug - contactName being passed:", contactName)}
-      <ImportExportModal
-        visible={importExportModalVisible}
-        onClose={() => setImportExportModalVisible(false)}
-        messages={messages}
-        onImport={handleImportMessages}
-        contactName={contactName}
-        onImportContact={handleImportContact}
-        profileImageUri={profileImageUri}
-        onImportProfileImage={setProfileImageUri}
-      />
     </View>
   )
 }
@@ -1955,8 +1963,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dateBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 1,
+    paddingHorizontal: 9,
+    paddingVertical: 2,
     borderRadius: 20,
     overflow: "hidden", // Ensure blur effect is contained within rounded corners
   },

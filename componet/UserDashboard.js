@@ -9,28 +9,36 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
-  Alert
+  Alert,
+  Modal,
+  Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useDarkMode } from './DarkModeContext';
 import { useAuth } from './AuthContext';
 import { mobileSupabaseHelpers } from '../config/supabase';
+import ImportExportModal from './importexport';
 
-const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
-  const { isDarkMode: contextIsDarkMode } = useDarkMode();
-  const { user } = useAuth();
-  const isDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : contextIsDarkMode;
+const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImport, onImportContact, onImportProfileImage, selectedBackground, onBackgroundSelect, customBackgroundUri: propCustomBackgroundUri, onCustomBackgroundChange }) => {
+  const { isDarkMode, setIsDarkMode, setManualOverride, toggleDarkMode, resetToSystemMode, manualOverride, systemColorScheme } = useDarkMode();
+  const { user, logout } = useAuth();
   const [userData, setUserData] = useState(null);
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showImportExport, setShowImportExport] = useState(false);
+  const [showBackgroundModal, setShowBackgroundModal] = useState(false);
+  const [customBackgroundUri, setCustomBackgroundUri] = useState(propCustomBackgroundUri);
+  const [screenshotCount, setScreenshotCount] = useState(0);
   const dynamicStyles = getDynamicStyles(isDarkMode);
 
   useEffect(() => {
     loadUserData();
     loadNotificationPreference();
+    loadMediaCounts();
   }, [user]);
 
   const loadUserData = async () => {
@@ -88,12 +96,46 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
     }
   };
 
+  const loadMediaCounts = async () => {
+    try {
+      const storedScreenshots = await AsyncStorage.getItem('screenshotCount');
+      
+      if (storedScreenshots !== null) {
+        setScreenshotCount(parseInt(storedScreenshots) || 0);
+      }
+    } catch (error) {
+      console.error('Error loading screenshot count:', error);
+    }
+  };
+
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadUserData();
     await loadNotificationPreference();
+    await loadMediaCounts();
     setRefreshing(false);
   };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: logout }
+      ]
+    );
+  };
+
+  // Background options
+  const backgroundOptions = [
+    { id: "defualtbg", name: "Default", preview: require('../assets/defualtbg.jpg') },
+    { id: "darkdefaultbg", name: "Dark Mode", preview: require('../assets/darkdefaultbg.png') },
+    { id: "gradient1", name: "Gradient 1", preview: "https://images.unsplash.com/photo-1557683316-973673baf926?w=100&h=200&fit=crop" },
+    { id: "gradient2", name: "Gradient 2", preview: "https://images.unsplash.com/photo-1557683311-eac922247aa9?w=100&h=200&fit=crop" },
+    { id: "custom", name: "Custom Image", preview: customBackgroundUri, isCustom: true },
+  ];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -109,6 +151,54 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
         return '#6b7280';
     }
   };
+
+  const pickCustomBackground = async () => {
+    try {
+      // Request permission to access media library
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission Required", "Permission to access camera roll is required!");
+        return;
+      }
+
+      // Launch image picker without editing/cropping
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false, // No auto-cropping
+        quality: 0.8,
+        aspect: undefined, // No aspect ratio restrictions
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri;
+        setCustomBackgroundUri(imageUri);
+        
+        // Notify parent component of custom background change
+        if (onCustomBackgroundChange) {
+          onCustomBackgroundChange(imageUri);
+        }
+        
+        // Apply the custom background immediately
+        if (onBackgroundSelect) {
+          onBackgroundSelect("custom");
+        }
+        
+        setShowBackgroundModal(false);
+        Alert.alert("Success", "Custom background applied!");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to pick image. Please try again.");
+      console.error("Custom background picker error:", error);
+    }
+  };
+
+  // Handle custom background changes from parent
+  useEffect(() => {
+    if (propCustomBackgroundUri !== customBackgroundUri) {
+      setCustomBackgroundUri(propCustomBackgroundUri);
+    }
+  }, [propCustomBackgroundUri]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -348,18 +438,13 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
           
           
           {renderInfoCard(
-            'Timezone',
-            userData?.timezone || 'UTC',
-            'time',
-            '#06b6d4'
+            'Screenshots Taken',
+            screenshotCount.toString(),
+            'camera',
+            '#8b5cf6'
           )}
+
           
-          {renderInfoCard(
-            'User ID',
-            userData?.id || 'Not available',
-            'key',
-            '#6b7280'
-          )}
         </View>
 
         {/* Notification Settings Section */}
@@ -404,6 +489,128 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
           </View>
         </View>
 
+        {/* Dark Mode Settings Section */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
+            Appearance
+          </Text>
+          
+          <View style={[styles.toggleCard, dynamicStyles.toggleCard]}>
+            <View style={styles.toggleContent}>
+              <View style={styles.toggleIcon}>
+                <Ionicons 
+                  name={isDarkMode ? "moon" : "sunny"} 
+                  size={24} 
+                  color={isDarkMode ? "#6366f1" : "#f59e0b"} 
+                />
+              </View>
+              <View style={styles.toggleText}>
+                <Text style={[styles.toggleTitle, dynamicStyles.toggleTitle]}>
+                  Dark Mode
+                </Text>
+                <Text style={[styles.toggleSubtitle, dynamicStyles.toggleSubtitle]}>
+                  {manualOverride 
+                    ? (isDarkMode ? "Manual: Dark theme" : "Manual: Light theme")
+                    : `Following system: ${systemColorScheme === 'dark' ? 'Dark' : 'Light'}`
+                  }
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.toggleSwitch,
+                  { backgroundColor: isDarkMode ? "#6366f1" : "#ccc" }
+                ]}
+                onPress={toggleDarkMode}
+              >
+                <View style={[
+                  styles.toggleThumb,
+                  { transform: [{ translateX: isDarkMode ? 20 : 2 }] }
+                ]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Reset to System Mode Button */}
+          {manualOverride && (
+            <TouchableOpacity 
+              style={[styles.resetSystemButton, dynamicStyles.resetSystemButton]}
+              onPress={() => {
+                Alert.alert(
+                  "Reset to System Mode",
+                  "This will make the app follow your phone's dark mode setting automatically.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { 
+                      text: "Reset", 
+                      onPress: resetToSystemMode
+                    }
+                  ]
+                );
+              }}
+            >
+              <Ionicons name="refresh-outline" size={16} color="#6366f1" />
+              <Text style={[styles.resetSystemButtonText, dynamicStyles.resetSystemButtonText]}>
+                Reset to System Mode
+              </Text>
+            </TouchableOpacity>
+          )}
+
+        </View>
+
+        {/* Chat Background Section */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
+            Chat Background
+          </Text>
+          
+          <TouchableOpacity 
+            style={[styles.actionCard, dynamicStyles.actionCard]}
+            onPress={() => setShowBackgroundModal(true)}
+          >
+            <View style={styles.actionContent}>
+              <View style={styles.actionIcon}>
+                <Ionicons name="image-outline" size={24} color="#8b5cf6" />
+              </View>
+              <View style={styles.actionText}>
+                <Text style={[styles.actionTitle, dynamicStyles.actionTitle]}>
+                  Change Background
+                </Text>
+                <Text style={[styles.actionSubtitle, dynamicStyles.actionSubtitle]}>
+                  Customize your chat appearance
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Import/Export Section */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
+            Data Management
+          </Text>
+          
+          <TouchableOpacity 
+            style={[styles.actionCard, dynamicStyles.actionCard]}
+            onPress={() => setShowImportExport(true)}
+          >
+            <View style={styles.actionContent}>
+              <View style={styles.actionIcon}>
+                <Ionicons name="download-outline" size={24} color="#10b981" />
+              </View>
+              <View style={styles.actionText}>
+                <Text style={[styles.actionTitle, dynamicStyles.actionTitle]}>
+                  Import/Export Chat
+                </Text>
+                <Text style={[styles.actionSubtitle, dynamicStyles.actionSubtitle]}>
+                  Backup or restore your chat data
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Support Section */}
         <View style={[styles.section, dynamicStyles.section]}>
           <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
@@ -426,9 +633,104 @@ const UserDashboard = ({ onClose, isDarkMode: propIsDarkMode }) => {
           </TouchableOpacity>
         </View>
 
+        {/* Logout Section */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <TouchableOpacity 
+            style={[styles.logoutButton, dynamicStyles.logoutButton]}
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#fff" />
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Import/Export Modal */}
+      <ImportExportModal
+        visible={showImportExport}
+        onClose={() => setShowImportExport(false)}
+        messages={messages}
+        onImport={onImport}
+        contactName={contactName}
+        onImportContact={onImportContact}
+        profileImageUri={profileImageUri}
+        onImportProfileImage={onImportProfileImage}
+      />
+
+      {/* Background Selection Modal */}
+      <Modal
+        visible={showBackgroundModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowBackgroundModal(false)}
+      >
+        <View style={styles.backgroundModalOverlay}>
+          <View style={[styles.backgroundModal, dynamicStyles.backgroundModal]}>
+            <View style={styles.backgroundModalHeader}>
+              <Text style={[styles.backgroundModalTitle, dynamicStyles.backgroundModalTitle]}>
+                Choose Background
+              </Text>
+              <TouchableOpacity 
+                onPress={() => setShowBackgroundModal(false)}
+                style={styles.backgroundModalClose}
+              >
+                <Ionicons name="close" size={24} color={isDarkMode ? '#fff' : '#000'} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.backgroundGrid}>
+              {backgroundOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.backgroundOption,
+                    dynamicStyles.backgroundOption,
+                    selectedBackground === option.id && styles.selectedBackgroundOption
+                  ]}
+                  onPress={() => {
+                    if (option.id === "custom") {
+                      pickCustomBackground();
+                    } else {
+                      if (onBackgroundSelect) {
+                        onBackgroundSelect(option.id);
+                      }
+                      setShowBackgroundModal(false);
+                    }
+                  }}
+                >
+                  <View style={styles.backgroundPreview}>
+                    {option.isCustom ? (
+                      option.preview ? (
+                        <Image source={{ uri: option.preview }} style={styles.backgroundImage} />
+                      ) : (
+                        <View style={styles.customBackgroundPlaceholder}>
+                          <Ionicons name="camera" size={30} color="#25D366" />
+                          <Text style={styles.customBackgroundText}>Add Photo</Text>
+                        </View>
+                      )
+                    ) : typeof option.preview === 'string' ? (
+                      <Image source={{ uri: option.preview }} style={styles.backgroundImage} />
+                    ) : (
+                      <Image source={option.preview} style={styles.backgroundImage} />
+                    )}
+                  </View>
+                  <Text style={[styles.backgroundName, dynamicStyles.backgroundName]}>
+                    {option.name}
+                  </Text>
+                  {selectedBackground === option.id && (
+                    <View style={styles.selectedIndicator}>
+                      <Ionicons name="checkmark" size={16} color="#fff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -505,6 +807,39 @@ const getDynamicStyles = (isDarkMode) => StyleSheet.create({
   },
   toggleSubtitle: {
     color: isDarkMode ? '#ccc' : '#666',
+  },
+  actionCard: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+    borderColor: isDarkMode ? '#333' : '#e0e0e0',
+  },
+  actionTitle: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  actionSubtitle: {
+    color: isDarkMode ? '#ccc' : '#666',
+  },
+  logoutButton: {
+    backgroundColor: '#dc3545',
+  },
+  backgroundModal: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+  },
+  backgroundModalTitle: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  backgroundOption: {
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+    borderColor: isDarkMode ? '#333' : '#e0e0e0',
+  },
+  backgroundName: {
+    color: isDarkMode ? '#fff' : '#000',
+  },
+  resetSystemButton: {
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+    borderColor: isDarkMode ? '#444' : '#e0e0e0',
+  },
+  resetSystemButtonText: {
+    color: isDarkMode ? '#6366f1' : '#6366f1',
   },
 });
 
@@ -717,6 +1052,155 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 32,
+  },
+  actionCard: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 12,
+  },
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionIcon: {
+    marginRight: 16,
+  },
+  actionText: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  actionSubtitle: {
+    fontSize: 14,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  backgroundModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  backgroundModal: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '70%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  backgroundModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backgroundModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  backgroundModalClose: {
+    padding: 4,
+  },
+  backgroundGrid: {
+    flex: 1,
+    padding: 20,
+  },
+  backgroundOption: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    position: 'relative',
+  },
+  backgroundPreview: {
+    width: '100%',
+    height: 80,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  customBackgroundPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0f8f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#25D366',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+  },
+  customBackgroundText: {
+    fontSize: 10,
+    color: '#25D366',
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  backgroundName: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  selectedBackgroundOption: {
+    borderColor: '#25D366',
+    borderWidth: 2,
+  },
+  selectedIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#25D366',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resetSystemButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginTop: 8,
+    gap: 6,
+  },
+  resetSystemButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

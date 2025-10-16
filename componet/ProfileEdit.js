@@ -16,7 +16,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useDarkMode } from './DarkModeContext';
-import { useAuth } from './AuthContext';
 
 const getDynamicStyles = (isDarkMode) => ({
   modalOverlay: {
@@ -55,9 +54,6 @@ const getDynamicStyles = (isDarkMode) => ({
   modalFooter: {
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
   },
-  logoutButton: {
-    backgroundColor: isDarkMode ? '#dc3545' : '#dc3545',
-  },
   cancelButton: {
     borderColor: isDarkMode ? '#444' : '#DDD',
   },
@@ -85,7 +81,6 @@ const ProfileEdit = ({
   onContactNameChange,
   unreadCount,
   onUnreadCountChange,
-  onSwitchToBackground,
   readMode,
   onReadModeChange,
   useApiNames,
@@ -93,8 +88,7 @@ const ProfileEdit = ({
   dateText,
   onDateTextChange
 }) => {
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const { logout } = useAuth();
+  const { isDarkMode } = useDarkMode();
   const [editContactName, setEditContactName] = useState(contactName);
   const [editUnreadCount, setEditUnreadCount] = useState(unreadCount.toString());
   const [isReadMode, setIsReadMode] = useState(readMode || false);
@@ -209,9 +203,6 @@ const ProfileEdit = ({
           <View style={[styles.modalHeader, dynamicStyles.modalHeader]}>
             <Text style={[styles.modalTitle, dynamicStyles.modalTitle]}>Edit Profile</Text>
             <View style={styles.headerButtons}>
-              <TouchableOpacity onPress={onSwitchToBackground} style={styles.switchButton}>
-                <Ionicons name="color-palette-outline" size={24} color="#25D366" />
-              </TouchableOpacity>
               <TouchableOpacity onPress={cancelEdit} style={styles.closeButton}>
                 <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
@@ -332,48 +323,10 @@ const ProfileEdit = ({
               </Text>
             </View>
 
-            {/* Dark Mode Toggle Section */}
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Dark Mode</Text>
-              <TouchableOpacity style={[styles.toggleContainer, dynamicStyles.toggleContainer]} onPress={toggleDarkMode}>
-                <View style={styles.toggleInfo}>
-                  <Ionicons 
-                    name={isDarkMode ? "moon" : "sunny"} 
-                    size={20} 
-                    color={isDarkMode ? "#25D366" : "#666"} 
-                  />
-                  <Text style={[styles.toggleLabel, dynamicStyles.toggleLabel, isDarkMode && styles.toggleLabelActive]}>
-                    {isDarkMode ? "Dark Mode ON" : "Dark Mode OFF"}
-                  </Text>
-                </View>
-                <View style={[styles.toggleSwitch, isDarkMode && styles.toggleSwitchActive]}>
-                  <View style={[styles.toggleThumb, isDarkMode && styles.toggleThumbActive]} />
-                </View>
-              </TouchableOpacity>
-              <Text style={[styles.helperText, dynamicStyles.helperText]}>
-                Toggle between light and dark theme
-              </Text>
-            </View>
 
           </ScrollView>
           
           <View style={[styles.modalFooter, dynamicStyles.modalFooter]}>
-            <TouchableOpacity 
-              style={[styles.logoutButton, dynamicStyles.logoutButton]} 
-              onPress={() => {
-                Alert.alert(
-                  "Logout",
-                  "Are you sure you want to logout?",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Logout", style: "destructive", onPress: logout }
-                  ]
-                );
-              }}
-            >
-              <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={[styles.cancelButton, dynamicStyles.cancelButton]} onPress={cancelEdit}>
               <Text style={[styles.cancelButtonText, dynamicStyles.cancelButtonText]}>Cancel</Text>
             </TouchableOpacity>
@@ -530,23 +483,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#25D366',
   },
   saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#dc3545',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 8,
-  },
-  logoutIcon: {
-    marginRight: 4,
-  },
-  logoutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
