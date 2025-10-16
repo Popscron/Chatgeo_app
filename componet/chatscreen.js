@@ -939,17 +939,35 @@ export default function WhatsAppChat() {
     }
   };
 
+  // Save viewed notifications to storage
+  const saveViewedNotifications = async (newViewedSet) => {
+    try {
+      const viewedArray = Array.from(newViewedSet);
+      await AsyncStorage.setItem('viewedNotifications', JSON.stringify(viewedArray));
+      console.log('Saved viewed notifications:', viewedArray);
+    } catch (error) {
+      console.error('Error saving viewed notifications:', error);
+    }
+  };
+
   // Handle update action
   const handleUpdateAction = async () => {
     // Mark notification as viewed in database
     if (currentNotification && user && user.id) {
       console.log('Marking notification as viewed:', currentNotification.id);
-      await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'accepted');
-      
-      // Update local viewed notifications
+      try {
+        await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'accepted');
+      } catch (error) {
+        console.error('Error marking notification as viewed in database:', error);
+      }
+    }
+    
+    // Update local viewed notifications
+    if (currentNotification) {
       setViewedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated viewed notifications:', Array.from(newSet));
+        saveViewedNotifications(newSet);
         return newSet;
       });
     }
@@ -997,12 +1015,19 @@ export default function WhatsAppChat() {
     // Mark notification as viewed in database
     if (currentNotification && user && user.id) {
       console.log('Marking notification as viewed:', currentNotification.id);
-      await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
-      
-      // Update local viewed notifications
+      try {
+        await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
+      } catch (error) {
+        console.error('Error marking notification as viewed in database:', error);
+      }
+    }
+    
+    // Update local viewed notifications
+    if (currentNotification) {
       setViewedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated viewed notifications:', Array.from(newSet));
+        saveViewedNotifications(newSet);
         return newSet;
       });
     }
@@ -1026,12 +1051,19 @@ export default function WhatsAppChat() {
     // Mark notification as viewed in database
     if (currentNotification && user && user.id) {
       console.log('Marking notification as viewed:', currentNotification.id);
-      await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
-      
-      // Update local viewed notifications
+      try {
+        await mobileSupabaseHelpers.markNotificationViewed(currentNotification.id, user.id, 'dismissed');
+      } catch (error) {
+        console.error('Error marking notification as viewed in database:', error);
+      }
+    }
+    
+    // Update local viewed notifications
+    if (currentNotification) {
       setViewedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated viewed notifications:', Array.from(newSet));
+        saveViewedNotifications(newSet);
         return newSet;
       });
     }
@@ -1081,11 +1113,24 @@ export default function WhatsAppChat() {
   
   const loadViewedNotifications = async () => {
     try {
-      if (user && user.id) {
-        const viewedData = await mobileSupabaseHelpers.getViewedNotifications(user.id);
-        const viewedIds = new Set(viewedData.map(item => item.notification_id));
+      // First try to load from local storage as fallback
+      const storedViewed = await AsyncStorage.getItem('viewedNotifications');
+      if (storedViewed) {
+        const viewedIds = new Set(JSON.parse(storedViewed));
         setViewedNotifications(viewedIds);
-        console.log('Loaded viewed notifications:', Array.from(viewedIds));
+        console.log('Loaded viewed notifications from storage:', Array.from(viewedIds));
+      }
+      
+      // Then try to load from database if user is logged in
+      if (user && user.id) {
+        try {
+          const viewedData = await mobileSupabaseHelpers.getViewedNotifications(user.id);
+          const viewedIds = new Set(viewedData.map(item => item.notification_id));
+          setViewedNotifications(viewedIds);
+          console.log('Loaded viewed notifications from database:', Array.from(viewedIds));
+        } catch (dbError) {
+          console.log('Database not available, using local storage only');
+        }
       }
     } catch (error) {
       console.error('Error loading viewed notifications:', error);
