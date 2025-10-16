@@ -172,7 +172,7 @@ export default function WhatsAppChat() {
   const [editTime, setEditTime] = useState("")
   
   const [backgroundModalVisible, setBackgroundModalVisible] = useState(false)
-  const [selectedBackground, setSelectedBackground] = useState("default")
+  const [selectedBackground, setSelectedBackground] = useState(isDarkMode ? "darkdefaultbg" : "defualtbg")
   const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
   const [profileImageUri, setProfileImageUri] = useState(null)
   const [contactName, setContactName] = useState("MiniChat")
@@ -1024,7 +1024,7 @@ export default function WhatsAppChat() {
       try {
         const dismissedArray = Array.from(dismissedUpdates);
         await AsyncStorage.setItem('dismissedUpdates', JSON.stringify(dismissedArray));
-    } catch (error) {
+      } catch (error) {
         console.error('Error saving dismissed updates:', error);
       }
     };
@@ -1033,6 +1033,19 @@ export default function WhatsAppChat() {
       saveDismissedUpdates();
     }
   }, [dismissedUpdates]);
+
+  // Handle dark mode background switching
+  useEffect(() => {
+    // Automatically switch to dark background when dark mode is enabled
+    if (isDarkMode && selectedBackground !== "darkdefaultbg") {
+      setSelectedBackground("darkdefaultbg");
+      console.log('Dark mode enabled, switching to dark background');
+    } else if (!isDarkMode && selectedBackground === "darkdefaultbg") {
+      // Switch to default background image when light mode is enabled
+      setSelectedBackground("defualtbg");
+      console.log('Light mode enabled, switching to default background image');
+    }
+  }, [isDarkMode]);
 
   // Screen capture detection for default contact name warning
   useEffect(() => {
@@ -1743,8 +1756,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "rgba(208, 192, 176, 0.3)",
+  //  borderBottomWidth: 0.5,
+   // borderBottomColor: "rgba(208, 192, 176, 0.3)",
     backgroundColor: "transparent", // Ensure no background color interferes with blur
     ...(Platform.OS === 'ios' && {
       // iOS-specific blur enhancements
@@ -2024,7 +2037,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   inputBlurView: {
-    borderTopWidth: 0.5,
+    //borderTopWidth: 0.5,
     borderTopColor: "rgba(208, 192, 176, 0.3)",
   },
   inputContent: {
