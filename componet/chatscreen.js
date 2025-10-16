@@ -17,6 +17,7 @@ import {
   AppState,
   Linking,
 } from "react-native"
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons"
@@ -52,6 +53,11 @@ const getDynamicStyles = (isDarkMode) => ({
   },
   inputContainer: {
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   input: {
     backgroundColor: isDarkMode ? '#2a2a2a' : '#fff',
@@ -63,6 +69,11 @@ const getDynamicStyles = (isDarkMode) => ({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   notificationBanner: {
     backgroundColor: isDarkMode ? '#1a1a1a' : '#25D366',
@@ -891,6 +902,17 @@ export default function WhatsAppChat() {
     }
   };
 
+  // Save dismissed notifications to storage
+  const saveDismissedNotifications = async (newDismissedSet) => {
+    try {
+      const dismissedArray = Array.from(newDismissedSet);
+      await AsyncStorage.setItem('dismissedNotifications', JSON.stringify(dismissedArray));
+      console.log('Saved dismissed notifications:', dismissedArray);
+    } catch (error) {
+      console.error('Error saving dismissed notifications:', error);
+    }
+  };
+
   // Handle update action
   const handleUpdateAction = () => {
     // Mark notification as dismissed
@@ -899,6 +921,7 @@ export default function WhatsAppChat() {
       setDismissedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated dismissed notifications:', Array.from(newSet));
+        saveDismissedNotifications(newSet);
         return newSet;
       });
     }
@@ -938,6 +961,7 @@ export default function WhatsAppChat() {
       setDismissedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated dismissed notifications:', Array.from(newSet));
+        saveDismissedNotifications(newSet);
         return newSet;
       });
     }
@@ -953,12 +977,30 @@ export default function WhatsAppChat() {
       setDismissedNotifications(prev => {
         const newSet = new Set([...prev, currentNotification.id]);
         console.log('Updated dismissed notifications:', Array.from(newSet));
+        saveDismissedNotifications(newSet);
         return newSet;
       });
     }
     
     setShowNotificationModal(false);
   };
+
+  // Load dismissed notifications from storage on mount
+  useEffect(() => {
+    const loadDismissedNotifications = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('dismissedNotifications');
+        if (stored) {
+          const dismissedIds = JSON.parse(stored);
+          setDismissedNotifications(new Set(dismissedIds));
+        }
+      } catch (error) {
+        console.error('Error loading dismissed notifications:', error);
+      }
+    };
+    
+    loadDismissedNotifications();
+  }, []);
 
   // Load notifications on component mount and every 30 seconds
   useEffect(() => {
@@ -1258,7 +1300,7 @@ export default function WhatsAppChat() {
                 dynamicStyles.inputContainerBackground,
                 { 
                   transform: [{ scaleX: inputWidthAnimation }],
-                  transformOrigin: 'left'
+                  transformOrigin: 'center'
                 }
               ]}
             >
@@ -2004,10 +2046,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   inputBlurView: {
     borderTopWidth: 0.5,
     borderTopColor: "rgba(208, 192, 176, 0.3)",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   inputContent: {
     flexDirection: "row",
@@ -2016,6 +2065,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingBottom: 36, // Account for safe area
     minHeight: 60,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   inputIcon: {
     padding: 4,
@@ -2032,9 +2086,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-   // borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     paddingHorizontal: 4,
     marginHorizontal: 10,
+    overflow: 'hidden',
   },
   textInput: {
     flex: 1,
