@@ -28,8 +28,8 @@ import { generateGhanaianNickname } from './namesapi'
 import ChatBackground from './ChatBackground'
 import ImportExportModal from './importexport'
 import * as ScreenCapture from 'expo-screen-capture'
-import { useDarkMode } from './DarkModeContext'
 import { mobileSupabaseHelpers } from '../config/supabase'
+import { useDarkMode } from './DarkModeContext'
 import { useAuth } from './AuthContext'
 
 const getDynamicStyles = (isDarkMode) => ({
@@ -62,6 +62,11 @@ const getDynamicStyles = (isDarkMode) => ({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
+  },
+  notificationBanner: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#25D366',
+    borderColor: isDarkMode ? '#333' : 'transparent',
+    borderWidth: isDarkMode ? 1 : 0,
     borderRadius: 20,
     paddingHorizontal: 4,
     marginHorizontal: 10,
@@ -170,6 +175,11 @@ export default function WhatsAppChat() {
   const [useApiNames, setUseApiNames] = useState(false)
   const [dateText, setDateText] = useState("Today")
   const [importExportModalVisible, setImportExportModalVisible] = useState(false)
+  
+  // Notification state
+  const [notifications, setNotifications] = useState([])
+  const [showNotificationBanner, setShowNotificationBanner] = useState(false)
+  const [currentNotification, setCurrentNotification] = useState(null)
   
   // Image size selection state
   const [showImageSizeModal, setShowImageSizeModal] = useState(false)
@@ -840,6 +850,37 @@ export default function WhatsAppChat() {
     }
   }, [])
 
+  // Load notifications
+  const loadNotifications = async () => {
+    try {
+      const notificationData = await mobileSupabaseHelpers.getNotifications();
+      setNotifications(notificationData);
+      
+      // Show the latest notification as a banner
+      if (notificationData.length > 0) {
+        const latestNotification = notificationData[0];
+        setCurrentNotification(latestNotification);
+        setShowNotificationBanner(true);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+          setShowNotificationBanner(false);
+        }, 5000);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  // Load notifications on component mount and every 30 seconds
+  useEffect(() => {
+    loadNotifications();
+    
+    const interval = setInterval(loadNotifications, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Screen capture detection for default contact name warning
   useEffect(() => {
     const handleScreenshot = async () => {
@@ -1176,6 +1217,33 @@ export default function WhatsAppChat() {
 
   return (
     <View style={[styles.container, dynamicStyles.container]}>
+      {/* Notification Banner */}
+      {showNotificationBanner && currentNotification && (
+        <View style={[styles.notificationBanner, dynamicStyles.notificationBanner]}>
+          <View style={styles.notificationContent}>
+            <View style={styles.notificationIcon}>
+              <Ionicons 
+                name={currentNotification.type === 'urgent' ? 'warning' : 'notifications'} 
+                size={20} 
+                color="#fff" 
+              />
+            </View>
+            <View style={styles.notificationText}>
+              <Text style={styles.notificationTitle}>{currentNotification.title}</Text>
+              <Text style={styles.notificationMessage} numberOfLines={2}>
+                {currentNotification.message}
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.notificationClose}
+              onPress={() => setShowNotificationBanner(false)}
+            >
+              <Ionicons name="close" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      
       {/* Header - positioned above everything */}
       <CustomBlurView 
         intensity={100} 
@@ -1356,6 +1424,51 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "transparent",
+  },
+  notificationBanner: {
+    position: 'absolute',
+    top: 60,
+    left: 10,
+    right: 10,
+    zIndex: 1001,
+    backgroundColor: '#25D366',
+    borderRadius: 8,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  notificationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  notificationText: {
+    flex: 1,
+  },
+  notificationTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  notificationMessage: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.9,
+  },
+  notificationClose: {
+    padding: 4,
   },
   header: {
     position: "absolute",

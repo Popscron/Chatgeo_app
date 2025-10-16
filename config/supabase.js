@@ -143,5 +143,28 @@ export const mobileSupabaseHelpers = {
     } catch (error) {
       console.error('Analytics update error:', error)
     }
+  },
+
+  // Get notifications for user
+  async getNotifications() {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('target_audience', 'all')
+        .eq('status', 'sent')
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        console.error('Error fetching notifications:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Notifications fetch error:', error)
+      return []
+    }
   }
 }
