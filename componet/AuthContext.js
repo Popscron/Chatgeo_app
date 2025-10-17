@@ -117,15 +117,21 @@ export const AuthProvider = ({ children }) => {
       const result = await mobileSupabaseHelpers.authenticateUser(number, password);
       
       if (result.success) {
+        console.log('✅ Authentication successful for user:', result.user.id);
+        
         // Check subscription status
         const subscription = await mobileSupabaseHelpers.checkSubscription(result.user.id);
+        console.log('Subscription check result:', subscription);
         
         if (!subscription.hasActiveSubscription) {
+          console.log('❌ No active subscription, blocking login');
           return {
             success: false,
             error: 'Your subscription has expired. Please contact support.'
           };
         }
+        
+        console.log('✅ Active subscription found, proceeding with login');
 
         // Store user data
         await AsyncStorage.setItem('user_data', JSON.stringify(result.user));
@@ -133,10 +139,14 @@ export const AuthProvider = ({ children }) => {
         setUser(result.user);
         
         // Get device information and track login
+        console.log('🔍 Starting device tracking for real user...');
         const deviceInfo = await getDeviceInfo();
+        console.log('Device info collected:', deviceInfo);
+        
         await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
         await mobileSupabaseHelpers.logActivity(result.user.id, 'login');
         await mobileSupabaseHelpers.updateAnalytics(result.user.id, 'login');
+        console.log('✅ Device tracking completed for real user');
         
         return { success: true };
       } else {
