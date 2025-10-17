@@ -150,8 +150,54 @@ export const mobileSupabaseHelpers = {
     try {
       const now = new Date().toISOString()
       
-      // First, check for existing active sessions from other devices
-      console.log('🔍 Checking for active sessions for user:', userId, 'device:', deviceInfo.deviceId)
+      // First, check if there's an existing session for this specific device
+      console.log('🔍 Checking for existing session on current device:', deviceInfo.deviceId)
+      
+      const { data: currentDeviceSession, error: currentSessionError } = await supabase
+        .from('user_device_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('device_id', deviceInfo.deviceId)
+        .single()
+
+      if (currentSessionError && currentSessionError.code !== 'PGRST116') {
+        console.error('Error checking current device session:', currentSessionError)
+      }
+
+      // If there's an existing session on the same device (even if inactive), allow login
+      if (currentDeviceSession) {
+        console.log('✅ Found existing session on same device - allowing login')
+        
+        // Update the existing session to active
+        const { error: updateError } = await supabase
+          .from('user_device_sessions')
+          .update({
+            last_login: now,
+            is_active: true,
+            device_name: deviceInfo.deviceName,
+            device_type: deviceInfo.deviceType,
+            platform: deviceInfo.platform,
+            os_version: deviceInfo.osVersion,
+            app_version: deviceInfo.appVersion,
+            updated_at: now
+          })
+          .eq('id', currentDeviceSession.id)
+
+        if (updateError) {
+          console.error('Error updating existing session:', updateError)
+        } else {
+          console.log('✅ Existing session reactivated for same device')
+        }
+
+        return {
+          success: true,
+          hasConflict: false,
+          message: 'Same device login allowed'
+        }
+      }
+      
+      // If no existing session on current device, check for active sessions on OTHER devices
+      console.log('🔍 Checking for active sessions on OTHER devices for user:', userId)
       
       const { data: activeSessions, error: activeSessionsError } = await supabase
         .from('user_device_sessions')
@@ -160,7 +206,7 @@ export const mobileSupabaseHelpers = {
         .eq('is_active', true)
         .neq('device_id', deviceInfo.deviceId)
 
-      console.log('🔍 Active sessions found:', activeSessions?.length || 0, activeSessions)
+      console.log('🔍 Active sessions on other devices found:', activeSessions?.length || 0, activeSessions)
 
       if (activeSessionsError) {
         console.error('Error checking active sessions:', activeSessionsError)
@@ -202,76 +248,42 @@ export const mobileSupabaseHelpers = {
         }
       }
 
-      // Check if device session already exists
-      const { data: existingSession, error: sessionError } = await supabase
+      // No active sessions on other devices, create new session for this device
+      console.log('No active sessions on other devices - creating new session')
+      const { data: newSession, error: insertError } = await supabase
         .from('user_device_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('device_id', deviceInfo.deviceId)
+        .insert({
+          user_id: userId,
+          device_id: deviceInfo.deviceId,
+          device_name: deviceInfo.deviceName,
+          device_type: deviceInfo.deviceType,
+          platform: deviceInfo.platform,
+          os_version: deviceInfo.osVersion,
+          app_version: deviceInfo.appVersion,
+          last_login: now,
+          first_login: now,
+          is_active: true
+        })
+        .select()
         .single()
-
-      if (sessionError && sessionError.code !== 'PGRST116') {
-        console.error('Error checking existing session:', sessionError)
-      }
-
-      let deviceSessionId = null
-
-      if (existingSession) {
-        // Update existing session
-        const { error: updateError } = await supabase
-          .from('user_device_sessions')
-          .update({
-            last_login: now,
-            is_active: true,
-            device_name: deviceInfo.deviceName,
-            device_type: deviceInfo.deviceType,
-            platform: deviceInfo.platform,
-            os_version: deviceInfo.osVersion,
-            app_version: deviceInfo.appVersion
-          })
-          .eq('id', existingSession.id)
         
-        if (updateError) {
-          console.error('Error updating device session:', updateError)
-        } else {
-          deviceSessionId = existingSession.id
+      if (insertError) {
+        console.error('Error creating device session:', insertError)
+        console.log('Insert error details:', JSON.stringify(insertError, null, 2))
+        return {
+          success: false,
+          hasConflict: false,
+          error: 'Failed to create device session'
         }
       } else {
-        // Create new device session
-        console.log('Creating new device session')
-        const { data: newSession, error: insertError } = await supabase
-          .from('user_device_sessions')
-          .insert({
-            user_id: userId,
-            device_id: deviceInfo.deviceId,
-            device_name: deviceInfo.deviceName,
-            device_type: deviceInfo.deviceType,
-            platform: deviceInfo.platform,
-            os_version: deviceInfo.osVersion,
-            app_version: deviceInfo.appVersion,
-            last_login: now,
-            first_login: now,
-            is_active: true
-          })
-          .select()
-          .single()
+        console.log('✅ Created new device session:', newSession.id)
         
-        if (insertError) {
-          console.error('Error creating device session:', insertError)
-          console.log('Insert error details:', JSON.stringify(insertError, null, 2))
-        } else {
-          deviceSessionId = newSession.id
-          console.log('✅ Created new device session:', deviceSessionId)
-        }
-      }
-
-      // Create login history entry
-      if (deviceSessionId) {
+        // Create login history entry
         const { error: historyError } = await supabase
           .from('user_login_history')
           .insert({
             user_id: userId,
-            device_session_id: deviceSessionId,
+            device_session_id: newSession.id,
             login_at: now
           })
         
@@ -281,15 +293,14 @@ export const mobileSupabaseHelpers = {
         } else {
           console.log('✅ Created login history entry')
         }
-      } else {
-        console.log('❌ No device session ID available, skipping login history')
-      }
 
-      console.log('=== DEVICE TRACKING COMPLETE ===')
-      return {
-        success: true,
-        hasConflict: false,
-        message: 'Login successful'
+        console.log('=== DEVICE TRACKING COMPLETE ===')
+        
+        return {
+          success: true,
+          hasConflict: false,
+          message: 'New device session created successfully'
+        }
       }
     } catch (error) {
       console.error('❌ Device tracking error:', error)
