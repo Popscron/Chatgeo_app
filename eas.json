@@ -18,6 +18,15 @@
       "ios": {
         "simulator": false
       }
+    },
+    "ios-fix": {
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release"
+      },
+      "env": {
+        "EXPO_USE_HERMES": "false"
+      }
     }
   },
   "submit": {

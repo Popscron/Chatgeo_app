@@ -5,7 +5,7 @@
     "version": "1.1.5",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/whatsappicon.jpg",
+    "icon": "./assets/whatsappicon.png",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#008069"
@@ -20,7 +20,7 @@
     "android": {
       "package": "com.minichat.app2025",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/whatsappicon.jpg",
+        "foregroundImage": "./assets/whatsappicon.png",
         "backgroundColor": "#008069"
       },
       "permissions": [
@@ -28,7 +28,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/whatsappicon.jpg"
+      "favicon": "./assets/whatsappicon.png"
     },
     "scheme": "chatgeo",
     "plugins": [
