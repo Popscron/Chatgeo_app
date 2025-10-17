@@ -19,26 +19,53 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
 
-  // Keep demo credentials for testing
-  const DEMO_CREDENTIALS = {
-    number: '9088',
-    password: '9088'
-  };
 
   // Get device information
   const getDeviceInfo = async () => {
     try {
       const deviceId = await Device.getDeviceIdAsync();
-      console.log('Device ID obtained:', deviceId);
+      
+      // Create a better device name
+      let deviceName = 'Unknown Device';
+      
+      // Try to get device name from various sources
+      if (Device.deviceName && Device.deviceName !== 'Unknown') {
+        deviceName = Device.deviceName;
+      } else if (Device.modelName && Device.modelName !== 'Unknown') {
+        deviceName = Device.modelName;
+      } else {
+        // Generate device name based on available info
+        const { width, height } = Dimensions.get('window');
+        const brand = Device.brand || '';
+        
+        if (Platform.OS === 'ios') {
+          // Try to identify iPhone model based on screen dimensions
+          if (width === 375 && height === 812) {
+            deviceName = 'iPhone X/XS/11 Pro';
+          } else if (width === 414 && height === 896) {
+            deviceName = 'iPhone XR/11';
+          } else if (width === 390 && height === 844) {
+            deviceName = 'iPhone 12/13/14';
+          } else if (width === 393 && height === 852) {
+            deviceName = 'iPhone 14 Pro';
+          } else if (width === 430 && height === 932) {
+            deviceName = 'iPhone 14 Pro Max';
+          } else {
+            deviceName = brand ? `${brand} iPhone` : 'iPhone';
+          }
+        } else if (Platform.OS === 'android') {
+          deviceName = brand ? `${brand} Android` : 'Android Device';
+        }
+      }
       
       const deviceInfo = {
         deviceId: deviceId,
-        deviceName: Device.deviceName || 'Unknown Device',
+        deviceName: deviceName,
         deviceType: Device.deviceType === Device.DeviceType.PHONE ? 'mobile' : 
                    Device.deviceType === Device.DeviceType.TABLET ? 'tablet' : 'unknown',
         platform: Platform.OS,
         osVersion: Device.osVersion || 'Unknown',
-        appVersion: '1.1.3', // You can get this from app.json or package.json
+        appVersion: '1.1.3',
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
         isDevice: Device.isDevice,
@@ -46,7 +73,6 @@ export const AuthProvider = ({ children }) => {
         modelName: Device.modelName || 'Unknown'
       };
       
-      console.log('Device info collected:', deviceInfo);
       return deviceInfo;
     } catch (error) {
       console.error('Error getting device info:', error);
@@ -91,47 +117,19 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (number, password) => {
     try {
-      // First try demo credentials
-      if (number === DEMO_CREDENTIALS.number && password === DEMO_CREDENTIALS.password) {
-        const demoUser = {
-          id: '00000000-0000-0000-0000-000000000000', // Valid UUID format for demo user
-          username: 'Demo User',
-          phone: '9088',
-          email: 'demo@minichat.com',
-          status: 'active'
-        };
-        
-        await AsyncStorage.setItem('user_data', JSON.stringify(demoUser));
-        setIsAuthenticated(true);
-        setUser(demoUser);
-        
-        // Track device info for demo user too
-        const deviceInfo = await getDeviceInfo();
-        await mobileSupabaseHelpers.trackDeviceLogin(demoUser.id, deviceInfo);
-        console.log('Demo user device tracking completed');
-        
-        return { success: true };
-      }
-
       // Try Supabase authentication
       const result = await mobileSupabaseHelpers.authenticateUser(number, password);
       
       if (result.success) {
-        console.log('✅ Authentication successful for user:', result.user.id);
-        
         // Check subscription status
         const subscription = await mobileSupabaseHelpers.checkSubscription(result.user.id);
-        console.log('Subscription check result:', subscription);
         
         if (!subscription.hasActiveSubscription) {
-          console.log('❌ No active subscription, blocking login');
           return {
             success: false,
             error: 'Your subscription has expired. Please contact support.'
           };
         }
-        
-        console.log('✅ Active subscription found, proceeding with login');
 
         // Store user data
         await AsyncStorage.setItem('user_data', JSON.stringify(result.user));
@@ -139,14 +137,16 @@ export const AuthProvider = ({ children }) => {
         setUser(result.user);
         
         // Get device information and track login
-        console.log('🔍 Starting device tracking for real user...');
         const deviceInfo = await getDeviceInfo();
-        console.log('Device info collected:', deviceInfo);
+        
+        // If device name is still unknown, use phone number as identifier
+        if (deviceInfo.deviceName === 'Unknown Device') {
+          deviceInfo.deviceName = `${result.user.phone} Device`;
+        }
         
         await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
         await mobileSupabaseHelpers.logActivity(result.user.id, 'login');
         await mobileSupabaseHelpers.updateAnalytics(result.user.id, 'login');
-        console.log('✅ Device tracking completed for real user');
         
         return { success: true };
       } else {

@@ -149,10 +149,6 @@ export const mobileSupabaseHelpers = {
   async trackDeviceLogin(userId, deviceInfo) {
     try {
       const now = new Date().toISOString()
-      console.log('=== DEVICE TRACKING START ===')
-      console.log('User ID:', userId)
-      console.log('Device info:', deviceInfo)
-      console.log('Timestamp:', now)
       
       // Check if device session already exists
       const { data: existingSession, error: sessionError } = await supabase
@@ -170,7 +166,6 @@ export const mobileSupabaseHelpers = {
 
       if (existingSession) {
         // Update existing session
-        console.log('Updating existing device session:', existingSession.id)
         const { error: updateError } = await supabase
           .from('user_device_sessions')
           .update({
