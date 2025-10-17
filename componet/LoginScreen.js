@@ -13,6 +13,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
 
 const LoginScreen = () => {
@@ -20,7 +21,9 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
+
+
 
   const handleLogin = async () => {
     // Validate inputs
@@ -50,7 +53,41 @@ const LoginScreen = () => {
         // Login successful - navigation will be handled by AuthProvider
         console.log('Login successful');
       } else {
+      // Check if it's a device conflict error
+      if (result.error && (result.error.includes('Account is already in use') || result.error.includes('another device'))) {
+        Alert.alert(
+          '⚠️ Login Failed',
+          'This account is currently active on another device. Tap reset to continue here?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel'
+            },
+            {
+              text: 'Reset',
+              style: 'default',
+              onPress: async () => {
+                try {
+                  // This will trigger the conflict detection and create admin request
+                  const resetResult = await login(number.trim(), password.trim());
+                  if (resetResult.success) {
+                    Alert.alert("✅ Login Successful", "You have been logged in successfully!");
+                  } else {
+                    Alert.alert(
+                      "⏳ Processing...", 
+                      "This may take a few moments."
+                    );
+                  }
+                } catch (error) {
+                  Alert.alert("Error", error.message);
+                }
+              }
+            }
+          ]
+        );
+      } else {
         Alert.alert('Login Failed', result.error);
+      }
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred');

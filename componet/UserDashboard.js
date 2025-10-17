@@ -21,7 +21,7 @@ import { useAuth } from './AuthContext';
 import { mobileSupabaseHelpers } from '../config/supabase';
 import ImportExportModal from './importexport';
 
-const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImport, onImportContact, onImportProfileImage, selectedBackground, onBackgroundSelect, customBackgroundUri: propCustomBackgroundUri, onCustomBackgroundChange }) => {
+const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImport, onImportContact, onImportProfileImage, selectedBackground, onBackgroundSelect, customBackgroundUri: propCustomBackgroundUri, onCustomBackgroundChange, onClearMessages }) => {
   const { isDarkMode, setIsDarkMode, setManualOverride, toggleDarkMode, resetToSystemMode, manualOverride, systemColorScheme } = useDarkMode();
   const { user, logout } = useAuth();
   const [userData, setUserData] = useState(null);
@@ -124,6 +124,29 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
       [
         { text: "Cancel", style: "cancel" },
         { text: "Logout", style: "destructive", onPress: logout }
+      ]
+    );
+  };
+
+  const handleClearChat = () => {
+    Alert.alert(
+      "Clear Chat",
+      "Are you sure you want to clear all messages? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Clear All",
+          style: "destructive",
+          onPress: () => {
+            if (onClearMessages) {
+              onClearMessages();
+              Alert.alert("Success", "All messages have been cleared.");
+            }
+          }
+        }
       ]
     );
   };
@@ -597,6 +620,27 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
                 </Text>
                 <Text style={[styles.actionSubtitle, dynamicStyles.actionSubtitle]}>
                   Backup or restore your chat data
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Clear Chat Button */}
+          <TouchableOpacity 
+            style={[styles.actionCard, dynamicStyles.actionCard]}
+            onPress={handleClearChat}
+          >
+            <View style={styles.actionContent}>
+              <View style={styles.actionIcon}>
+                <Ionicons name="trash-outline" size={24} color="#ef4444" />
+              </View>
+              <View style={styles.actionText}>
+                <Text style={[styles.actionTitle, dynamicStyles.actionTitle]}>
+                  Clear Chat
+                </Text>
+                <Text style={[styles.actionSubtitle, dynamicStyles.actionSubtitle]}>
+                  Delete all messages permanently
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#666" />

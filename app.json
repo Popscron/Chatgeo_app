@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "WhatsApp",
-    "slug": "minichat",
-    "version": "1.1.4",
+    "slug": "chatgeo",
+    "version": "1.1.5",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/whatsappicon.jpg",
@@ -12,22 +12,25 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ChatGeo.app2024",
+      "bundleIdentifier": "com.minichat.app2025",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.ChatGeo.app2024",
+      "package": "com.minichat.app2025",
       "adaptiveIcon": {
         "foregroundImage": "./assets/whatsappicon.jpg",
         "backgroundColor": "#008069"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/whatsappicon.jpg"
     },
-    "scheme": "ChatGeo",
+    "scheme": "chatgeo",
     "plugins": [
       "expo-font",
       [
@@ -40,8 +43,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "b8bbc7d6-9aeb-46ef-8795-68332e8d9724"
+        "projectId": "ee0e3120-19d9-4a8e-b54a-de4bdb7b3b85"
       }
-    }
+    },
+    "owner": "popscorn"
   }
 }

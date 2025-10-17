@@ -178,12 +178,7 @@ export const AuthProvider = ({ children }) => {
           };
         }
 
-        // Store user data
-        await AsyncStorage.setItem('user_data', JSON.stringify(result.user));
-        setIsAuthenticated(true);
-        setUser(result.user);
-        
-        // Get device information and track login
+        // Get device information and track login with multi-device detection
         const deviceInfo = await getDeviceInfo();
         
         // If device name is still unknown, use phone number as identifier
@@ -192,7 +187,33 @@ export const AuthProvider = ({ children }) => {
           console.log('Using phone number as device name:', deviceInfo.deviceName);
         }
         
-        await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
+        // Check if there's an approved login request first
+        const loginRequestResult = await mobileSupabaseHelpers.checkLoginRequest(result.user.id, deviceInfo.deviceId);
+        
+        if (loginRequestResult.hasApprovedRequest) {
+          console.log('✅ Approved login request found - proceeding with login');
+          // Mark the request as used
+          await mobileSupabaseHelpers.markLoginRequestUsed(loginRequestResult.request.id);
+        } else {
+          // Track device login and check for conflicts
+          const deviceResult = await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
+          
+          // If there was a device conflict, block the login
+          if (deviceResult.hasConflict) {
+            console.log('❌ Device conflict detected - blocking login');
+            return {
+              success: false,
+              error: deviceResult.error
+            };
+          }
+        }
+        
+        // Only set authentication state after all checks pass
+        await AsyncStorage.setItem('user_data', JSON.stringify(result.user));
+        setIsAuthenticated(true);
+        setUser(result.user);
+        
+        // Log activity and analytics
         await mobileSupabaseHelpers.logActivity(result.user.id, 'login');
         await mobileSupabaseHelpers.updateAnalytics(result.user.id, 'login');
         
@@ -217,6 +238,10 @@ export const AuthProvider = ({ children }) => {
       // Log logout activity if user exists
       if (user && user.id !== 'demo-user') {
         await mobileSupabaseHelpers.logActivity(user.id, 'logout');
+        
+        // Mark device session as inactive
+        const deviceInfo = await getDeviceInfo();
+        await mobileSupabaseHelpers.deactivateDeviceSession(user.id, deviceInfo.deviceId);
       }
       
       await AsyncStorage.removeItem('user_data');

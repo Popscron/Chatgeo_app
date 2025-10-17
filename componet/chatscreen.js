@@ -26,11 +26,12 @@ import { useState, useEffect, useRef } from "react"
 import SenderEditModal from './SenderEditModal'
 import ReceiverEditModal from './ReceiverEditModal'
 import ProfileEdit from './ProfileEdit'
-import { generateGhanaianNickname } from './namesapi'
+import { generateGhanaianNickname } from '../namesapi'
 import * as ScreenCapture from 'expo-screen-capture'
 import { mobileSupabaseHelpers } from '../config/supabase'
 import { useDarkMode } from './DarkModeContext'
 import { useAuth } from './AuthContext'
+import * as Device from 'expo-device'
 import DisabledUserScreen from './DisabledUserScreen'
 import SuspendedUserScreen from './SuspendedUserScreen'
 import ExpiredUserScreen from './ExpiredUserScreen'
@@ -158,8 +159,75 @@ const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) =>
 
 export default function WhatsAppChat() {
   const { isDarkMode } = useDarkMode();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const dynamicStyles = getDynamicStyles(isDarkMode);
+
+  // Get device information for session tracking
+  const getDeviceInfo = async () => {
+    try {
+      let deviceId = 'unknown';
+      
+      // First try to get stored device ID
+      try {
+        const storedDeviceId = await AsyncStorage.getItem('device_id');
+        if (storedDeviceId) {
+          deviceId = storedDeviceId;
+          console.log('✅ Using stored device ID:', deviceId);
+        } else {
+          // Try to get device ID from expo-device
+          try {
+            deviceId = await Device.getDeviceIdAsync();
+            console.log('✅ Got device ID from Device.getDeviceIdAsync:', deviceId);
+            // Store it for future use
+            await AsyncStorage.setItem('device_id', deviceId);
+          } catch (error) {
+            console.log('Device.getDeviceIdAsync not available, using fallback');
+            // Create a more stable fallback device ID
+            const fallbackId = `${Platform.OS}-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
+            deviceId = fallbackId;
+            console.log('Using fallback device ID:', deviceId);
+            // Store the fallback ID
+            await AsyncStorage.setItem('device_id', deviceId);
+          }
+        }
+      } catch (error) {
+        console.error('Error with device ID storage:', error);
+        // Fallback to simple ID
+        deviceId = `${Platform.OS}-${Date.now()}`;
+      }
+      
+      let deviceName = 'Unknown Device';
+      if (Device.deviceName && Device.deviceName !== 'Unknown') {
+        deviceName = Device.deviceName;
+      } else if (Device.modelName) {
+        deviceName = Device.modelName;
+      } else {
+        deviceName = `${Platform.OS} Device`;
+      }
+      
+      const deviceInfo = {
+        deviceId,
+        deviceName,
+        deviceType: Device.deviceType || 'unknown',
+        platform: Platform.OS,
+        osVersion: Platform.Version,
+        appVersion: '1.1.5'
+      };
+      
+      console.log('Device info generated:', deviceInfo);
+      return deviceInfo;
+    } catch (error) {
+      console.error('Error getting device info:', error);
+      return {
+        deviceId: `${Platform.OS}-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`,
+        deviceName: 'Unknown Device',
+        deviceType: 'unknown',
+        platform: Platform.OS,
+        osVersion: Platform.Version,
+        appVersion: '1.1.5'
+      };
+    }
+  };
   const [messages, setMessages] = useState([])
 
   const [senderEditModalVisible, setSenderEditModalVisible] = useState(false)
@@ -384,6 +452,16 @@ export default function WhatsAppChat() {
     } catch (error) {
       console.error("Error importing contact name:", error)
     }
+  }
+
+  const handleClearMessages = () => {
+    console.log("=== CLEAR MESSAGES START ===")
+    console.log("Clearing all messages...")
+    
+    setMessages([])
+    console.log("All messages cleared successfully")
+    
+    console.log("=== CLEAR MESSAGES END ===")
   }
 
   // Handle import profile image
@@ -1165,6 +1243,9 @@ export default function WhatsAppChat() {
   // Screen capture detection for default contact name warning
   useEffect(() => {
     const handleScreenshot = async () => {
+      console.log('📸 Screenshot detected!');
+      console.log('Current contact name:', contactName);
+      
       // Log screenshot activity
       if (user && user.id !== 'demo-user') {
         await mobileSupabaseHelpers.logActivity(user.id, 'screenshot', {
@@ -1178,10 +1259,11 @@ export default function WhatsAppChat() {
       await incrementScreenshotCount();
 
       // Check if contact name is still the default "ChatGeo"
-      if (contactName === "ChatGeo ") {
+      if (contactName === "ChatGeo") {
+        console.log('⚠️ Showing alert for unchanged contact name');
         Alert.alert(
           "⚠️ Warning",
-          "Contact name still not changed ",
+          "Contact name still not changed! Please change the contact name before taking screenshots.",
           [
             {
               text: "OK",
@@ -1189,6 +1271,46 @@ export default function WhatsAppChat() {
             }
           ]
         )
+      } else {
+        console.log('✅ Contact name has been changed, no alert needed');
+      }
+    }
+
+    // Session status check for multi-device detection
+    const checkSessionStatus = async () => {
+      if (user && user.id !== 'demo-user') {
+        try {
+          const deviceInfo = await getDeviceInfo();
+          const sessionStatus = await mobileSupabaseHelpers.checkSessionStatus(user.id, deviceInfo.deviceId);
+          
+          console.log('Session status check result:', sessionStatus);
+          
+          // Only logout if session is explicitly inactive (not just missing)
+          // This happens when user tries to login on another device
+          if (sessionStatus.isActive === false && !sessionStatus.message) {
+            console.log('❌ Session is no longer active - user logged in on another device');
+            Alert.alert(
+              "⚠️ Account Active on Another Device",
+              "Your account is now active on another device. You have been logged out from this device.",
+              [
+                {
+                  text: "OK",
+                  onPress: async () => {
+                    // Logout the user
+                    await logout();
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+          } else if (sessionStatus.isActive === true) {
+            console.log('✅ Session is still active');
+          } else if (sessionStatus.message === 'No session found') {
+            console.log('ℹ️ No session found - this is normal for first login');
+          }
+        } catch (error) {
+          console.error('Error checking session status:', error);
+        }
       }
     }
 
@@ -1205,13 +1327,20 @@ export default function WhatsAppChat() {
 
 
     // Add screenshot listener
+    console.log('🔧 Setting up screenshot listener...');
     const subscription = ScreenCapture.addScreenshotListener(handleScreenshot)
+    console.log('✅ Screenshot listener added');
 
-    // Cleanup listener on unmount
+    // Set up periodic session check (every 2 minutes to avoid too many DB calls)
+    const sessionCheckInterval = setInterval(checkSessionStatus, 120000);
+
+    // Cleanup listeners on unmount
     return () => {
+      console.log('🧹 Cleaning up screenshot listener and session check');
       subscription?.remove()
+      clearInterval(sessionCheckInterval);
     }
-  }, [contactName])
+  }, [contactName, user])
   
   const renderMainContent = () => (
     <>
@@ -1610,6 +1739,7 @@ export default function WhatsAppChat() {
                     onBackgroundSelect={handleBackgroundSelect}
                     customBackgroundUri={customBackgroundUri}
                     onCustomBackgroundChange={setCustomBackgroundUri}
+                    onClearMessages={handleClearMessages}
                   />
           </View>
         </View>
