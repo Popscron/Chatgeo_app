@@ -977,7 +977,7 @@ export default function WhatsAppChat() {
     const lastNotificationTime = new Date(lastTime).getTime();
     const hoursPassed = (now - lastNotificationTime) / (1000 * 60 * 60);
     console.log(`Hours passed since last notification: ${hoursPassed.toFixed(2)}`);
-    return hoursPassed >= 24;
+    return hoursPassed >= 24; // Back to 24 hours for production
   };
 
   // Debug function to test 24-hour cooldown (for testing only)
@@ -1039,10 +1039,15 @@ export default function WhatsAppChat() {
         console.error('Error loading last notification time:', error);
       }
 
+      console.log('🔔 Loading notifications...');
       const notificationData = await mobileSupabaseHelpers.getNotifications();
+      console.log('🔔 Raw notification data:', notificationData);
+      
       const updateNotifications = notificationData.filter(notification => 
         notification.type === 'update' && notification.version
       );
+      
+      console.log('🔔 Filtered update notifications:', updateNotifications);
       
       if (updateNotifications.length > 0) {
         const latestUpdate = updateNotifications[0];

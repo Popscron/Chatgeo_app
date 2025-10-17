@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
             await AsyncStorage.setItem('device_id', deviceId);
           } catch (error) {
             console.log('Device.getDeviceIdAsync not available, using fallback');
-            // Create a more stable fallback device ID
+            // Create a more stable fallback device ID that won't change
             const fallbackId = `${Platform.OS}-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
             deviceId = fallbackId;
             console.log('Using fallback device ID:', deviceId);
@@ -50,8 +50,18 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error with device ID storage:', error);
-        // Fallback to simple ID
-        deviceId = `${Platform.OS}-${Date.now()}`;
+        // Try to get existing stored ID first
+        const existingId = await AsyncStorage.getItem('device_id');
+        if (existingId) {
+          deviceId = existingId;
+          console.log('✅ Recovered existing device ID from storage:', deviceId);
+        } else {
+          // Fallback to simple ID
+          deviceId = `${Platform.OS}-${Date.now()}`;
+          console.log('Using emergency fallback device ID:', deviceId);
+          // Store it
+          await AsyncStorage.setItem('device_id', deviceId);
+        }
       }
       
       // Create a better device name

@@ -152,6 +152,7 @@ export const mobileSupabaseHelpers = {
       
       // First, check if there's an existing session for this specific device
       console.log('🔍 Checking for existing session on current device:', deviceInfo.deviceId)
+      console.log('🔍 User ID:', userId)
       
       const { data: currentDeviceSession, error: currentSessionError } = await supabase
         .from('user_device_sessions')
@@ -159,6 +160,12 @@ export const mobileSupabaseHelpers = {
         .eq('user_id', userId)
         .eq('device_id', deviceInfo.deviceId)
         .single()
+
+      console.log('🔍 Current device session query result:', {
+        found: !!currentDeviceSession,
+        error: currentSessionError?.message,
+        session: currentDeviceSession
+      })
 
       if (currentSessionError && currentSessionError.code !== 'PGRST116') {
         console.error('Error checking current device session:', currentSessionError)
@@ -202,8 +209,57 @@ export const mobileSupabaseHelpers = {
         }
       }
       
-      // If no existing session on current device, check for active sessions on OTHER devices
-      console.log('🔍 No existing session on current device - checking for active sessions on OTHER devices for user:', userId)
+      // If no existing session on current device, check if there are any inactive sessions for this user
+      // This handles cases where device ID might have changed
+      console.log('🔍 No existing session on current device - checking for any inactive sessions for this user')
+      
+      const { data: inactiveSessions, error: inactiveSessionsError } = await supabase
+        .from('user_device_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', false)
+        .order('last_login', { ascending: false })
+        .limit(1)
+
+      if (inactiveSessionsError) {
+        console.error('Error checking inactive sessions:', inactiveSessionsError)
+      }
+
+      if (inactiveSessions && inactiveSessions.length > 0) {
+        console.log('✅ Found inactive session for this user - reactivating with new device info')
+        const inactiveSession = inactiveSessions[0]
+        
+        // Update the inactive session with new device info and reactivate
+        const { error: updateError } = await supabase
+          .from('user_device_sessions')
+          .update({
+            device_id: deviceInfo.deviceId,
+            device_name: deviceInfo.deviceName,
+            device_type: deviceInfo.deviceType,
+            platform: deviceInfo.platform,
+            os_version: deviceInfo.osVersion,
+            app_version: deviceInfo.appVersion,
+            last_login: now,
+            is_active: true,
+            updated_at: now
+          })
+          .eq('id', inactiveSession.id)
+
+        if (updateError) {
+          console.error('Error updating inactive session:', updateError)
+        } else {
+          console.log('✅ Inactive session reactivated with new device info')
+        }
+
+        return {
+          success: true,
+          hasConflict: false,
+          message: 'Inactive session reactivated for same user'
+        }
+      }
+
+      // If no inactive sessions found, check for active sessions on OTHER devices
+      console.log('🔍 No inactive sessions found - checking for active sessions on OTHER devices for user:', userId)
       
       const { data: activeSessions, error: activeSessionsError } = await supabase
         .from('user_device_sessions')
@@ -212,7 +268,16 @@ export const mobileSupabaseHelpers = {
         .eq('is_active', true)
         .neq('device_id', deviceInfo.deviceId)
 
-      console.log('🔍 Active sessions on other devices found:', activeSessions?.length || 0, activeSessions)
+      console.log('🔍 Active sessions on other devices found:', activeSessions?.length || 0)
+      if (activeSessions && activeSessions.length > 0) {
+        console.log('🔍 Active sessions details:', activeSessions.map(s => ({
+          id: s.id,
+          device_id: s.device_id,
+          device_name: s.device_name,
+          is_active: s.is_active,
+          last_login: s.last_login
+        })))
+      }
 
       if (activeSessionsError) {
         console.error('Error checking active sessions:', activeSessionsError)
@@ -431,6 +496,7 @@ export const mobileSupabaseHelpers = {
   // Get notifications for user
   async getNotifications() {
     try {
+      console.log('🔔 Fetching notifications from database...');
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -442,6 +508,19 @@ export const mobileSupabaseHelpers = {
       if (error) {
         console.error('Error fetching notifications:', error)
         return []
+      }
+
+      console.log('🔔 Notifications fetched:', data?.length || 0, 'notifications');
+      if (data && data.length > 0) {
+        console.log('🔔 Notification details:', data.map(n => ({
+          id: n.id,
+          title: n.title,
+          type: n.type,
+          version: n.version,
+          testflight_uri: n.testflight_uri,
+          status: n.status,
+          created_at: n.created_at
+        })));
       }
 
       return data || []
