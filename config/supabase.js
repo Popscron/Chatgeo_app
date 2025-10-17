@@ -145,6 +145,65 @@ export const mobileSupabaseHelpers = {
     }
   },
 
+  // Track device login
+  async trackDeviceLogin(userId, deviceInfo) {
+    try {
+      const now = new Date().toISOString()
+      
+      // Check if device session already exists
+      const { data: existingSession } = await supabase
+        .from('user_device_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('device_id', deviceInfo.deviceId)
+        .single()
+
+      if (existingSession) {
+        // Update existing session
+        await supabase
+          .from('user_device_sessions')
+          .update({
+            last_login: now,
+            is_active: true,
+            device_name: deviceInfo.deviceName,
+            device_type: deviceInfo.deviceType,
+            platform: deviceInfo.platform,
+            os_version: deviceInfo.osVersion,
+            app_version: deviceInfo.appVersion
+          })
+          .eq('id', existingSession.id)
+      } else {
+        // Create new device session
+        await supabase
+          .from('user_device_sessions')
+          .insert({
+            user_id: userId,
+            device_id: deviceInfo.deviceId,
+            device_name: deviceInfo.deviceName,
+            device_type: deviceInfo.deviceType,
+            platform: deviceInfo.platform,
+            os_version: deviceInfo.osVersion,
+            app_version: deviceInfo.appVersion,
+            last_login: now,
+            first_login: now,
+            is_active: true
+          })
+      }
+
+      // Create login history entry
+      await supabase
+        .from('user_login_history')
+        .insert({
+          user_id: userId,
+          device_session_id: existingSession?.id,
+          login_at: now
+        })
+
+    } catch (error) {
+      console.error('Device tracking error:', error)
+    }
+  },
+
   // Get notifications for user
   async getNotifications() {
     try {

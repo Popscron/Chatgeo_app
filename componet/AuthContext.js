@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform, Dimensions } from 'react-native';
+import * as Device from 'expo-device';
 import { mobileSupabaseHelpers } from '../config/supabase';
 
 const AuthContext = createContext();
@@ -21,6 +23,43 @@ export const AuthProvider = ({ children }) => {
   const DEMO_CREDENTIALS = {
     number: '9088',
     password: '9088'
+  };
+
+  // Get device information
+  const getDeviceInfo = async () => {
+    try {
+      const deviceInfo = {
+        deviceId: await Device.getDeviceIdAsync(),
+        deviceName: Device.deviceName || 'Unknown Device',
+        deviceType: Device.deviceType === Device.DeviceType.PHONE ? 'mobile' : 
+                   Device.deviceType === Device.DeviceType.TABLET ? 'tablet' : 'unknown',
+        platform: Platform.OS,
+        osVersion: Device.osVersion || 'Unknown',
+        appVersion: '1.1.3', // You can get this from app.json or package.json
+        screenWidth: Dimensions.get('window').width,
+        screenHeight: Dimensions.get('window').height,
+        isDevice: Device.isDevice,
+        brand: Device.brand || 'Unknown',
+        modelName: Device.modelName || 'Unknown'
+      };
+      
+      return deviceInfo;
+    } catch (error) {
+      console.error('Error getting device info:', error);
+      return {
+        deviceId: 'unknown',
+        deviceName: 'Unknown Device',
+        deviceType: 'mobile',
+        platform: Platform.OS,
+        osVersion: 'Unknown',
+        appVersion: '1.1.3',
+        screenWidth: 0,
+        screenHeight: 0,
+        isDevice: false,
+        brand: 'Unknown',
+        modelName: 'Unknown'
+      };
+    }
   };
 
   useEffect(() => {
@@ -83,7 +122,9 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setUser(result.user);
         
-        // Log activity
+        // Get device information and track login
+        const deviceInfo = await getDeviceInfo();
+        await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
         await mobileSupabaseHelpers.logActivity(result.user.id, 'login');
         await mobileSupabaseHelpers.updateAnalytics(result.user.id, 'login');
         
