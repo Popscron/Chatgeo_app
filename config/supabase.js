@@ -167,6 +167,12 @@ export const mobileSupabaseHelpers = {
       // If there's an existing session on the same device (even if inactive), allow login
       if (currentDeviceSession) {
         console.log('✅ Found existing session on same device - allowing login')
+        console.log('📱 Current device session details:', {
+          id: currentDeviceSession.id,
+          device_id: currentDeviceSession.device_id,
+          is_active: currentDeviceSession.is_active,
+          last_login: currentDeviceSession.last_login
+        })
         
         // Update the existing session to active
         const { error: updateError } = await supabase
@@ -197,7 +203,7 @@ export const mobileSupabaseHelpers = {
       }
       
       // If no existing session on current device, check for active sessions on OTHER devices
-      console.log('🔍 Checking for active sessions on OTHER devices for user:', userId)
+      console.log('🔍 No existing session on current device - checking for active sessions on OTHER devices for user:', userId)
       
       const { data: activeSessions, error: activeSessionsError } = await supabase
         .from('user_device_sessions')

@@ -187,25 +187,28 @@ export const AuthProvider = ({ children }) => {
           console.log('Using phone number as device name:', deviceInfo.deviceName);
         }
         
-        // Check if there's an approved login request first
+        // Track device login and check for conflicts
+        console.log('🔍 Starting device tracking for user:', result.user.id, 'device:', deviceInfo.deviceId);
+        const deviceResult = await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
+        
+        console.log('🔍 Device tracking result:', deviceResult);
+        
+        // If there was a device conflict, block the login
+        if (deviceResult.hasConflict) {
+          console.log('❌ Device conflict detected - blocking login');
+          return {
+            success: false,
+            error: deviceResult.error
+          };
+        }
+        
+        // Check if there's an approved login request after device tracking
         const loginRequestResult = await mobileSupabaseHelpers.checkLoginRequest(result.user.id, deviceInfo.deviceId);
         
         if (loginRequestResult.hasApprovedRequest) {
           console.log('✅ Approved login request found - proceeding with login');
           // Mark the request as used
           await mobileSupabaseHelpers.markLoginRequestUsed(loginRequestResult.request.id);
-        } else {
-          // Track device login and check for conflicts
-          const deviceResult = await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
-          
-          // If there was a device conflict, block the login
-          if (deviceResult.hasConflict) {
-            console.log('❌ Device conflict detected - blocking login');
-            return {
-              success: false,
-              error: deviceResult.error
-            };
-          }
         }
         
         // Only set authentication state after all checks pass
