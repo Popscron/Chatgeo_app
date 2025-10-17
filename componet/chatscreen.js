@@ -1120,7 +1120,7 @@ export default function WhatsAppChat() {
       setShowUpdateModal(false);
       
       // Open TestFlight
-            const testflightUrl = "https://testflight.apple.com/v1/app/6753818336";
+            const testflightUrl = "https://testflight.apple.com/v1/app/6754164907?l";
             Linking.openURL(testflightUrl).catch(err => {
               console.error('Error opening TestFlight:', err);
         Alert.alert("Error", "Could not open TestFlight. Please try again later.");
