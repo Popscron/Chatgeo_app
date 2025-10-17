@@ -111,44 +111,46 @@ const getDynamicStyles = (isDarkMode) => ({
   },
 });
 
-// Custom BlurView component with iOS compatibility
+// Custom BlurView component with enhanced iOS compatibility
 const CustomBlurView = ({ children, style, intensity = 100, tint = "light" }) => {
-  if (Platform.OS === 'ios') {
-    // Try the standard BlurView first
-    try {
-      return (
-        <BlurView 
-          intensity={intensity} 
-          tint={tint} 
-          style={style}
-          experimentalBlurMethod="dimezisBlurView"
-          reducedTransparencyFallbackColor="rgba(255, 255, 255, 0.8)"
-        >
-          {children}
-        </BlurView>
-      );
-    } catch (error) {
-      // Fallback if BlurView fails
-      console.log('BlurView failed, using fallback:', error);
-      return (
-        <View style={[style, { backgroundColor: 'rgba(255, 255, 255, 0.8)' }]}>
-          {children}
-        </View>
-      );
-    }
+  const [blurError, setBlurError] = useState(false);
+  
+  if (Platform.OS === 'ios' && !blurError) {
+    // Enhanced BlurView with better iPhone 16+ compatibility
+    return (
+      <BlurView 
+        intensity={intensity} 
+        tint={tint} 
+        style={style}
+        // Use more compatible blur settings
+        reducedTransparencyFallbackColor={tint === "dark" ? "rgba(0, 0, 0, 0.9)" : "rgba(255, 255, 255, 0.9)"}
+        // Ensure proper blur rendering on all iOS devices
+        blurType={tint === "dark" ? "dark" : "light"}
+        blurAmount={Math.min(intensity, 80)} // Cap intensity for better compatibility
+        onError={() => {
+          console.log('BlurView error, falling back to solid background');
+          setBlurError(true);
+        }}
+      >
+        {children}
+      </BlurView>
+    );
   } else {
-    // Enhanced Android fallback with better blur simulation
+    // Enhanced fallback for Android or when BlurView fails
     return (
       <View style={[
         style, 
         { 
-          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backgroundColor: tint === "dark" ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)',
           // Add shadow and border for better visual effect
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
+          shadowOpacity: 0.15,
+          shadowRadius: 6,
+          elevation: 4,
+          // Add subtle border for better definition
+          borderBottomWidth: 0.5,
+          borderBottomColor: tint === "dark" ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)',
         }
       ]}>
         {children}
@@ -1119,10 +1121,10 @@ export default function WhatsAppChat() {
       // Close modal
       setShowUpdateModal(false);
       
-      // Open TestFlight
-            const testflightUrl = "https://testflight.apple.com/v1/app/6754164907?l";
-            Linking.openURL(testflightUrl).catch(err => {
-              console.error('Error opening TestFlight:', err);
+      // Open TestFlight using the URI from notification data
+      const testflightUrl = currentUpdateNotification.testflight_uri;
+      Linking.openURL(testflightUrl).catch(err => {
+        console.error('Error opening TestFlight:', err);
         Alert.alert("Error", "Could not open TestFlight. Please try again later.");
       });
     }
@@ -1999,16 +2001,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-  //  borderBottomWidth: 0.5,
-   // borderBottomColor: "rgba(208, 192, 176, 0.3)",
     backgroundColor: "transparent", // Ensure no background color interferes with blur
+    // Remove web-specific CSS properties that don't work in React Native
     ...(Platform.OS === 'ios' && {
-      // iOS-specific blur enhancements
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      // Additional iOS blur properties
-      background: 'rgba(255, 255, 255, 0.1)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
+      // iOS-specific enhancements for better blur support
+      overflow: 'hidden',
     }),
   },
   headerContent: {
