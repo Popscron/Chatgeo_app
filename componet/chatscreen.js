@@ -1668,7 +1668,7 @@ export default function WhatsAppChat() {
       >
         <View style={styles.backgroundOverlay}>
           <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="dark-content" />
+            <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
             {renderMainContent()}
           </SafeAreaView>
         </View>
