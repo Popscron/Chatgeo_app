@@ -172,7 +172,7 @@ export default function WhatsAppChat() {
   const [selectedBackground, setSelectedBackground] = useState(isDarkMode ? "darkdefaultbg" : "defualtbg")
   const [customBackgroundUri, setCustomBackgroundUri] = useState(null)
   const [profileImageUri, setProfileImageUri] = useState(null)
-  const [contactName, setContactName] = useState("MiniChat")
+  const [contactName, setContactName] = useState("ChatGeo")
   const [unreadCount, setUnreadCount] = useState(34)
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
@@ -1177,8 +1177,8 @@ export default function WhatsAppChat() {
       // Increment screenshot count
       await incrementScreenshotCount();
 
-      // Check if contact name is still the default "MiniChat"
-      if (contactName === "MiniChat") {
+      // Check if contact name is still the default "ChatGeo"
+      if (contactName === "ChatGeo ") {
         Alert.alert(
           "⚠️ Warning",
           "Contact name still not changed ",

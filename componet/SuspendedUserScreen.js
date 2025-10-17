@@ -40,7 +40,7 @@ const SuspendedUserScreen = ({ navigation }) => {
 
         {/* Message */}
         <Text style={[styles.message, dynamicStyles.message]}>
-          Your account has been temporarily suspended. You cannot access MiniChat at this time.
+          Your account has been temporarily suspended. You cannot access ChatGeo at this time.
         </Text>
 
         {/* Details */}

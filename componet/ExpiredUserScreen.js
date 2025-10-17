@@ -45,7 +45,7 @@ const ExpiredUserScreen = ({ navigation }) => {
 
         {/* Message */}
         <Text style={[styles.message, dynamicStyles.message]}>
-          Your MiniChat subscription has expired. Please renew to continue using the service.
+          Your ChatGeo subscription has expired. Please renew to continue using the service.
         </Text>
 
         {/* Details */}
@@ -55,7 +55,7 @@ const ExpiredUserScreen = ({ navigation }) => {
           </Text>
           <Text style={[styles.detailsText, dynamicStyles.detailsText]}>
             • Your subscription period has ended{'\n'}
-            • You need to renew to continue using MiniChat{'\n'}
+            • You need to renew to continue using ChatGeo{'\n'}
             • Your data is safe and will be restored upon renewal
           </Text>
         </View>

@@ -351,13 +351,13 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
             <View style={[styles.statusDetails, dynamicStyles.statusDetails]}>
               <Text style={[styles.statusDescription, dynamicStyles.statusDescription]}>
                 {userData?.status === 'active' 
-                  ? 'Your account is active and you have full access to MiniChat features.'
+                  ? 'Your account is active and you have full access to ChatGeo features.'
                   : userData?.status === 'disabled'
                   ? 'Your account has been disabled. Please contact support for assistance.'
                   : userData?.status === 'suspended'
                   ? 'Your account is temporarily suspended. Please contact support for more information.'
                   : userData?.status === 'expired'
-                  ? 'Your subscription has expired. Please renew to continue using MiniChat.'
+                  ? 'Your subscription has expired. Please renew to continue using ChatGeo.'
                   : 'Unable to determine account status.'
                 }
               </Text>

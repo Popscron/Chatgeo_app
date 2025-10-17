@@ -41,7 +41,7 @@ const DisabledUserScreen = ({ navigation }) => {
 
         {/* Message */}
         <Text style={[styles.message, dynamicStyles.message]}>
-          Your account has been disabled by the administrator. You are no longer able to access MiniChat.
+          Your account has been disabled by the administrator. You are no longer able to access ChatGeo.
         </Text>
 
         {/* Details */}

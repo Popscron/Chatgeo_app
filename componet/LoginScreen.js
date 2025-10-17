@@ -79,7 +79,7 @@ const LoginScreen = () => {
         <View style={styles.loginContainer}>
           <View style={styles.header}>
             <Ionicons name="chatbubbles" size={60} color="#25D366" />
-            <Text style={styles.title}>Minichat</Text>
+            <Text style={styles.title}>ChatGeo</Text>
             <Text style={styles.subtitle}>Welcome back! Please sign in</Text>
           </View>
 

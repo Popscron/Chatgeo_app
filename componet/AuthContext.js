@@ -48,14 +48,15 @@ export const AuthProvider = ({ children }) => {
       console.log('Screen dimensions:', Dimensions.get('window'));
       console.log('========================');
       
-      // Try to get device name from various sources
-      if (Device.deviceName && Device.deviceName !== 'Unknown' && Device.deviceName !== '') {
-        deviceName = Device.deviceName;
-        console.log('Using Device.deviceName:', deviceName);
-      } else if (Device.modelName && Device.modelName !== 'Unknown' && Device.modelName !== '') {
+      // Try to get device name from various sources - prioritize modelName over deviceName
+      if (Device.modelName && Device.modelName !== 'Unknown' && Device.modelName !== '') {
         deviceName = Device.modelName;
         console.log('Using Device.modelName:', deviceName);
+      } else if (Device.deviceName && Device.deviceName !== 'Unknown' && Device.deviceName !== '') {
+        deviceName = Device.deviceName;
+        console.log('Using Device.deviceName:', deviceName);
       } else {
+        console.log('Neither deviceName nor modelName available, generating...');
         // Generate device name based on available info
         const { width, height } = Dimensions.get('window');
         const brand = Device.brand || '';
@@ -101,6 +102,8 @@ export const AuthProvider = ({ children }) => {
         }
         console.log('Generated device name:', deviceName);
       }
+      
+      console.log('FINAL DEVICE NAME:', deviceName);
       
       const deviceInfo = {
         deviceId: deviceId,
