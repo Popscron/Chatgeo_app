@@ -23,13 +23,34 @@ export const AuthProvider = ({ children }) => {
   // Get device information
   const getDeviceInfo = async () => {
     try {
-      // Use Device.getDeviceIdAsync() if available, otherwise generate a fallback
       let deviceId = 'unknown';
+      
+      // First try to get stored device ID (consistent with chatscreen.js)
       try {
-        deviceId = await Device.getDeviceIdAsync();
+        const storedDeviceId = await AsyncStorage.getItem('device_id');
+        if (storedDeviceId) {
+          deviceId = storedDeviceId;
+          console.log('✅ Using stored device ID:', deviceId);
+        } else {
+          // Try to get device ID from expo-device
+          try {
+            deviceId = await Device.getDeviceIdAsync();
+            console.log('✅ Got device ID from Device.getDeviceIdAsync:', deviceId);
+            // Store it for future use
+            await AsyncStorage.setItem('device_id', deviceId);
+          } catch (error) {
+            console.log('Device.getDeviceIdAsync not available, using fallback');
+            // Create a more stable fallback device ID
+            const fallbackId = `${Platform.OS}-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
+            deviceId = fallbackId;
+            console.log('Using fallback device ID:', deviceId);
+            // Store the fallback ID
+            await AsyncStorage.setItem('device_id', deviceId);
+          }
+        }
       } catch (error) {
-        console.log('Device.getDeviceIdAsync not available, using fallback');
-        // Generate a fallback device ID based on available info
+        console.error('Error with device ID storage:', error);
+        // Fallback to simple ID
         deviceId = `${Platform.OS}-${Date.now()}`;
       }
       
@@ -112,7 +133,7 @@ export const AuthProvider = ({ children }) => {
                    Device.deviceType === Device.DeviceType.TABLET ? 'tablet' : 'unknown',
         platform: Platform.OS,
         osVersion: Device.osVersion || 'Unknown',
-        appVersion: '1.1.3',
+        appVersion: '1.1.5',
         screenWidth: Dimensions.get('window').width,
         screenHeight: Dimensions.get('window').height,
         isDevice: Device.isDevice,
@@ -129,7 +150,7 @@ export const AuthProvider = ({ children }) => {
         deviceType: 'mobile',
         platform: Platform.OS,
         osVersion: 'Unknown',
-        appVersion: '1.1.3',
+        appVersion: '1.1.5',
         screenWidth: 0,
         screenHeight: 0,
         isDevice: false,
@@ -189,6 +210,7 @@ export const AuthProvider = ({ children }) => {
         
         // Track device login and check for conflicts
         console.log('🔍 Starting device tracking for user:', result.user.id, 'device:', deviceInfo.deviceId);
+        console.log('🔍 Full device info:', JSON.stringify(deviceInfo, null, 2));
         const deviceResult = await mobileSupabaseHelpers.trackDeviceLogin(result.user.id, deviceInfo);
         
         console.log('🔍 Device tracking result:', deviceResult);
