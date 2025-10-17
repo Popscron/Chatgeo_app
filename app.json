@@ -2,7 +2,7 @@
   "expo": {
     "name": "WhatsApp",
     "slug": "chatgeo",
-    "version": "1.1.5",
+    "version": "1.1.6",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/whatsappicon.png",
