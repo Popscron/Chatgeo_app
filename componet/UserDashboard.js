@@ -316,13 +316,6 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
           )}
           
           {renderInfoCard(
-            'Email',
-            userData?.email || 'Not set',
-            'mail',
-            '#8b5cf6'
-          )}
-          
-          {renderInfoCard(
             'Phone',
             userData?.phone || 'Not set',
             'call',
