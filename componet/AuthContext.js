@@ -28,8 +28,11 @@ export const AuthProvider = ({ children }) => {
   // Get device information
   const getDeviceInfo = async () => {
     try {
+      const deviceId = await Device.getDeviceIdAsync();
+      console.log('Device ID obtained:', deviceId);
+      
       const deviceInfo = {
-        deviceId: await Device.getDeviceIdAsync(),
+        deviceId: deviceId,
         deviceName: Device.deviceName || 'Unknown Device',
         deviceType: Device.deviceType === Device.DeviceType.PHONE ? 'mobile' : 
                    Device.deviceType === Device.DeviceType.TABLET ? 'tablet' : 'unknown',
@@ -43,6 +46,7 @@ export const AuthProvider = ({ children }) => {
         modelName: Device.modelName || 'Unknown'
       };
       
+      console.log('Device info collected:', deviceInfo);
       return deviceInfo;
     } catch (error) {
       console.error('Error getting device info:', error);
@@ -100,6 +104,12 @@ export const AuthProvider = ({ children }) => {
         await AsyncStorage.setItem('user_data', JSON.stringify(demoUser));
         setIsAuthenticated(true);
         setUser(demoUser);
+        
+        // Track device info for demo user too
+        const deviceInfo = await getDeviceInfo();
+        await mobileSupabaseHelpers.trackDeviceLogin(demoUser.id, deviceInfo);
+        console.log('Demo user device tracking completed');
+        
         return { success: true };
       }
 
