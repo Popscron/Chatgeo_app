@@ -149,7 +149,10 @@ export const mobileSupabaseHelpers = {
   async trackDeviceLogin(userId, deviceInfo) {
     try {
       const now = new Date().toISOString()
-      console.log('Tracking device login for user:', userId, 'Device info:', deviceInfo)
+      console.log('=== DEVICE TRACKING START ===')
+      console.log('User ID:', userId)
+      console.log('Device info:', deviceInfo)
+      console.log('Timestamp:', now)
       
       // Check if device session already exists
       const { data: existingSession, error: sessionError } = await supabase
@@ -208,9 +211,10 @@ export const mobileSupabaseHelpers = {
         
         if (insertError) {
           console.error('Error creating device session:', insertError)
+          console.log('Insert error details:', JSON.stringify(insertError, null, 2))
         } else {
           deviceSessionId = newSession.id
-          console.log('Created new device session:', deviceSessionId)
+          console.log('✅ Created new device session:', deviceSessionId)
         }
       }
 
@@ -226,13 +230,18 @@ export const mobileSupabaseHelpers = {
         
         if (historyError) {
           console.error('Error creating login history:', historyError)
+          console.log('History error details:', JSON.stringify(historyError, null, 2))
         } else {
-          console.log('Created login history entry')
+          console.log('✅ Created login history entry')
         }
+      } else {
+        console.log('❌ No device session ID available, skipping login history')
       }
 
+      console.log('=== DEVICE TRACKING COMPLETE ===')
     } catch (error) {
-      console.error('Device tracking error:', error)
+      console.error('❌ Device tracking error:', error)
+      console.log('Error details:', JSON.stringify(error, null, 2))
     }
   },
 

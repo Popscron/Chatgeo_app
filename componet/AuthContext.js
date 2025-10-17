@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
       // First try demo credentials
       if (number === DEMO_CREDENTIALS.number && password === DEMO_CREDENTIALS.password) {
         const demoUser = {
-          id: 'demo-user',
+          id: '00000000-0000-0000-0000-000000000000', // Valid UUID format for demo user
           username: 'Demo User',
           phone: '9088',
           email: 'demo@minichat.com',
