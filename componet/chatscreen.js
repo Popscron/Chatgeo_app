@@ -1854,6 +1854,8 @@ export default function WhatsAppChat() {
               left: 5,
               borderRadius: 12,
               zIndex: 9999,
+              // Simulate mix-blend-mode: overlay effect
+              backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
             }
           ]}
         >
@@ -1982,6 +1984,12 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    // CSS equivalent properties
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 15,
+    elevation: 17,
   },
   overlayContent: {
     flexDirection: "row",
