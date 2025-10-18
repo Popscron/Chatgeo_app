@@ -1591,7 +1591,7 @@ export default function WhatsAppChat() {
         <CustomBlurView 
           intensity={100} 
           tint={isDarkMode ? "dark" : "light"} 
-          style={styles.inputBlurView}
+          style={[styles.inputBlurView, dynamicStyles.inputContainer]}
         >
           <View style={styles.inputContent}>
             <TouchableOpacity style={styles.inputIcon} onPress={addReceiverMessage}>
