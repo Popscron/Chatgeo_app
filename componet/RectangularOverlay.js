@@ -25,7 +25,7 @@ const RectangularOverlay = ({
           height,
           borderRadius,
           opacity,
-          backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+          backgroundColor: isDarkMode ? 'rgb(43, 41, 41)' : 'rgb(230, 228, 228)',
           position,
           top,
           left,
@@ -36,9 +36,9 @@ const RectangularOverlay = ({
           // CSS equivalent: box-shadow: 0 4px 17px 15px #000;
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 1,
-          shadowRadius: 15,
-          elevation: 17,
+          shadowOpacity: 0.3,
+          shadowRadius: 25,
+          elevation: 25,
         },
         style
       ]} 
