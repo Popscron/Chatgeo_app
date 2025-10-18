@@ -36,6 +36,7 @@ import DisabledUserScreen from './DisabledUserScreen'
 import SuspendedUserScreen from './SuspendedUserScreen'
 import ExpiredUserScreen from './ExpiredUserScreen'
 import UserDashboard from './UserDashboard'
+import RectangularOverlay from './RectangularOverlay'
 
 const getDynamicStyles = (isDarkMode) => ({
   container: {
@@ -245,6 +246,7 @@ export default function WhatsAppChat() {
   const [contactName, setContactName] = useState("ChatGeo")
   const [unreadCount, setUnreadCount] = useState(34)
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
+  const [overlayEnabled, setOverlayEnabled] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
   const inputWidthAnimation = useState(new Animated.Value(1))[0]
   const [inputText, setInputText] = useState("")
@@ -1200,6 +1202,21 @@ export default function WhatsAppChat() {
     loadLastNotificationTime();
   }, []);
 
+  useEffect(() => {
+    const loadOverlayPreference = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('overlayEnabled');
+        if (stored !== null) {
+          setOverlayEnabled(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.error('Error loading overlay preference:', error);
+      }
+    };
+    
+    loadOverlayPreference();
+  }, []);
+
   // Load update notifications on mount and periodically
   useEffect(() => {
     loadUpdateNotifications();
@@ -1795,6 +1812,20 @@ export default function WhatsAppChat() {
         </View>
         </View>
       </CustomBlurView>
+
+      {/* Rectangular Overlay for Screenshots */}
+      {overlayEnabled && (
+        <RectangularOverlay 
+          width={140}           // Adjust width to cover profile picture + name
+          height={35}           // Adjust height to cover the area
+          top={60}              // Position from top (adjust based on header height)
+          left={80}             // Position from left (adjust based on profile position)
+          opacity={0.7}         // Adjust transparency (0.6-0.8 range)
+          borderRadius={8}      // iOS-style rounded corners
+          backgroundColor="white" // White background
+          zIndex={9999}         // High z-index to appear above other elements
+        />
+      )}
 
       <ImageBackground 
         source={selectedBackground === "default" ? null : (typeof currentBackgroundUri === 'string' ? { uri: currentBackgroundUri } : currentBackgroundUri)} 

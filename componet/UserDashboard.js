@@ -27,6 +27,7 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
   const [userData, setUserData] = useState(null);
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [overlayEnabled, setOverlayEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showImportExport, setShowImportExport] = useState(false);
@@ -38,6 +39,7 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
   useEffect(() => {
     loadUserData();
     loadNotificationPreference();
+    loadOverlayPreference();
     loadMediaCounts();
   }, [user]);
 
@@ -93,6 +95,29 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
       console.log('Notification preference saved:', newValue);
     } catch (error) {
       console.error('Error saving notification preference:', error);
+    }
+  };
+
+  const loadOverlayPreference = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('overlayEnabled');
+      if (saved !== null) {
+        setOverlayEnabled(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.error('Error loading overlay preference:', error);
+    }
+  };
+
+  const toggleOverlay = async () => {
+    const newValue = !overlayEnabled;
+    setOverlayEnabled(newValue);
+    
+    try {
+      await AsyncStorage.setItem('overlayEnabled', JSON.stringify(newValue));
+      console.log('Overlay preference saved:', newValue);
+    } catch (error) {
+      console.error('Error saving overlay preference:', error);
     }
   };
 
@@ -571,6 +596,48 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
             </TouchableOpacity>
           )}
 
+        </View>
+
+        {/* Screenshot Overlay Section */}
+        <View style={[styles.section, dynamicStyles.section]}>
+          <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>
+            Screenshot Privacy
+          </Text>
+          
+          <View style={[styles.toggleCard, dynamicStyles.toggleCard]}>
+            <View style={styles.toggleContent}>
+              <View style={styles.toggleIcon}>
+                <Ionicons 
+                  name={overlayEnabled ? "eye-off" : "eye"} 
+                  size={24} 
+                  color={overlayEnabled ? "#ef4444" : "#6b7280"} 
+                />
+              </View>
+              <View style={styles.toggleText}>
+                <Text style={[styles.toggleTitle, dynamicStyles.toggleTitle]}>
+                  Hide Profile in Screenshots
+                </Text>
+                <Text style={[styles.toggleSubtitle, dynamicStyles.toggleSubtitle]}>
+                  {overlayEnabled 
+                    ? "Profile picture and name are hidden in screenshots" 
+                    : "Profile picture and name are visible in screenshots"
+                  }
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.toggleSwitch,
+                  { backgroundColor: overlayEnabled ? "#ef4444" : "#ccc" }
+                ]}
+                onPress={toggleOverlay}
+              >
+                <View style={[
+                  styles.toggleThumb,
+                  { transform: [{ translateX: overlayEnabled ? 20 : 2 }] }
+                ]} />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Chat Background Section */}
