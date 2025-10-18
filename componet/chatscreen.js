@@ -107,6 +107,10 @@ const getDynamicStyles = (isDarkMode) => ({
     fontSize: 11,
     color: isDarkMode ? '#a7a8a8' : '#53656f',
   },
+  imageTimeOnImage: {
+    fontSize: 11,
+    color: '#FFFFFF', // White text for dark background
+  },
   dashboardModal: {
     backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
   },
@@ -1545,8 +1549,11 @@ export default function WhatsAppChat() {
                       ) : null}
                       
                       {/* Time and read ticks for images */}
-                      <View style={styles.imageTimeContainer}>
-                        <Text style={dynamicStyles.imageTime}>
+                      <View style={[
+                        styles.imageTimeContainer,
+                        (!message.text || message.text.trim().length === 0) ? styles.imageTimeWithoutCaption : styles.imageTimeWithCaption
+                      ]}>
+                        <Text style={(!message.text || message.text.trim().length === 0) ? dynamicStyles.imageTimeOnImage : dynamicStyles.imageTime}>
                           {message.time}
                         </Text>
                         {!message.isReceived && (
@@ -2459,7 +2466,16 @@ const styles = StyleSheet.create({
     // No special positioning needed - uses relative positioning
   },
   imageTimeWithoutCaption: {
-    // No special positioning needed - uses relative positioning
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   // Share Icon Styles
   shareIconContainer: {
