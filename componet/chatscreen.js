@@ -109,7 +109,7 @@ const getDynamicStyles = (isDarkMode) => ({
   },
   imageTimeOnImage: {
     fontSize: 11,
-    color: '#FFFFFF', // White text for dark background
+    color: '#53656f', // Dark text for light background
   },
   dashboardModal: {
     backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
@@ -2469,7 +2469,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 8,
     right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
