@@ -56,6 +56,7 @@ const getDynamicStyles = (isDarkMode) => ({
     backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
   },
   inputContainer: {
+    backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
   },
   input: {
