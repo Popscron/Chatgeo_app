@@ -2472,6 +2472,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
+    // Shadow effect
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 17,
+    elevation: 15, // Android shadow
   },
   // Share Icon Styles
   shareIconContainer: {
