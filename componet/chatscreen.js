@@ -2453,16 +2453,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginTop: 4, // Add space between caption and time
     paddingHorizontal: 13, // Match caption padding
-    marginRight: -40, // Move time further to the right
-    // Shadow effect similar to overlay
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 17,
-    elevation: 15, // Android shadow
+   marginRight: -40, // Move time further to the right
   },
   imageTimeWithCaption: {
     // No special positioning needed - uses relative positioning
