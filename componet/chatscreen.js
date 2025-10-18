@@ -1307,9 +1307,9 @@ export default function WhatsAppChat() {
       // Increment screenshot count
       await incrementScreenshotCount();
 
-      // Check if contact name is still the default "ChatGeo"
-      if (contactName === "ChatGeo") {
-        console.log('⚠️ Showing alert for unchanged contact name');
+      // Check if contact name is still the default "ChatGeo" and overlay is disabled
+      if (contactName === "ChatGeo" && !overlayEnabled) {
+        console.log('⚠️ Showing alert for unchanged contact name (overlay disabled)');
         Alert.alert(
           "⚠️ Warning",
           "Contact name still not changed! Please change the contact name before taking screenshots.",
@@ -1320,6 +1320,8 @@ export default function WhatsAppChat() {
             }
           ]
         )
+      } else if (contactName === "ChatGeo" && overlayEnabled) {
+        console.log('✅ Contact name unchanged but overlay is enabled, no alert needed');
       } else {
         console.log('✅ Contact name has been changed, no alert needed');
       }
