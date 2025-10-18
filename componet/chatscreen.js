@@ -56,7 +56,6 @@ const getDynamicStyles = (isDarkMode) => ({
     backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
   },
   inputContainer: {
-    backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
     borderTopColor: isDarkMode ? '#333' : '#E0E0E0',
   },
   input: {
@@ -427,34 +426,6 @@ export default function WhatsAppChat() {
     } catch (error) {
       console.error("Error in saveMessageEdit:", error)
     }
-  }
-
-  const deleteMessage = (messageId) => {
-    Alert.alert(
-      "Delete Message",
-      "Are you sure you want to delete this message?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setMessages(prevMessages => 
-              prevMessages.filter(msg => msg.id !== messageId)
-            )
-            // Close modals
-            setSenderEditModalVisible(false)
-            setReceiverEditModalVisible(false)
-            setEditingMessage(null)
-            setEditText("")
-            setEditTime("")
-          }
-        }
-      ]
-    )
   }
 
   // Handle import messages
@@ -1924,7 +1895,6 @@ export default function WhatsAppChat() {
         visible={senderEditModalVisible}
         onClose={cancelSenderEdit}
         onSave={saveMessageEdit}
-        onDelete={deleteMessage}
         message={editingMessage}
         editText={editText}
         setEditText={setEditText}
@@ -1937,7 +1907,6 @@ export default function WhatsAppChat() {
         visible={receiverEditModalVisible}
         onClose={cancelReceiverEdit}
         onSave={saveMessageEdit}
-        onDelete={deleteMessage}
         message={editingMessage}
         editText={editText}
         setEditText={setEditText}
