@@ -2467,8 +2467,8 @@ const styles = StyleSheet.create({
   },
   imageTimeWithoutCaption: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
+    bottom: 4,
+    right: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
