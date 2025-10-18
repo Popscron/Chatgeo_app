@@ -1841,15 +1841,21 @@ export default function WhatsAppChat() {
 
       {/* Rectangular Overlay for Screenshots */}
       {overlayEnabled && (
-        <RectangularOverlay 
-          width={140}           // Adjust width to cover profile picture + name
-          height={35}           // Adjust height to cover the area
-          top={60}              // Position from top (adjust based on header height)
-          left={80}             // Position from left (adjust based on profile position)
-          opacity={0.7}         // Adjust transparency (0.6-0.8 range)
-          borderRadius={8}      // iOS-style rounded corners
-          backgroundColor="white" // White background
-          zIndex={9999}         // High z-index to appear above other elements
+        <CustomBlurView 
+          intensity={100} 
+          tint={isDarkMode ? "dark" : "light"} 
+          style={[
+            styles.overlayContainer,
+            dynamicStyles.header,
+            {
+              width: 250,
+              height: 45,
+              top: 55,
+              left: 5,
+              borderRadius: 12,
+              zIndex: 9999,
+            }
+          ]}
         />
       )}
 
@@ -1963,6 +1969,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "transparent",
+  },
+  overlayContainer: {
+    position: "absolute",
   },
   updateModalOverlay: {
     flex: 1,
