@@ -429,6 +429,34 @@ export default function WhatsAppChat() {
     }
   }
 
+  const deleteMessage = (messageId) => {
+    Alert.alert(
+      "Delete Message",
+      "Are you sure you want to delete this message?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setMessages(prevMessages => 
+              prevMessages.filter(msg => msg.id !== messageId)
+            )
+            // Close modals
+            setSenderEditModalVisible(false)
+            setReceiverEditModalVisible(false)
+            setEditingMessage(null)
+            setEditText("")
+            setEditTime("")
+          }
+        }
+      ]
+    )
+  }
+
   // Handle import messages
   const handleImportMessages = (importedMessages) => {
     try {
@@ -1896,6 +1924,7 @@ export default function WhatsAppChat() {
         visible={senderEditModalVisible}
         onClose={cancelSenderEdit}
         onSave={saveMessageEdit}
+        onDelete={deleteMessage}
         message={editingMessage}
         editText={editText}
         setEditText={setEditText}
@@ -1908,6 +1937,7 @@ export default function WhatsAppChat() {
         visible={receiverEditModalVisible}
         onClose={cancelReceiverEdit}
         onSave={saveMessageEdit}
+        onDelete={deleteMessage}
         message={editingMessage}
         editText={editText}
         setEditText={setEditText}
