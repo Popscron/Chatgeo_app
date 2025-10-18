@@ -1308,6 +1308,8 @@ export default function WhatsAppChat() {
       await incrementScreenshotCount();
 
       // Check if contact name is still the default "ChatGeo" and overlay is disabled
+      console.log('🔍 Debug - contactName:', contactName, 'overlayEnabled:', overlayEnabled);
+      
       if (contactName === "ChatGeo" && !overlayEnabled) {
         console.log('⚠️ Showing alert for unchanged contact name (overlay disabled)');
         Alert.alert(
@@ -1391,7 +1393,7 @@ export default function WhatsAppChat() {
       subscription?.remove()
       clearInterval(sessionCheckInterval);
     }
-  }, [contactName, user])
+  }, [contactName, user, overlayEnabled])
   
   const renderMainContent = () => (
     <>
