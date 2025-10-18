@@ -1314,7 +1314,7 @@ export default function WhatsAppChat() {
         console.log('⚠️ Showing alert for unchanged contact name (overlay disabled)');
         Alert.alert(
           "⚠️ Warning",
-          "Contact name still not changed! Please change the contact name before taking screenshots.",
+          "Contact name still not changed! Please change the contact name or use overlay cover before taking screenshots.",
           [
             {
               text: "OK",
