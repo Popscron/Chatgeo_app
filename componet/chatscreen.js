@@ -1845,25 +1845,30 @@ export default function WhatsAppChat() {
           intensity={100} 
           tint={isDarkMode ? "dark" : "light"} 
           style={[
-            styles.overlayContainer,
             dynamicStyles.header,
             {
               width: 250,
               height: 45,
-              top: 55,
-              left: 5,
-              borderRadius: 12,
+              top: 53,
+              left: 10,
+              borderRadius: 8,
               zIndex: 9999,
-              // Simulate mix-blend-mode: overlay effect
-              backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+              position: 'absolute',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              paddingHorizontal: 12,
+              // CSS equivalent: box-shadow: 0 4px 17px 15px #000;
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 1,
+              shadowRadius: 15,
+              elevation: 17,
             }
           ]}
         >
-          <View style={styles.overlayContent}>
-            <Text style={[styles.overlayText, dynamicStyles.contactName]}>
-              Chats
-            </Text>
-          </View>
+          <Text style={[styles.overlayText, dynamicStyles.contactName]}>
+            Chats
+          </Text>
         </CustomBlurView>
       )}
 
@@ -1978,28 +1983,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "transparent",
   },
-  overlayContainer: {
-    position: "absolute",
-    justifyContent: "center",
-    alignItems: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    // CSS equivalent properties
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 15,
-    elevation: 17,
-  },
-  overlayContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    flex: 1,
-  },
   overlayText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   updateModalOverlay: {
     flex: 1,
