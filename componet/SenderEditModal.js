@@ -19,6 +19,7 @@ const SenderEditModal = ({
   visible, 
   onClose, 
   onSave, 
+  onDelete,
   message, 
   editText, 
   setEditText, 
@@ -220,6 +221,10 @@ const SenderEditModal = ({
           </View>
           
           <View style={styles.modalFooter}>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => onDelete(message.id)}>
+              <Ionicons name="trash" size={16} color="#fff" />
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={handleClose}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -332,11 +337,25 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
     gap: 12,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#FF4444',
+    gap: 6,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   cancelButton: {
     paddingHorizontal: 20,
