@@ -1841,35 +1841,26 @@ export default function WhatsAppChat() {
 
       {/* Rectangular Overlay for Screenshots */}
       {overlayEnabled && (
-        <CustomBlurView 
-          intensity={100} 
-          tint={isDarkMode ? "dark" : "light"} 
-          style={[
-            dynamicStyles.header,
-            {
-              width: 250,
-              height: 45,
-              top: 53,
-              left: 10,
-              borderRadius: 8,
-              zIndex: 9999,
-              position: 'absolute',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
-              paddingHorizontal: 12,
-              // CSS equivalent: box-shadow: 0 4px 17px 15px #000;
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 1,
-              shadowRadius: 15,
-              elevation: 17,
-            }
-          ]}
-        >
-          <Text style={[styles.overlayText, dynamicStyles.contactName]}>
+        <View style={{ position: 'absolute', top: 53, left: 10, zIndex: 9999 }}>
+          <RectangularOverlay 
+            width={250}           // Adjust width to cover profile picture + name
+            height={45}           // Adjust height to cover the area
+            top={0}               // Position relative to container
+            left={0}              // Position relative to container
+            opacity={0.7}         // Adjust transparency (0.6-0.8 range)
+            borderRadius={8}      // iOS-style rounded corners
+            backgroundColor="white" // White background
+            zIndex={9999}         // High z-index to appear above other elements
+          />
+          <Text style={[styles.overlayText, dynamicStyles.contactName, {
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            zIndex: 10000,
+          }]}>
             Chats
           </Text>
-        </CustomBlurView>
+        </View>
       )}
 
       <ImageBackground 
