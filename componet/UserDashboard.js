@@ -21,7 +21,7 @@ import { useAuth } from './AuthContext';
 import { mobileSupabaseHelpers } from '../config/supabase';
 import ImportExportModal from './importexport';
 
-const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImport, onImportContact, onImportProfileImage, selectedBackground, onBackgroundSelect, customBackgroundUri: propCustomBackgroundUri, onCustomBackgroundChange, onClearMessages }) => {
+const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImport, onImportContact, onImportProfileImage, selectedBackground, onBackgroundSelect, customBackgroundUri: propCustomBackgroundUri, onCustomBackgroundChange, onClearMessages, onOverlayToggle }) => {
   const { isDarkMode, setIsDarkMode, setManualOverride, toggleDarkMode, resetToSystemMode, manualOverride, systemColorScheme } = useDarkMode();
   const { user, logout } = useAuth();
   const [userData, setUserData] = useState(null);
@@ -116,6 +116,11 @@ const UserDashboard = ({ onClose, messages, contactName, profileImageUri, onImpo
     try {
       await AsyncStorage.setItem('overlayEnabled', JSON.stringify(newValue));
       console.log('Overlay preference saved:', newValue);
+      
+      // Notify parent component of the change
+      if (onOverlayToggle) {
+        onOverlayToggle(newValue);
+      }
     } catch (error) {
       console.error('Error saving overlay preference:', error);
     }

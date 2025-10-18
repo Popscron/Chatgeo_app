@@ -248,6 +248,10 @@ export default function WhatsAppChat() {
   const [profileEditModalVisible, setProfileEditModalVisible] = useState(false)
   const [overlayEnabled, setOverlayEnabled] = useState(false)
   const inputContainerAnimation = useState(new Animated.Value(0))[0]
+
+  const handleOverlayToggle = (enabled) => {
+    setOverlayEnabled(enabled);
+  };
   const inputWidthAnimation = useState(new Animated.Value(1))[0]
   const [inputText, setInputText] = useState("")
   const [showSendButton, setShowSendButton] = useState(false)
@@ -1217,6 +1221,27 @@ export default function WhatsAppChat() {
     loadOverlayPreference();
   }, []);
 
+  // Listen for app state changes to refresh overlay preference
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App became active, check for overlay preference changes
+        try {
+          const stored = await AsyncStorage.getItem('overlayEnabled');
+          if (stored !== null) {
+            setOverlayEnabled(JSON.parse(stored));
+          }
+        } catch (error) {
+          console.error('Error checking overlay preference:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => subscription?.remove();
+  }, []);
+
   // Load update notifications on mount and periodically
   useEffect(() => {
     loadUpdateNotifications();
@@ -1764,6 +1789,7 @@ export default function WhatsAppChat() {
                     customBackgroundUri={customBackgroundUri}
                     onCustomBackgroundChange={setCustomBackgroundUri}
                     onClearMessages={handleClearMessages}
+                    onOverlayToggle={handleOverlayToggle}
                   />
           </View>
         </View>
