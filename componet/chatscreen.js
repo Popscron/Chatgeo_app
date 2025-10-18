@@ -1856,7 +1856,13 @@ export default function WhatsAppChat() {
               zIndex: 9999,
             }
           ]}
-        />
+        >
+          <View style={styles.overlayContent}>
+            <Text style={[styles.overlayText, dynamicStyles.contactName]}>
+              Chats
+            </Text>
+          </View>
+        </CustomBlurView>
       )}
 
       <ImageBackground 
@@ -1972,6 +1978,17 @@ const styles = StyleSheet.create({
   },
   overlayContainer: {
     position: "absolute",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingHorizontal: 12,
+  },
+  overlayContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  overlayText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   updateModalOverlay: {
     flex: 1,
