@@ -1981,10 +1981,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-start",
     paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   overlayContent: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "flex-start",
+    flex: 1,
   },
   overlayText: {
     fontSize: 16,
